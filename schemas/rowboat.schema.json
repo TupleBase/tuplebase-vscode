@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rowboat configuration",
+  "type": "object",
+  "required": ["environments"],
+  "properties": {
+    "defaultEnvironment": { "type": "string", "description": "Environment selected when the workspace opens" },
+    "environments": {
+      "type": "object",
+      "description": "Named environments, each grouping named connections",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "$ref": "#/definitions/connection" }
+      }
+    }
+  },
+  "definitions": {
+    "connection": {
+      "type": "object",
+      "required": ["adapter"],
+      "properties": {
+        "adapter": { "enum": ["postgres", "redis", "dynamodb"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "adapter": { "const": "postgres" } } },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "host": { "type": "string" },
+              "port": { "type": "number", "default": 5432 },
+              "database": { "type": "string" },
+              "user": { "type": "string" },
+              "ssl": { "type": "boolean", "default": false }
+            },
+            "required": ["host", "database", "user"],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": { "properties": { "adapter": { "const": "redis" } } },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "host": { "type": "string" },
+              "port": { "type": "number", "default": 6379 },
+              "db": { "type": "number", "default": 0 },
+              "tls": { "type": "boolean", "default": false },
+              "username": { "type": "string" }
+            },
+            "required": ["host"],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": { "properties": { "adapter": { "const": "dynamodb" } } },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "region": { "type": "string" },
+              "profile": { "type": "string" },
+              "endpoint": { "type": "string", "description": "Custom endpoint, e.g. http://localhost:8000 for dynamodb-local" }
+            },
+            "required": ["region"],
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  }
+}

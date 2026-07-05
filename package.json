@@ -27,6 +27,12 @@
     "workspaceContains:**/.rowboat.json"
   ],
   "contributes": {
+    "languages": [
+      { "id": "jsonc", "filenames": [".rowboat.json"] }
+    ],
+    "jsonValidation": [
+      { "fileMatch": ".rowboat.json", "url": "./schemas/rowboat.schema.json" }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
