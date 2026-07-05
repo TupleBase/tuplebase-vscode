@@ -55,6 +55,7 @@ export function parseConfig(
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
           errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — Rowboat keeps secrets out of config (prompted and stored on your machine)` })
+          delete conn[field]
         }
       }
       if (typeof conn.adapter !== 'string' || !KNOWN_ADAPTERS.includes(conn.adapter)) {

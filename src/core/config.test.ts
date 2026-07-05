@@ -43,6 +43,11 @@ describe('parseConfig', () => {
     const { errors } = parseConfig('{"environments":{"dev":{"c":{"adapter":"postgres","password":"x"}}}}')
     expect(errors[0].message).toMatch(/secret/i)
   })
+  it('strips secret field values from the returned config', () => {
+    const { config, errors } = parseConfig('{"environments":{"dev":{"c":{"adapter":"postgres","password":"x"}}}}')
+    expect(errors[0].message).toMatch(/secret/i)
+    expect(config?.environments.dev.c).not.toHaveProperty('password')
+  })
   it('reports JSON syntax errors', () => {
     const { errors } = parseConfig('{ nope ')
     expect(errors.length).toBeGreaterThan(0)
