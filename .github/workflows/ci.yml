@@ -1,0 +1,18 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - run: docker compose --profile postgres up -d --wait
+      - run: RB_IT=1 npx vitest run
+      - run: xvfb-run -a npm run test:vscode

@@ -9,6 +9,9 @@ const host = {
   outfile: 'dist/extension.js',
   platform: 'node',
   format: 'cjs',
+  // jsonc-parser's CJS/UMD build calls require() through a factory parameter,
+  // which esbuild can't statically resolve when bundled — pick its ESM build instead.
+  mainFields: ['module', 'main'],
   external: ['vscode', 'pg-native'],
   sourcemap: true,
   minify: process.env.NODE_ENV === 'production',
@@ -24,6 +27,13 @@ const webview = {
   minify: process.env.NODE_ENV === 'production',
 }
 
+const smokeTest = {
+  ...host,
+  entryPoints: ['src/test/smoke.test.ts'],
+  outfile: 'dist/test/smoke.test.js',
+  external: [...host.external, 'mocha'],
+}
+
 const copyAssets = () => {
   mkdirSync('dist/webview', { recursive: true })
   cpSync('node_modules/tabulator-tables/dist/css/tabulator.min.css', 'dist/webview/tabulator.min.css')
@@ -34,8 +44,8 @@ const assetPlugin = { name: 'copy-assets', setup(b) { b.onEnd(copyAssets) } }
 webview.plugins = [assetPlugin]
 
 if (watch) {
-  const ctxs = await Promise.all([esbuild.context(host), esbuild.context(webview)])
+  const ctxs = await Promise.all([esbuild.context(host), esbuild.context(webview), esbuild.context(smokeTest)])
   await Promise.all(ctxs.map(c => c.watch()))
 } else {
-  await Promise.all([esbuild.build(host), esbuild.build(webview)])
+  await Promise.all([esbuild.build(host), esbuild.build(webview), esbuild.build(smokeTest)])
 }

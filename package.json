@@ -145,13 +145,16 @@
     "test": "vitest run",
     "db:postgres": "docker compose --profile postgres up -d",
     "db:all": "docker compose --profile all up -d",
-    "db:down": "docker compose --profile all down"
+    "db:down": "docker compose --profile all down",
+    "test:vscode": "npm run build && vscode-test"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.20.0",
     "@types/tabulator-tables": "^6.3.5",
     "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
