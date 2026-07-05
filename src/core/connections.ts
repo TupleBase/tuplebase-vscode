@@ -9,6 +9,7 @@ const ACTIVE_ENV_KEY = 'rowboat.activeEnv'
 export class ConnectionManager implements vscode.Disposable {
   readonly factories = new Map<string, AdapterFactory>([[postgresFactory.id, postgresFactory]])
   private live = new Map<string, Adapter>()   // key: `${env}/${conn}`
+  private pending = new Map<string, Promise<Adapter>>()
   private envEmitter = new vscode.EventEmitter<string>()
   readonly onDidChangeEnvironment = this.envEmitter.event
 
@@ -19,10 +20,12 @@ export class ConnectionManager implements vscode.Disposable {
   ) {}
 
   get activeEnvironment(): string | undefined {
-    const saved = this.workspaceState.get<string>(ACTIVE_ENV_KEY)
     const names = this.store.environmentNames()
+    const saved = this.workspaceState.get<string>(ACTIVE_ENV_KEY)
     if (saved && names.includes(saved)) return saved
-    return this.store.config?.defaultEnvironment ?? names[0]
+    const def = this.store.config?.defaultEnvironment
+    if (def && names.includes(def)) return def
+    return names[0]
   }
 
   async setActiveEnvironment(env: string) {
@@ -66,12 +69,22 @@ export class ConnectionManager implements vscode.Disposable {
     const key = `${cfg.env}/${cfg.name}`
     const existing = this.live.get(key)
     if (existing) return existing
-    const factory = this.factories.get(cfg.adapter)!
-    const resolved = await this.resolve(cfg)
-    const adapter = factory.create(resolved)
-    await adapter.connect(resolved)
-    this.live.set(key, adapter)
-    return adapter
+    const inFlight = this.pending.get(key)
+    if (inFlight) return inFlight
+    const p = (async () => {
+      const factory = this.factories.get(cfg.adapter)!
+      const resolved = await this.resolve(cfg)
+      const adapter = factory.create(resolved)
+      await adapter.connect(resolved)
+      this.live.set(key, adapter)
+      return adapter
+    })()
+    this.pending.set(key, p)
+    try {
+      return await p
+    } finally {
+      this.pending.delete(key)
+    }
   }
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
