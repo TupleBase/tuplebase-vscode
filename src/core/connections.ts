@@ -87,6 +87,14 @@ export class ConnectionManager implements vscode.Disposable {
     }
   }
 
+  async disconnect(connName: string): Promise<void> {
+    const cfg = this.findConfig(connName)
+    const key = `${cfg.env}/${cfg.name}`
+    const adapter = this.live.get(key)
+    if (adapter) await adapter.dispose().catch(() => {})
+    this.live.delete(key)
+  }
+
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     const key = `${cfg.env}/${cfg.name}`

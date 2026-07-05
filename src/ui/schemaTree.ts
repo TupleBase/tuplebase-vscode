@@ -73,7 +73,11 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
     vscode.commands.registerCommand('rowboat.refreshExplorer', () => provider.refresh()),
     vscode.commands.registerCommand('rowboat.disconnect', async (el?: ExplorerNode) => {
       if (el?.type === 'connection') {
-        await manager.disposeAll()
+        try {
+          await manager.disconnect(el.conn.name)
+        } catch {
+          await manager.disposeAll()
+        }
         provider.refresh()
       }
     }),
