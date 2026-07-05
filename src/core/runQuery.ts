@@ -47,8 +47,9 @@ export function registerRunQuery(
     if (!connName) return
 
     inFlight?.abort()
-    inFlight = new AbortController()
-    const signal = inFlight.signal
+    const mine = new AbortController()
+    inFlight = mine
+    const signal = mine.signal
 
     await panel.show()
     panel.post({ type: 'running', statement: stmt })
@@ -57,6 +58,7 @@ export function registerRunQuery(
       const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
       panel.post({ type: 'result', envelope, statement: stmt })
     } catch (e) {
+      if (signal.aborted) return
       const message = (e as Error).message
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
@@ -69,7 +71,7 @@ export function registerRunQuery(
         }
       }
     } finally {
-      inFlight = undefined
+      if (inFlight === mine) inFlight = undefined
     }
   }
 
