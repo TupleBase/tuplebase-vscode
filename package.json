@@ -5,20 +5,59 @@
   "version": "0.1.0",
   "publisher": "felicegeracitano",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/FeliceGeracitano/rowboat" },
-  "engines": { "vscode": "^1.90.0" },
-  "categories": ["Other"],
-  "keywords": ["postgres", "redis", "dynamodb", "sql", "database"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FeliceGeracitano/rowboat"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "postgres",
+    "redis",
+    "dynamodb",
+    "sql",
+    "database"
+  ],
   "main": "./dist/extension.js",
-  "activationEvents": ["workspaceContains:**/.rowboat.json"],
+  "activationEvents": [
+    "workspaceContains:**/.rowboat.json"
+  ],
   "contributes": {
     "viewsContainers": {
-      "activitybar": [{ "id": "rowboat", "title": "Rowboat", "icon": "media/rowboat.svg" }],
-      "panel": [{ "id": "rowboat-panel", "title": "Rowboat Results", "icon": "media/rowboat.svg" }]
+      "activitybar": [
+        {
+          "id": "rowboat",
+          "title": "Rowboat",
+          "icon": "media/rowboat.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "rowboat-panel",
+          "title": "Rowboat Results",
+          "icon": "media/rowboat.svg"
+        }
+      ]
     },
     "views": {
-      "rowboat": [{ "id": "rowboat.explorer", "name": "Explorer", "icon": "media/rowboat.svg" }],
-      "rowboat-panel": [{ "id": "rowboat.results", "type": "webview", "name": "Results" }]
+      "rowboat": [
+        {
+          "id": "rowboat.explorer",
+          "name": "Explorer",
+          "icon": "media/rowboat.svg"
+        }
+      ],
+      "rowboat-panel": [
+        {
+          "id": "rowboat.results",
+          "type": "webview",
+          "name": "Results"
+        }
+      ]
     },
     "viewsWelcome": [
       {
@@ -27,22 +66,52 @@
       }
     ],
     "commands": [
-      { "command": "rowboat.runQuery", "title": "Rowboat: Run Query", "icon": "$(play)" },
-      { "command": "rowboat.selectEnvironment", "title": "Rowboat: Select Environment" },
-      { "command": "rowboat.refreshExplorer", "title": "Rowboat: Refresh Explorer", "icon": "$(refresh)" },
-      { "command": "rowboat.clearCredentials", "title": "Rowboat: Clear Stored Credentials" },
-      { "command": "rowboat.createConfig", "title": "Rowboat: Create Config File" }
+      {
+        "command": "rowboat.runQuery",
+        "title": "Rowboat: Run Query",
+        "icon": "$(play)"
+      },
+      {
+        "command": "rowboat.selectEnvironment",
+        "title": "Rowboat: Select Environment"
+      },
+      {
+        "command": "rowboat.refreshExplorer",
+        "title": "Rowboat: Refresh Explorer",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "rowboat.clearCredentials",
+        "title": "Rowboat: Clear Stored Credentials"
+      },
+      {
+        "command": "rowboat.createConfig",
+        "title": "Rowboat: Create Config File"
+      }
     ],
     "menus": {
       "editor/title/run": [
-        { "command": "rowboat.runQuery", "when": "resourceLangId == sql", "group": "navigation" }
+        {
+          "command": "rowboat.runQuery",
+          "when": "resourceLangId == sql",
+          "group": "navigation"
+        }
       ],
       "view/title": [
-        { "command": "rowboat.refreshExplorer", "when": "view == rowboat.explorer", "group": "navigation" }
+        {
+          "command": "rowboat.refreshExplorer",
+          "when": "view == rowboat.explorer",
+          "group": "navigation"
+        }
       ]
     },
     "keybindings": [
-      { "command": "rowboat.runQuery", "key": "ctrl+enter", "mac": "cmd+enter", "when": "editorTextFocus && resourceLangId == sql" }
+      {
+        "command": "rowboat.runQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && resourceLangId == sql"
+      }
     ]
   },
   "scripts": {
@@ -60,5 +129,8 @@
     "esbuild": "^0.24.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "jsonc-parser": "^3.3.1"
   }
 }
