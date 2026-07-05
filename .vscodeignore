@@ -1,0 +1,10 @@
+src/**
+node_modules/**
+docs/**
+dev/**
+.vscode/**
+esbuild.mjs
+vitest.config.ts
+tsconfig.json
+docker-compose.yml
+**/*.map
