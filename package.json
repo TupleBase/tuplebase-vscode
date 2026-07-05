@@ -101,6 +101,10 @@
       {
         "command": "rowboat.createConfig",
         "title": "Rowboat: Create Config File"
+      },
+      {
+        "command": "rowboat.disconnect",
+        "title": "Rowboat: Disconnect"
       }
     ],
     "menus": {
@@ -116,6 +120,12 @@
           "command": "rowboat.refreshExplorer",
           "when": "view == rowboat.explorer",
           "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "rowboat.disconnect",
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection"
         }
       ]
     },
