@@ -28,10 +28,18 @@
   ],
   "contributes": {
     "languages": [
-      { "id": "jsonc", "filenames": [".rowboat.json"] }
+      {
+        "id": "jsonc",
+        "filenames": [
+          ".rowboat.json"
+        ]
+      }
     ],
     "jsonValidation": [
-      { "fileMatch": ".rowboat.json", "url": "./schemas/rowboat.schema.json" }
+      {
+        "fileMatch": ".rowboat.json",
+        "url": "./schemas/rowboat.schema.json"
+      }
     ],
     "viewsContainers": {
       "activitybar": [
@@ -131,12 +139,14 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.20.0",
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.5.0",
     "vitest": "^2.0.0"
   },
   "dependencies": {
-    "jsonc-parser": "^3.3.1"
+    "jsonc-parser": "^3.3.1",
+    "pg": "^8.22.0"
   }
 }
