@@ -19,6 +19,22 @@ let table: Tabulator | undefined
 
 cancelBtn.addEventListener('click', () => vscode.postMessage({ type: 'cancel' }))
 
+const escapeHtml = (s: string) =>
+  s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
+
+const MAX_STATE_ROWS = 100
+function toPersistable(msg: Incoming): Incoming {
+  if (msg.type !== 'result' || msg.envelope.rows.length <= MAX_STATE_ROWS) return msg
+  return {
+    ...msg,
+    envelope: {
+      ...msg.envelope,
+      rows: msg.envelope.rows.slice(0, MAX_STATE_ROWS),
+      warnings: [...msg.envelope.warnings, `state restored with first ${MAX_STATE_ROWS} rows — re-run for full results`],
+    },
+  }
+}
+
 function render(msg: Incoming) {
   if (msg.type === 'running') {
     status.textContent = `Running: ${msg.statement.slice(0, 120)}…`
@@ -40,7 +56,7 @@ function render(msg: Incoming) {
     field: `c${i}`,
     formatter: (cell: { getValue(): unknown }) => {
       const v = cell.getValue()
-      return v === null || v === undefined ? '<span class="null">NULL</span>' : String(v)
+      return v === null || v === undefined ? '<span class="null">NULL</span>' : escapeHtml(String(v))
     },
   }))
   const data = envelope.rows.map(r => Object.fromEntries(r.map((v, i) => [`c${i}`, v])))
@@ -51,7 +67,7 @@ function render(msg: Incoming) {
     height: '100%',
     layout: 'fitDataStretch',
   })
-  vscode.setState({ last: msg })
+  vscode.setState({ last: toPersistable(msg) })
 }
 
 window.addEventListener('message', e => render(e.data as Incoming))
