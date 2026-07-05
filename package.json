@@ -150,6 +150,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/pg": "^8.20.0",
+    "@types/tabulator-tables": "^6.3.5",
     "@types/vscode": "^1.90.0",
     "esbuild": "^0.24.0",
     "typescript": "^5.5.0",
@@ -157,6 +158,7 @@
   },
   "dependencies": {
     "jsonc-parser": "^3.3.1",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "tabulator-tables": "^6.5.2"
   }
 }
