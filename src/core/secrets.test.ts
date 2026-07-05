@@ -11,7 +11,10 @@ function fakes() {
   }
   const index: KeyIndex = {
     get: <T,>(k: string, d: T) => (state.has(k) ? (state.get(k) as T) : d),
-    update: async (k, v) => void state.set(k, v),
+    update: async (k, v) => {
+      await Promise.resolve() // ponytail: forces read-modify-write to interleave, exposing the lost-update race
+      state.set(k, v)
+    },
   }
   return { backend, index, secrets }
 }
@@ -46,5 +49,28 @@ describe('SecretVault', () => {
     const deleted = await v.clearAll()
     expect(deleted.sort()).toEqual(['rowboat.dev.db.password', 'rowboat.prod.db.password'])
     expect(secrets.size).toBe(0)
+  })
+
+  it('does not collide when names contain dots', async () => {
+    const { backend, index, secrets } = fakes()
+    const v = new SecretVault(backend, index)
+    await v.store('dev.eu', 'db', 'password', 'a')
+    await v.store('dev', 'eu.db', 'password', 'b')
+    expect(secrets.size).toBe(2)
+    await v.deleteConnection('dev.eu', 'db')
+    expect(await v.get('dev', 'eu.db', 'password')).toBe('b')
+    expect(await v.get('dev.eu', 'db', 'password')).toBeUndefined()
+  })
+
+  it('concurrent stores all land in the index', async () => {
+    const { backend, index } = fakes()
+    const v = new SecretVault(backend, index)
+    await Promise.all([
+      v.store('dev', 'a', 'password', '1'),
+      v.store('dev', 'b', 'password', '2'),
+      v.store('dev', 'c', 'password', '3'),
+    ])
+    const deleted = await v.clearAll()
+    expect(deleted).toHaveLength(3)
   })
 })
