@@ -1,0 +1,11 @@
+services:
+  postgres:
+    image: postgres:17
+    profiles: ["postgres", "all"]
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_USER: rowboat
+      POSTGRES_PASSWORD: rowboat
+      POSTGRES_DB: rowboat
+    volumes:
+      - ./dev/seed/postgres:/docker-entrypoint-initdb.d

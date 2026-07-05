@@ -49,7 +49,10 @@
     "build": "node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
     "check": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:postgres": "docker compose --profile postgres up -d",
+    "db:all": "docker compose --profile all up -d",
+    "db:down": "docker compose --profile all down"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
