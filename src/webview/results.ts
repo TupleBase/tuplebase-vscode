@@ -52,7 +52,7 @@ function render(msg: Incoming) {
   const warn = envelope.warnings.length ? ` — ${envelope.warnings.join('; ')}` : ''
   status.textContent = `${envelope.rowCount} rows in ${envelope.elapsedMs}ms${warn}`
   const columns = envelope.columns.map((c, i) => ({
-    title: c.name,
+    title: escapeHtml(c.name),
     field: `c${i}`,
     formatter: (cell: { getValue(): unknown }) => {
       const v = cell.getValue()

@@ -50,15 +50,22 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
+    const cancelledOrSuperseded = () => {
+      if (!signal.aborted) return false
+      if (inFlight === mine) panel.post({ type: 'error', message: 'Cancelled' })
+      return true
+    }
 
     await panel.show()
     panel.post({ type: 'running', statement: stmt })
     try {
       const adapter = await manager.getAdapter(connName)
+      if (cancelledOrSuperseded()) return
       const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
+      if (cancelledOrSuperseded()) return
       panel.post({ type: 'result', envelope, statement: stmt })
     } catch (e) {
-      if (signal.aborted) return
+      if (cancelledOrSuperseded()) return
       const message = (e as Error).message
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
