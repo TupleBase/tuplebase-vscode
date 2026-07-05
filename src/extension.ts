@@ -4,12 +4,15 @@ import { SecretVault } from './core/secrets'
 import { ConnectionManager } from './core/connections'
 import { createEnvStatusBar } from './ui/statusBar'
 import { registerSchemaTree } from './ui/schemaTree'
+import { ResultsPanel } from './ui/resultsPanel'
+import { registerRunQuery } from './core/runQuery'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
   const store = new ConfigStore(diagnostics)
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault, context.workspaceState)
+  const panel = ResultsPanel.register(context)
 
   context.subscriptions.push(
     diagnostics,
@@ -17,6 +20,7 @@ export async function activate(context: vscode.ExtensionContext) {
     manager,
     createEnvStatusBar(manager, store),
     registerSchemaTree(manager, store),
+    registerRunQuery(manager, store, panel, context.workspaceState),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
       const deleted = await vault.clearAll()
       void vscode.window.showInformationMessage(`Rowboat: cleared ${deleted.length} stored secret(s)`)
