@@ -31,7 +31,8 @@
               "port": { "type": "number", "default": 5432 },
               "database": { "type": "string" },
               "user": { "type": "string" },
-              "ssl": { "type": "boolean", "default": false }
+              "sslmode": { "enum": ["disable", "require", "verify-ca", "verify-full"], "description": "TLS mode (libpq semantics): require encrypts without certificate checks, verify-ca checks the CA but not the hostname, verify-full checks both" },
+              "sslrootcert": { "type": "string", "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)" }
             },
             "required": ["host", "database", "user"],
             "additionalProperties": false

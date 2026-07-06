@@ -13,7 +13,7 @@ Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` in
 - [x] Redis adapter: commands from `.redis` files (one per line, `#` comments), key-namespace tree, optional `"auth": true` → password prompt
 - [x] `.redis` language contribution + per-language run extraction (SQL statement vs redis line)
 - [x] DynamoDB adapter: PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain (profile/SSO/env — never stored), `endpoint` for dynamodb-local
-- [ ] Postgres TLS options: `sslmode`, CA cert path in connection config (hosted DBs require it)
+- [x] Postgres TLS options: `sslmode`, CA cert path in connection config (hosted DBs require it)
 - [ ] Cleanup batch: ~15 deferred minors from Plan 01 reviews (stable tree ids, tightened auth-error regex, CI dedup, etc.)
 
 ## Plan 03: Workbench — autocomplete + query history
