@@ -70,6 +70,12 @@ export class ConnectionManager implements vscode.Disposable {
     return { ...cfg, secrets }
   }
 
+  // live-only lookup for completion providers — never connects, never prompts
+  liveAdapter(connName: string): Adapter | undefined {
+    const env = this.activeEnvironment
+    return env ? this.live.get(`${env}/${connName}`) : undefined
+  }
+
   async getAdapter(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     const key = `${cfg.env}/${cfg.name}`

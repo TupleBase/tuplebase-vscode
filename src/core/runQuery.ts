@@ -2,9 +2,9 @@ import * as vscode from 'vscode'
 import { statementAt } from './statements'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
+import { getFileConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
 
-const FILE_CONN_PREFIX = 'rowboat.fileConn.'
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
 const AUTH_ERROR_RE = /password authentication failed|\b28P01\b|\bWRONGPASS\b|\bNOAUTH\b/i
 
@@ -22,8 +22,7 @@ export function registerRunQuery(
       void vscode.window.showWarningMessage('Rowboat: no .rowboat.json config found')
       return undefined
     }
-    const key = FILE_CONN_PREFIX + fsPath
-    const remembered = workspaceState.get<string>(key)
+    const remembered = getFileConnection(workspaceState, fsPath)
     // only connections whose adapter speaks this editor language
     const available = store.connections(env)
       .filter(c => manager.factories.get(c.adapter)?.languageId === languageId)
@@ -36,7 +35,7 @@ export function registerRunQuery(
     const picked = await vscode.window.showQuickPick(available, {
       placeHolder: `Run against which ${env} connection?`,
     })
-    if (picked) await workspaceState.update(key, picked)
+    if (picked) await setFileConnection(workspaceState, fsPath, picked)
     return picked
   }
 
