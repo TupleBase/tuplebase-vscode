@@ -79,11 +79,11 @@ class DynamoDBAdapter implements Adapter {
   }
 
   async connect(cfg: ResolvedConnection) {
-    this.cfg = cfg
     await this.testConnection(cfg)
   }
 
-  async testConnection(_cfg: ResolvedConnection) {
+  async testConnection(cfg: ResolvedConnection) {
+    this.cfg = cfg
     const client = await this.getClient()
     const { ListTablesCommand } = await import('@aws-sdk/client-dynamodb')
     await this.call(() => client.send(new ListTablesCommand({ Limit: 1 })))

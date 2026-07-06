@@ -14,7 +14,7 @@ Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` in
 - [x] `.redis` language contribution + per-language run extraction (SQL statement vs redis line)
 - [x] DynamoDB adapter: PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain (profile/SSO/env — never stored), `endpoint` for dynamodb-local
 - [x] Postgres TLS options: `sslmode`, CA cert path in connection config (hosted DBs require it)
-- [ ] Cleanup batch: ~15 deferred minors from Plan 01 reviews (stable tree ids, tightened auth-error regex, CI dedup, etc.)
+- [x] Cleanup batch: deferred minors from Plan 01 reviews (dot-safe tree ids, tightened auth-error regex, CI dedup, testConnection(cfg) contract, webview pending queue, pg cancellation IT test)
 
 ## Plan 03: Workbench — autocomplete + query history
 
@@ -58,6 +58,6 @@ Scope agreed 2026-07-06; design not finalized — brainstorm/design session requ
 
 ## Deferred (tracked, not scheduled)
 
-Dotted-identifier tree ids, pg cancellation integration test, `testConnection(cfg)` arg handling, webview pending-queue single slot, statement-splitter for PartiQL edge cases, SSH tunnels (decided: deferred until asked for).
+Statement-splitter for PartiQL edge cases, SSH tunnels (decided: deferred until asked for).
 
 Later / pro territory (deliberately skipped for now): grid cell editing with write-back, EXPLAIN visualizer, telemetry.

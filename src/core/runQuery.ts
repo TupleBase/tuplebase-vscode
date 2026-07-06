@@ -5,7 +5,8 @@ import { ConfigStore } from './configStore'
 import { ResultsPanel } from '../ui/resultsPanel'
 
 const FILE_CONN_PREFIX = 'rowboat.fileConn.'
-const AUTH_ERROR_RE = /password authentication failed|SASL|28P01|WRONGPASS|NOAUTH/i
+// SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
+const AUTH_ERROR_RE = /password authentication failed|\b28P01\b|\bWRONGPASS\b|\bNOAUTH\b/i
 
 export function registerRunQuery(
   manager: ConnectionManager,

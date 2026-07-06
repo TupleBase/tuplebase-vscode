@@ -121,11 +121,11 @@ class RedisAdapter implements Adapter {
   }
 
   async connect(cfg: ResolvedConnection) {
-    this.cfg = cfg
     await this.testConnection(cfg)
   }
 
-  async testConnection(_cfg: ResolvedConnection) {
+  async testConnection(cfg: ResolvedConnection) {
+    this.cfg = cfg
     const client = await this.getClient()
     await client.sendCommand(['PING'])
   }

@@ -9,6 +9,17 @@ import type { Pool } from 'pg'
 
 const SSL_MODES = ['disable', 'require', 'verify-ca', 'verify-full']
 
+// tree node ids: 'pg:' + dot-joined segments, each segment escaped so names
+// containing dots survive parsing (mirrors esc() in core/secrets.ts).
+// deterministic — VS Code preserves tree expansion by id
+export function pgNodeId(...parts: string[]): string {
+  return 'pg:' + parts.map(p => encodeURIComponent(p).replace(/\./g, '%2E')).join('.')
+}
+
+export function parsePgNodeId(id: string): string[] {
+  return id.slice(3).split('.').map(decodeURIComponent)
+}
+
 export function buildSslOptions(
   cfg: { sslmode?: unknown; sslrootcert?: unknown; [key: string]: unknown },
   readFile: (path: string) => string | Buffer = readFileSync,
@@ -65,11 +76,11 @@ class PostgresAdapter implements Adapter {
   }
 
   async connect(cfg: ResolvedConnection) {
-    this.cfg = cfg
     await this.testConnection(cfg)
   }
 
-  async testConnection(_cfg: ResolvedConnection) {
+  async testConnection(cfg: ResolvedConnection) {
+    this.cfg = cfg
     const pool = await this.getPool()
     const client = await pool.connect()
     client.release()
@@ -116,26 +127,26 @@ class PostgresAdapter implements Adapter {
          where schema_name not in ('pg_catalog','information_schema') order by 1`
       )
       return r.rows.map(row => ({
-        id: `pg:${row.schema_name}`, label: row.schema_name, kind: 'schema', hasChildren: true,
+        id: pgNodeId(row.schema_name), label: row.schema_name, kind: 'schema', hasChildren: true,
       }))
     }
     if (node.kind === 'schema') {
-      const schema = node.id.slice(3)
+      const [schema] = parsePgNodeId(node.id)
       const r = await pool.query(
         'select table_name from information_schema.tables where table_schema = $1 order by 1', [schema]
       )
       return r.rows.map(row => ({
-        id: `${node.id}.${row.table_name}`, label: row.table_name, kind: 'table', hasChildren: true,
+        id: pgNodeId(schema, row.table_name), label: row.table_name, kind: 'table', hasChildren: true,
       }))
     }
     if (node.kind === 'table') {
-      const [schema, table] = node.id.slice(3).split('.')
+      const [schema, table] = parsePgNodeId(node.id)
       const r = await pool.query(
         `select column_name, data_type from information_schema.columns
          where table_schema = $1 and table_name = $2 order by ordinal_position`, [schema, table]
       )
       return r.rows.map(row => ({
-        id: `${node.id}.${row.column_name}`, label: row.column_name,
+        id: pgNodeId(schema, table, row.column_name), label: row.column_name,
         kind: 'column', hasChildren: false, detail: row.data_type,
       }))
     }

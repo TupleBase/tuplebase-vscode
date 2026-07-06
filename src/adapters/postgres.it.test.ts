@@ -64,6 +64,19 @@ describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgre
     await a.dispose()
   })
 
+  it('cancels a running query on abort, rejecting fast', async () => {
+    const a = postgresFactory.create(cfg)
+    await a.connect(cfg)
+    const ac = new AbortController()
+    setTimeout(() => ac.abort(), 100)
+    const started = Date.now()
+    await expect(
+      a.execute('select pg_sleep(10)', { pageSize: 10, signal: ac.signal })
+    ).rejects.toThrow(/cancel/i)   // pg 57014: canceling statement due to user request
+    expect(Date.now() - started).toBeLessThan(5000)
+    await a.dispose()
+  })
+
   it('surfaces sql errors with the pg message', async () => {
     const a = postgresFactory.create(cfg)
     await a.connect(cfg)

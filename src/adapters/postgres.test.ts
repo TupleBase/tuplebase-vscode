@@ -1,7 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { buildSslOptions, postgresFactory } from './postgres'
+import { buildSslOptions, parsePgNodeId, pgNodeId, postgresFactory } from './postgres'
 
 const readPem = () => 'PEM'
+
+describe('pgNodeId / parsePgNodeId', () => {
+  it('round-trips plain names', () => {
+    expect(parsePgNodeId(pgNodeId('public', 'crew', 'name'))).toEqual(['public', 'crew', 'name'])
+  })
+  it('round-trips names containing dots', () => {
+    expect(parsePgNodeId(pgNodeId('my.schema', 'my.table'))).toEqual(['my.schema', 'my.table'])
+  })
+  it('round-trips names containing percent signs', () => {
+    expect(parsePgNodeId(pgNodeId('100%2Edone', 'a%b'))).toEqual(['100%2Edone', 'a%b'])
+  })
+  it('round-trips unicode names', () => {
+    expect(parsePgNodeId(pgNodeId('schéma', '表.名'))).toEqual(['schéma', '表.名'])
+  })
+  it('is deterministic and keeps the pg: prefix', () => {
+    expect(pgNodeId('public')).toBe('pg:public')
+    expect(pgNodeId('my.schema', 't')).toBe(pgNodeId('my.schema', 't'))
+  })
+})
 
 describe('buildSslOptions', () => {
   it('returns undefined when sslmode is absent', () => {

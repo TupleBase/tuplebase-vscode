@@ -10,7 +10,7 @@ export type ResultsRequest = { type: 'cancel' }
 
 export class ResultsPanel implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined
-  private pending: ResultsMessage | undefined
+  private pending: ResultsMessage[] = []
   private cancelEmitter = new vscode.EventEmitter<void>()
   readonly onCancel = this.cancelEmitter.event
 
@@ -35,10 +35,8 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       if (msg.type === 'cancel') this.cancelEmitter.fire()
     })
     view.webview.html = this.html(view.webview)
-    if (this.pending) {
-      void view.webview.postMessage(this.pending)
-      this.pending = undefined
-    }
+    for (const msg of this.pending) void view.webview.postMessage(msg)
+    this.pending = []
   }
 
   async show() {
@@ -47,7 +45,11 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
 
   post(msg: ResultsMessage) {
     if (this.view) void this.view.webview.postMessage(msg)
-    else this.pending = msg
+    else {
+      this.pending.push(msg)
+      // ponytail: cap at 20, drop oldest — plenty for a running/result pair before resolve; ring buffer if it ever grows
+      if (this.pending.length > 20) this.pending.shift()
+    }
   }
 
   private html(webview: vscode.Webview): string {
