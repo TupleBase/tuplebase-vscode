@@ -13,6 +13,7 @@ const KIND_ICONS: Record<string, string> = {
   column: 'symbol-field',
   namespace: 'folder',
   key: 'key',
+  index: 'list-tree',
   info: 'info',
 }
 

@@ -4,3 +4,4 @@ dist/
 .serena/
 .vscode-test/
 dev/empty-ws/
+.claude/

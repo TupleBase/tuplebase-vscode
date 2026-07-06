@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import type { Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection } from '../adapters/types'
+import { dynamodbFactory } from '../adapters/dynamodb'
 import { postgresFactory } from '../adapters/postgres'
 import { redisFactory } from '../adapters/redis'
 import { ConfigStore } from './configStore'
@@ -11,6 +12,7 @@ export class ConnectionManager implements vscode.Disposable {
   readonly factories = new Map<string, AdapterFactory>([
     [postgresFactory.id, postgresFactory],
     [redisFactory.id, redisFactory],
+    [dynamodbFactory.id, dynamodbFactory],
   ])
   private live = new Map<string, Adapter>()   // key: `${env}/${conn}`
   private pending = new Map<string, Promise<Adapter>>()

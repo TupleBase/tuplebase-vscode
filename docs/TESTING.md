@@ -7,6 +7,7 @@ nvm use            # node 24 (.nvmrc)
 npm install
 npm run db:postgres   # dockerized postgres on :5432, seeded (password: rowboat)
 npm run db:redis      # dockerized redis on :6379, seeded
+npm run db:dynamo     # dockerized dynamodb-local on :8000, seeded
 ```
 
 ## Manual testing (Extension Development Host)
@@ -36,7 +37,7 @@ Three layers:
 
 ```bash
 npm test                 # unit (vitest) — no external dependencies
-RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` + `npm run db:redis`
+RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` + `npm run db:redis` + `npm run db:dynamo`
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```

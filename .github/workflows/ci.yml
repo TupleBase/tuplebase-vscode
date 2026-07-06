@@ -15,5 +15,6 @@ jobs:
       - run: npm test
       - run: docker compose --profile postgres up -d --wait
       - run: npm run db:redis
+      - run: npm run db:dynamo
       - run: RB_IT=1 npx vitest run
       - run: xvfb-run -a npm run test:vscode
