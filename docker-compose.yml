@@ -14,3 +14,17 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+  redis:
+    image: redis:7-alpine
+    profiles: ["redis", "all"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+  dynamodb:
+    image: amazon/dynamodb-local
+    profiles: ["dynamo", "all"]
+    ports: ["8000:8000"]
+    # no healthcheck: image ships no curl/wget — the seed script retries until the port answers

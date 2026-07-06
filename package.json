@@ -144,7 +144,12 @@
     "check": "tsc --noEmit",
     "test": "vitest run",
     "db:postgres": "docker compose --profile postgres up -d",
-    "db:all": "docker compose --profile all up -d",
+    "db:redis": "docker compose --profile redis up -d --wait && npm run db:seed:redis",
+    "db:dynamo": "docker compose --profile dynamo up -d && npm run db:seed:dynamo",
+    "db:seed:redis": "grep -v '^#' dev/seed/redis/seed.redis | docker compose exec -T redis redis-cli",
+    "db:seed:dynamo": "node dev/seed/dynamo/seed.mjs",
+    "db:seed": "npm run db:seed:redis && npm run db:seed:dynamo",
+    "db:all": "docker compose --profile all up -d --wait && npm run db:seed",
     "db:down": "docker compose --profile all down",
     "test:vscode": "npm run build && vscode-test"
   },
@@ -160,6 +165,7 @@
     "vitest": "^2.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1080.0",
     "jsonc-parser": "^3.3.1",
     "pg": "^8.22.0",
     "tabulator-tables": "^6.5.2"

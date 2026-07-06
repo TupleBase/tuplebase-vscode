@@ -1,0 +1,14 @@
+# Seed data for the dev redis — piped through redis-cli by `npm run db:seed`
+# (comment lines are stripped by the npm script; the future .redis language
+# strips them in the extension instead)
+FLUSHALL
+SET crew:1:name ada
+SET crew:1:role captain
+SET crew:2:name linus
+SET crew:2:role rower
+SET crew:3:name grace
+SET crew:3:role navigator
+HSET boat:1 name "Rowboat One" oars 2 draft_cm 30
+HSET boat:2 name "Rowboat Two" oars 4 draft_cm 45
+RPUSH queue:departures upstream downstream delta
+SET stats:voyages:total 3
