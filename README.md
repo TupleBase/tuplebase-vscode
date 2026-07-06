@@ -15,13 +15,7 @@ npm run watch            # esbuild watch
 # press F5 → Extension Development Host opens; this repo is its own test workspace (.rowboat.json)
 ```
 
-Tests:
-
-```bash
-npm test                 # unit (vitest)
-RB_IT=1 npx vitest run   # + integration (needs db:postgres)
-npm run test:vscode      # extension-host smoke
-```
+Testing (manual dev-host flow, test layers, resetting state): see [docs/TESTING.md](docs/TESTING.md).
 
 ## Config
 

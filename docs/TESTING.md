@@ -1,0 +1,45 @@
+# Testing Rowboat
+
+## Prerequisites
+
+```bash
+nvm use            # node 24 (.nvmrc)
+npm install
+npm run db:postgres   # dockerized postgres on :5432, seeded (password: rowboat)
+```
+
+## Manual testing (Extension Development Host)
+
+The main way to try the extension while developing:
+
+```bash
+npm run watch   # esbuild watch, leave running
+```
+
+1. Open this repo in VS Code and press **F5** (Run → Start Debugging).
+2. A new window opens — the Extension Development Host — with the extension loaded. This repo is its own test workspace: the `.rowboat.json` at the root points at the dockerized postgres.
+3. Things to exercise:
+   - **Schema explorer** — Rowboat icon in the activity bar; expand schemas and tables.
+   - **Environment picker** — status bar item; switch environments.
+   - **Run a query** — open a `.sql` file, write a query, press **cmd+enter**. Results render in the Tabulator grid with paging and cancel.
+   - **Password prompt** — first connection asks for the password (`rowboat`) and stores it in the OS keychain (VS Code SecretStorage). It won't ask again.
+
+While `watch` is running, reload the dev host with **cmd+R** after a code change. Breakpoints in `src/` hit in the main window's debugger.
+
+## Automated tests
+
+Three layers:
+
+```bash
+npm test                 # unit (vitest) — no external dependencies
+RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` running
+npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
+                         # extension inside it, runs @vscode/test suite
+```
+
+CI runs all three on every push and PR (`.github/workflows/ci.yml`), with postgres via docker compose and the smoke test under `xvfb-run`.
+
+## Resetting state
+
+- **Database**: `docker compose --profile postgres down -v && npm run db:postgres` re-creates and re-seeds.
+- **Stored password**: in the dev host, run **Rowboat: Clear Stored Credentials** from the command palette. (Secrets are keyed by environment + connection name, so renaming a connection in `.rowboat.json` also triggers a fresh prompt.)
