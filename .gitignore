@@ -3,3 +3,4 @@ dist/
 *.vsix
 .serena/
 .vscode-test/
+dev/empty-ws/

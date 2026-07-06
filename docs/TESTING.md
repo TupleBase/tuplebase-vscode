@@ -16,8 +16,10 @@ The main way to try the extension while developing:
 npm run watch   # esbuild watch, leave running
 ```
 
-1. Open this repo in VS Code and press **F5** (Run → Start Debugging).
-2. A new window opens — the Extension Development Host — with the extension loaded. This repo is its own test workspace: the `.rowboat.json` at the root points at the dockerized postgres.
+1. Open this repo in VS Code and press **F5** (Run → Start Debugging). Two launch configs exist:
+   - **Run Extension** — dev host opens `dev/playground` (its `.rowboat.json` points at the dockerized postgres, and `scratch.sql` is ready to run). The dev host gets its own folder because VS Code won't open a folder that's already open in another window — pointing it at this repo would silently give you an empty window.
+   - **Run Extension (empty workspace)** — dev host opens `dev/empty-ws` (no config) to exercise the welcome view and the Create Config flow.
+2. A new window opens — the Extension Development Host — with the extension loaded.
 3. Things to exercise:
    - **Schema explorer** — Rowboat icon in the activity bar; expand schemas and tables.
    - **Environment picker** — status bar item; switch environments.

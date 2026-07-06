@@ -12,7 +12,7 @@ Walking skeleton: Postgres end-to-end (config → tree → query → grid). Redi
 npm install
 npm run db:postgres      # dockerized postgres, seeded (password: rowboat)
 npm run watch            # esbuild watch
-# press F5 → Extension Development Host opens; this repo is its own test workspace (.rowboat.json)
+# press F5 → Extension Development Host opens dev/playground (its .rowboat.json points at the docker postgres)
 ```
 
 Testing (manual dev-host flow, test layers, resetting state): see [docs/TESTING.md](docs/TESTING.md).

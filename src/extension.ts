@@ -27,7 +27,10 @@ export async function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand('rowboat.createConfig', async () => {
       const folder = vscode.workspace.workspaceFolders?.[0]
-      if (!folder) return
+      if (!folder) {
+        void vscode.window.showErrorMessage('Rowboat: open a folder first — the config file lives at the workspace root.')
+        return
+      }
       const uri = vscode.Uri.joinPath(folder.uri, '.rowboat.json')
       const template = `{
   // Rowboat config — safe to commit: secrets are never stored here.

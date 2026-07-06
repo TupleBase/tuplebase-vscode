@@ -1,0 +1,10 @@
+{
+  // Rowboat dev config — safe to commit: secrets are never stored here.
+  // Start databases with: npm run db:postgres   (password: rowboat)
+  "defaultEnvironment": "dev",
+  "environments": {
+    "dev": {
+      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "rowboat", "user": "rowboat" }
+    }
+  }
+}
