@@ -11,12 +11,18 @@ export function splitStatements(text: string): StatementRange[] {
   }
   while (i < text.length) {
     const ch = text[i]
-    if (ch === "'") {
+    if (ch === "'" || ch === '"') {
       i++
       while (i < text.length) {
-        if (text[i] === "'" && text[i + 1] === "'") { i += 2; continue }
-        if (text[i] === "'") break
+        if (text[i] === ch && text[i + 1] === ch) { i += 2; continue }
+        if (text[i] === ch) break
         i++
+      }
+    } else if (ch === '$') {
+      const tag = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(text.slice(i))?.[0]
+      if (tag) {
+        const close = text.indexOf(tag, i + tag.length)
+        i = close === -1 ? text.length : close + tag.length - 1
       }
     } else if (ch === '-' && text[i + 1] === '-') {
       while (i < text.length && text[i] !== '\n') i++
