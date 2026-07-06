@@ -22,7 +22,11 @@ Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` in
 - PartiQL keywords + table/attribute completion from the Dynamo cache
 - Query history: JSONL per workspace, history tree in the sidebar, click to rerun
 
-## Plan 04: Publishing
+## Plan 04: Environment/connection CRUD from the UI
+
+Add/rename/delete environments and connections from the explorer (mini toolbar + context menus) instead of hand-editing `.rowboat.json`. Edits write back to the config file via jsonc-parser `modify`/`applyEdits` so comments and formatting survive. Scope agreed 2026-07-06; design not started — resume brainstorm before implementing.
+
+## Plan 05: Publishing
 
 - Marketplace publisher setup (Entra ID auth — PATs die Dec 2026), `@vscode/vsce`, icon/keywords/manifest polish
 - Publish 0.1.x pre-release early (reserves namespace, starts verified-publisher clock); odd/even minor = pre-release/release
