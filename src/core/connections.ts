@@ -1,13 +1,17 @@
 import * as vscode from 'vscode'
 import type { Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection } from '../adapters/types'
 import { postgresFactory } from '../adapters/postgres'
+import { redisFactory } from '../adapters/redis'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 
 const ACTIVE_ENV_KEY = 'rowboat.activeEnv'
 
 export class ConnectionManager implements vscode.Disposable {
-  readonly factories = new Map<string, AdapterFactory>([[postgresFactory.id, postgresFactory]])
+  readonly factories = new Map<string, AdapterFactory>([
+    [postgresFactory.id, postgresFactory],
+    [redisFactory.id, redisFactory],
+  ])
   private live = new Map<string, Adapter>()   // key: `${env}/${conn}`
   private pending = new Map<string, Promise<Adapter>>()
   private envEmitter = new vscode.EventEmitter<string>()

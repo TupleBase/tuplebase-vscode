@@ -52,6 +52,7 @@ export interface Adapter {
 
 export interface AdapterFactory {
   id: AdapterId
+  languageId: string   // editor language whose files run against this adapter ('sql', 'redis', …)
   validate(raw: Record<string, unknown>): string[]
   requiredSecrets(cfg: ConnectionConfig): string[]
   create(cfg: ResolvedConnection): Adapter

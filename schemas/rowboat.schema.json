@@ -46,7 +46,8 @@
               "port": { "type": "number", "default": 6379 },
               "db": { "type": "number", "default": 0 },
               "tls": { "type": "boolean", "default": false },
-              "username": { "type": "string" }
+              "username": { "type": "string" },
+              "auth": { "type": "boolean", "default": false, "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)" }
             },
             "required": ["host"],
             "additionalProperties": false

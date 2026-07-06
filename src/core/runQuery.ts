@@ -5,7 +5,7 @@ import { ConfigStore } from './configStore'
 import { ResultsPanel } from '../ui/resultsPanel'
 
 const FILE_CONN_PREFIX = 'rowboat.fileConn.'
-const AUTH_ERROR_RE = /password authentication failed|SASL|28P01/i
+const AUTH_ERROR_RE = /password authentication failed|SASL|28P01|WRONGPASS|NOAUTH/i
 
 export function registerRunQuery(
   manager: ConnectionManager,
@@ -15,7 +15,7 @@ export function registerRunQuery(
 ): vscode.Disposable {
   let inFlight: AbortController | undefined
 
-  const pickConnection = async (fsPath: string): Promise<string | undefined> => {
+  const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
     const env = manager.activeEnvironment
     if (!env) {
       void vscode.window.showWarningMessage('Rowboat: no .rowboat.json config found')
@@ -23,7 +23,14 @@ export function registerRunQuery(
     }
     const key = FILE_CONN_PREFIX + fsPath
     const remembered = workspaceState.get<string>(key)
-    const available = store.connections(env).map(c => c.name)
+    // only connections whose adapter speaks this editor language
+    const available = store.connections(env)
+      .filter(c => manager.factories.get(c.adapter)?.languageId === languageId)
+      .map(c => c.name)
+    if (available.length === 0) {
+      void vscode.window.showWarningMessage(`Rowboat: no ${languageId} connections in environment "${env}"`)
+      return undefined
+    }
     if (remembered && available.includes(remembered)) return remembered
     const picked = await vscode.window.showQuickPick(available, {
       placeHolder: `Run against which ${env} connection?`,
@@ -37,13 +44,13 @@ export function registerRunQuery(
     if (!editor) return
     const doc = editor.document
     const stmt = editor.selection.isEmpty
-      ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active))?.text
+      ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active), doc.languageId)?.text
       : doc.getText(editor.selection)
     if (!stmt || !stmt.trim()) {
       void vscode.window.showWarningMessage('Rowboat: no statement at cursor')
       return
     }
-    const connName = await pickConnection(doc.uri.fsPath)
+    const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
     if (!connName) return
 
     inFlight?.abort()

@@ -40,7 +40,23 @@ export function splitStatements(text: string): StatementRange[] {
   return out
 }
 
-export function statementAt(text: string, offset: number): StatementRange | undefined {
+export function splitRedisCommands(text: string): StatementRange[] {
+  const out: StatementRange[] = []
+  let start = 0
+  for (const line of text.split('\n')) {
+    const end = start + line.length
+    const trimmed = line.trim()
+    if (trimmed.length > 0 && !trimmed.startsWith('#')) out.push({ text: trimmed, start, end })
+    start = end + 1
+  }
+  return out
+}
+
+export function statementAt(text: string, offset: number, languageId = 'sql'): StatementRange | undefined {
+  if (languageId === 'redis') {
+    // line-based: cursor on a comment/blank line means there is nothing to run
+    return splitRedisCommands(text).find(s => offset >= s.start && offset <= s.end)
+  }
   const all = splitStatements(text)
   return all.find(s => offset >= s.start && offset <= s.end + 1) ?? all[all.length - 1]
 }

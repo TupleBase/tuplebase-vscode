@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Redis",
+  "scopeName": "source.redis",
+  "patterns": [
+    { "name": "comment.line.number-sign.redis", "match": "^\\s*#.*$" },
+    { "name": "keyword.other.command.redis", "match": "^\\s*[A-Za-z]+(?:\\.[A-Za-z]+)?\\b" },
+    {
+      "name": "string.quoted.double.redis",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "name": "constant.character.escape.redis", "match": "\\\\(x[0-9a-fA-F]{2}|.)" }]
+    },
+    {
+      "name": "string.quoted.single.redis",
+      "begin": "'",
+      "end": "'",
+      "patterns": [{ "name": "constant.character.escape.redis", "match": "\\\\'" }]
+    },
+    { "name": "constant.numeric.redis", "match": "(?<=\\s)-?\\d+(\\.\\d+)?\\b" }
+  ]
+}

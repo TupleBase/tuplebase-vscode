@@ -33,6 +33,23 @@
         "filenames": [
           ".rowboat.json"
         ]
+      },
+      {
+        "id": "redis",
+        "aliases": [
+          "Redis"
+        ],
+        "extensions": [
+          ".redis"
+        ],
+        "configuration": "./language-configuration-redis.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "redis",
+        "scopeName": "source.redis",
+        "path": "./syntaxes/redis.tmLanguage.json"
       }
     ],
     "jsonValidation": [
@@ -111,7 +128,7 @@
       "editor/title/run": [
         {
           "command": "rowboat.runQuery",
-          "when": "resourceLangId == sql",
+          "when": "resourceLangId == sql || resourceLangId == redis",
           "group": "navigation"
         }
       ],
@@ -134,7 +151,7 @@
         "command": "rowboat.runQuery",
         "key": "ctrl+enter",
         "mac": "cmd+enter",
-        "when": "editorTextFocus && resourceLangId == sql"
+        "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
       }
     ]
   },
@@ -166,6 +183,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1080.0",
+    "@redis/client": "^6.1.0",
     "jsonc-parser": "^3.3.1",
     "pg": "^8.22.0",
     "tabulator-tables": "^6.5.2"

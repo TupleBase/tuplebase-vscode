@@ -11,6 +11,9 @@ const KIND_ICONS: Record<string, string> = {
   schema: 'symbol-namespace',
   table: 'table',
   column: 'symbol-field',
+  namespace: 'folder',
+  key: 'key',
+  info: 'info',
 }
 
 export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode> {

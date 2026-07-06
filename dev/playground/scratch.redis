@@ -1,0 +1,7 @@
+# Rowboat scratch — put the cursor on a line and press cmd+enter
+GET crew:1:name
+HGETALL boat:1
+LRANGE queue:departures 0 -1
+SET greeting "hello from rowboat"
+GET greeting
+SCAN 0 COUNT 100
