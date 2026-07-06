@@ -24,11 +24,12 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 - [ ] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
 - [ ] Redis command completion (static table) + key completion via SCAN
 - [ ] PartiQL keywords + table/attribute completion from the Dynamo cache
-- [ ] Query history: JSONL per workspace, history tree in the sidebar, click to rerun
+- [ ] Query history: JSONL per workspace, history tree in the sidebar, click to rerun — redact sensitive commands (redis `AUTH`), size cap + pruning
+- [ ] Marketplace publisher setup + first 0.1.x pre-release (pulled forward from Plan 06 — reserves namespace, starts verified-publisher clock)
 
 ## Plan 04: Safety + results-grid table stakes
 
-- [ ] Prod guardrails: `"readonly": true` flag on an environment → block (or confirm) writes/DDL; nothing stops cmd+enter `DELETE` on prod today
+- [ ] Prod guardrails: `"readonly": true` flag on an environment → block (or confirm) writes; nothing stops cmd+enter `DELETE` on prod today. Write detection is per-adapter: SQL DML/DDL, redis mutating commands (`SET`/`DEL`/`FLUSHALL`…), PartiQL `INSERT`/`UPDATE`/`DELETE` — one SQL regex won't cover it
 - [ ] Default query timeout (cancel exists; timeout catches the forgotten runaway)
 - [ ] Grid export/copy: CSV/JSON export, copy cell/row/column
 - [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
@@ -41,6 +42,7 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 - [ ] Connection CRUD (add/edit/remove) opens a webview form in an editor tab on the right — not inline in the tree
 - [ ] Status-bar picker unchanged: still selects the *active* environment for query runs, even with all envs visible in the tree
 - [ ] All edits write back to `.rowboat.json` via jsonc-parser `modify`/`applyEdits` so comments and formatting survive
+- [ ] `"version": 1` field in `.rowboat.json` schema (migration seam — must land before the config shape has real users)
 - [ ] `contributes.configuration` settings: results page size, max rows, default query timeout
 - [ ] Multi-root workspaces: config still resolves from the first folder — document the limitation (folder picker only if someone asks)
 
@@ -48,8 +50,7 @@ Scope agreed 2026-07-06; design not finalized — brainstorm/design session requ
 
 ## Plan 06: Publishing
 
-- [ ] Marketplace publisher setup (Entra ID auth — PATs die Dec 2026), `@vscode/vsce`, icon/keywords/manifest polish
-- [ ] Publish 0.1.x pre-release early (reserves namespace, starts verified-publisher clock); odd/even minor = pre-release/release
+- [ ] Publisher setup + first pre-release pulled forward to Plan 03 (Entra ID auth — PATs die Dec 2026); here: icon/keywords/manifest polish, odd/even minor = pre-release/release
 - [ ] Open VSX too (Cursor/Windsurf/VSCodium)
 - [ ] CI publish job on tag; THIRD-PARTY-NOTICES generation
 - [ ] Monetization seam only: `license.ts` with `isProEnabled() => true` — nothing else
