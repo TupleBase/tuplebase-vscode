@@ -8,32 +8,55 @@ Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` in
 
 ## Next — Plan 02: Redis + DynamoDB adapters
 
-1. Statement splitter upgrade: double-quoted identifiers + dollar-quoted strings (bites first when dogfooding Postgres)
-2. Compose services + seed script for redis and dynamodb-local (`db:redis`, `db:dynamo`, `db:seed`)
-3. Redis adapter: commands from `.redis` files (one per line, `#` comments), key-namespace tree, optional `"auth": true` → password prompt
-4. `.redis` language contribution + per-language run extraction (SQL statement vs redis line)
-5. DynamoDB adapter: PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain (profile/SSO/env — never stored), `endpoint` for dynamodb-local
-6. Cleanup batch: ~15 deferred minors from Plan 01 reviews (stable tree ids, tightened auth-error regex, CI dedup, etc.)
+- [x] Statement splitter upgrade: double-quoted identifiers + dollar-quoted strings (bites first when dogfooding Postgres)
+- [x] Compose services + seed script for redis and dynamodb-local (`db:redis`, `db:dynamo`, `db:seed`)
+- [ ] Redis adapter: commands from `.redis` files (one per line, `#` comments), key-namespace tree, optional `"auth": true` → password prompt
+- [ ] `.redis` language contribution + per-language run extraction (SQL statement vs redis line)
+- [ ] DynamoDB adapter: PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain (profile/SSO/env — never stored), `endpoint` for dynamodb-local
+- [ ] Postgres TLS options: `sslmode`, CA cert path in connection config (hosted DBs require it)
+- [ ] Cleanup batch: ~15 deferred minors from Plan 01 reviews (stable tree ids, tightened auth-error regex, CI dedup, etc.)
 
-## Plan 03: Autocomplete + query history
+## Plan 03: Workbench — autocomplete + query history
 
-- SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
-- Redis command completion (static table) + key completion via SCAN
-- PartiQL keywords + table/attribute completion from the Dynamo cache
-- Query history: JSONL per workspace, history tree in the sidebar, click to rerun
+Goal: type queries with IntelliSense and run them in place. Running from any `.sql` file already works (Plan 01); this plan adds the completion layer and the frictionless entry points.
 
-## Plan 04: Environment/connection CRUD from the UI
+- [ ] "New Query" command: opens an untitled `sql`/`redis` scratch buffer, runnable immediately (toolbar button on the explorer + command palette)
+- [ ] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
+- [ ] Redis command completion (static table) + key completion via SCAN
+- [ ] PartiQL keywords + table/attribute completion from the Dynamo cache
+- [ ] Query history: JSONL per workspace, history tree in the sidebar, click to rerun
 
-Add/rename/delete environments and connections from the explorer (mini toolbar + context menus) instead of hand-editing `.rowboat.json`. Edits write back to the config file via jsonc-parser `modify`/`applyEdits` so comments and formatting survive. Scope agreed 2026-07-06; design not started — resume brainstorm before implementing.
+## Plan 04: Safety + results-grid table stakes
 
-## Plan 05: Publishing
+- [ ] Prod guardrails: `"readonly": true` flag on an environment → block (or confirm) writes/DDL; nothing stops cmd+enter `DELETE` on prod today
+- [ ] Default query timeout (cancel exists; timeout catches the forgotten runaway)
+- [ ] Grid export/copy: CSV/JSON export, copy cell/row/column
+- [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
+- [ ] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
 
-- Marketplace publisher setup (Entra ID auth — PATs die Dec 2026), `@vscode/vsce`, icon/keywords/manifest polish
-- Publish 0.1.x pre-release early (reserves namespace, starts verified-publisher clock); odd/even minor = pre-release/release
-- Open VSX too (Cursor/Windsurf/VSCodium)
-- CI publish job on tag; THIRD-PARTY-NOTICES generation
-- Monetization seam only: `license.ts` with `isProEnabled() => true` — nothing else
+## Plan 05: Environment/connection CRUD from the UI
+
+- [ ] Explorer goes accordion: every environment becomes a top-level collapsible node (today the tree roots at the active env's connections only)
+- [ ] Environment CRUD (add/rename/delete/duplicate) entirely in the left panel: mini toolbar on the view title + context menu on environment nodes
+- [ ] Connection CRUD (add/edit/remove) opens a webview form in an editor tab on the right — not inline in the tree
+- [ ] Status-bar picker unchanged: still selects the *active* environment for query runs, even with all envs visible in the tree
+- [ ] All edits write back to `.rowboat.json` via jsonc-parser `modify`/`applyEdits` so comments and formatting survive
+- [ ] `contributes.configuration` settings: results page size, max rows, default query timeout
+- [ ] Multi-root workspaces: config still resolves from the first folder — document the limitation (folder picker only if someone asks)
+
+Scope agreed 2026-07-06; design not finalized — brainstorm/design session required before implementing.
+
+## Plan 06: Publishing
+
+- [ ] Marketplace publisher setup (Entra ID auth — PATs die Dec 2026), `@vscode/vsce`, icon/keywords/manifest polish
+- [ ] Publish 0.1.x pre-release early (reserves namespace, starts verified-publisher clock); odd/even minor = pre-release/release
+- [ ] Open VSX too (Cursor/Windsurf/VSCodium)
+- [ ] CI publish job on tag; THIRD-PARTY-NOTICES generation
+- [ ] Monetization seam only: `license.ts` with `isProEnabled() => true` — nothing else
+- [ ] CHANGELOG.md (marketplace renders it) + README screenshots/gif — page quality drives installs
 
 ## Deferred (tracked, not scheduled)
 
-Dotted-identifier tree ids, pg cancellation integration test, `testConnection(cfg)` arg handling, webview pending-queue single slot, statement-splitter for PartiQL edge cases.
+Dotted-identifier tree ids, pg cancellation integration test, `testConnection(cfg)` arg handling, webview pending-queue single slot, statement-splitter for PartiQL edge cases, SSH tunnels (decided: deferred until asked for).
+
+Later / pro territory (deliberately skipped for now): grid cell editing with write-back, EXPLAIN visualizer, telemetry.
