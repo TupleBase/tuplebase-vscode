@@ -6,6 +6,7 @@ import { createEnvStatusBar } from './ui/statusBar'
 import { registerSchemaTree } from './ui/schemaTree'
 import { ResultsPanel } from './ui/resultsPanel'
 import { registerRunQuery } from './core/runQuery'
+import { registerSqlCompletion } from './completion/sql'
 import { registerRedisCompletion } from './completion/redis'
 import { registerNewQuery } from './core/newQuery'
 import { HistoryStore } from './core/history'
@@ -32,6 +33,7 @@ export async function activate(context: vscode.ExtensionContext) {
       historyTree?.refresh()
     }),
     ...(historyTree ? [historyTree] : []),
+    registerSqlCompletion(manager, store, context.workspaceState),
     registerRedisCompletion(manager, store, context.workspaceState),
     registerNewQuery(),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {

@@ -20,12 +20,12 @@ Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` in
 
 Goal: type queries with IntelliSense and run them in place. Running from any `.sql` file already works (Plan 01); this plan adds the completion layer and the frictionless entry points.
 
-- [ ] "New Query" command: opens an untitled `sql`/`redis` scratch buffer, runnable immediately (toolbar button on the explorer + command palette)
-- [ ] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
-- [ ] Redis command completion (static table) + key completion via SCAN
-- [ ] PartiQL keywords + table/attribute completion from the Dynamo cache
-- [ ] Query history: JSONL per workspace, history tree in the sidebar, click to rerun — redact sensitive commands (redis `AUTH`), size cap + pruning
-- [ ] Marketplace publisher setup + first 0.1.x pre-release (pulled forward from Plan 06 — reserves namespace, starts verified-publisher clock)
+- [x] "New Query" command: opens an untitled `sql`/`redis` scratch buffer, runnable immediately (toolbar button on the explorer + command palette)
+- [x] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
+- [x] Redis command completion (static table) + key completion via SCAN
+- [x] PartiQL keywords + table/attribute completion from the Dynamo cache
+- [x] Query history: JSONL per workspace, history tree in the sidebar, click to rerun — redact sensitive commands (redis `AUTH`), size cap + pruning
+- [ ] Marketplace publisher setup + first 0.1.x pre-release — decided 2026-07-07: publishing happens LAST, after Plans 04/05 (needs owner's Azure DevOps/Entra account)
 
 ## Plan 04: Safety + results-grid table stakes
 
