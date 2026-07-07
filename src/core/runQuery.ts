@@ -4,6 +4,7 @@ import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { getFileConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
+import type { HistoryEntry } from './history'
 
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
 const AUTH_ERROR_RE = /password authentication failed|\b28P01\b|\bWRONGPASS\b|\bNOAUTH\b/i
@@ -13,6 +14,7 @@ export function registerRunQuery(
   store: ConfigStore,
   panel: ResultsPanel,
   workspaceState: vscode.Memento,
+  onRan?: (entry: HistoryEntry) => void,
 ): vscode.Disposable {
   let inFlight: AbortController | undefined
 
@@ -52,6 +54,18 @@ export function registerRunQuery(
     }
     const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
     if (!connName) return
+    const env = manager.activeEnvironment ?? ''
+    const adapterId = store.connections(env).find(c => c.name === connName)?.adapter ?? ''
+    const record = (ok: boolean, elapsedMs: number, rowCount?: number) => {
+      try {
+        onRan?.({
+          ts: Date.now(), env, conn: connName, adapter: adapterId,
+          languageId: doc.languageId, statement: stmt, ok, elapsedMs, rowCount,
+        })
+      } catch {
+        // history is best-effort — never fail the run over it
+      }
+    }
 
     inFlight?.abort()
     const mine = new AbortController()
@@ -65,14 +79,17 @@ export function registerRunQuery(
 
     await panel.show()
     panel.post({ type: 'running', statement: stmt })
+    const started = Date.now()
     try {
       const adapter = await manager.getAdapter(connName)
       if (cancelledOrSuperseded()) return
       const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
       if (cancelledOrSuperseded()) return
+      record(true, envelope.elapsedMs, envelope.rowCount)
       panel.post({ type: 'result', envelope, statement: stmt })
     } catch (e) {
       if (cancelledOrSuperseded()) return
+      record(false, Date.now() - started)
       const message = (e as Error).message
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {

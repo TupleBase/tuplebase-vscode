@@ -6,6 +6,10 @@ import { createEnvStatusBar } from './ui/statusBar'
 import { registerSchemaTree } from './ui/schemaTree'
 import { ResultsPanel } from './ui/resultsPanel'
 import { registerRunQuery } from './core/runQuery'
+import { registerRedisCompletion } from './completion/redis'
+import { registerNewQuery } from './core/newQuery'
+import { HistoryStore } from './core/history'
+import { registerHistoryTree } from './ui/historyTree'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -13,6 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault, context.workspaceState)
   const panel = ResultsPanel.register(context)
+  // storageUri is undefined without a workspace — no place for history, skip it
+  const history = context.storageUri ? new HistoryStore(context.storageUri.fsPath) : undefined
+  const historyTree = history ? registerHistoryTree(history, context.workspaceState) : undefined
 
   context.subscriptions.push(
     diagnostics,
@@ -20,7 +27,13 @@ export async function activate(context: vscode.ExtensionContext) {
     manager,
     createEnvStatusBar(manager, store),
     registerSchemaTree(manager, store),
-    registerRunQuery(manager, store, panel, context.workspaceState),
+    registerRunQuery(manager, store, panel, context.workspaceState, entry => {
+      history?.append(entry)
+      historyTree?.refresh()
+    }),
+    ...(historyTree ? [historyTree] : []),
+    registerRedisCompletion(manager, store, context.workspaceState),
+    registerNewQuery(),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
       const deleted = await vault.clearAll()
       void vscode.window.showInformationMessage(`Rowboat: cleared ${deleted.length} stored secret(s)`)

@@ -80,6 +80,11 @@
           "id": "rowboat.explorer",
           "name": "Explorer",
           "icon": "media/rowboat.svg"
+        },
+        {
+          "id": "rowboat.history",
+          "name": "History",
+          "icon": "media/rowboat.svg"
         }
       ],
       "rowboat-panel": [
@@ -103,6 +108,11 @@
         "icon": "$(play)"
       },
       {
+        "command": "rowboat.newQuery",
+        "title": "Rowboat: New Query",
+        "icon": "$(add)"
+      },
+      {
         "command": "rowboat.selectEnvironment",
         "title": "Rowboat: Select Environment"
       },
@@ -122,6 +132,15 @@
       {
         "command": "rowboat.disconnect",
         "title": "Rowboat: Disconnect"
+      },
+      {
+        "command": "rowboat.history.rerun",
+        "title": "Rowboat: Rerun From History"
+      },
+      {
+        "command": "rowboat.history.clear",
+        "title": "Rowboat: Clear Query History",
+        "icon": "$(clear-all)"
       }
     ],
     "menus": {
@@ -134,8 +153,18 @@
       ],
       "view/title": [
         {
+          "command": "rowboat.newQuery",
+          "when": "view == rowboat.explorer",
+          "group": "navigation@1"
+        },
+        {
           "command": "rowboat.refreshExplorer",
           "when": "view == rowboat.explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "rowboat.history.clear",
+          "when": "view == rowboat.history",
           "group": "navigation"
         }
       ],
@@ -143,6 +172,10 @@
         {
           "command": "rowboat.disconnect",
           "when": "view == rowboat.explorer && viewItem == rowboat.connection"
+        },
+        {
+          "command": "rowboat.history.rerun",
+          "when": "view == rowboat.history"
         }
       ]
     },
