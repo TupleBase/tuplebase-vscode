@@ -186,6 +186,8 @@ class DynamoDBAdapter implements Adapter {
         .map(name => ({ kind: 'table' as const, name }))
     }
     if (kind === 'column') {
+      this.tableNames ??= await this.listTables()
+      await Promise.all(this.tableNames.map(name => this.describe(name)))
       // only key attributes are known — dynamo items are schemaless
       return [...this.described].flatMap(([table, desc]) =>
         (desc.AttributeDefinitions ?? [])

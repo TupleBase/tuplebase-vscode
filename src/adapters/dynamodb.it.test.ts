@@ -109,6 +109,14 @@ describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`
     await a.dispose()
   })
 
+  it('hydrates key attributes for completion without opening the schema tree', async () => {
+    const a = dynamodbFactory.create(cfg)
+    await a.connect(cfg)
+    const attrs = await a.searchItems('column', 'boat')
+    expect(attrs.map(item => [item.name, item.parent])).toContainEqual(['boat_id', 'voyages'])
+    await a.dispose()
+  })
+
   it('surfaces AWS errors with their message', async () => {
     const a = dynamodbFactory.create(cfg)
     await a.connect(cfg)
