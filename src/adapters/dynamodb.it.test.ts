@@ -23,8 +23,8 @@ describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`
     const a = dynamodbFactory.create(cfg)
     await a.connect(cfg)
     const r = await a.execute('SELECT * FROM voyages', opts())
-    expect(r.rowCount).toBe(3)
-    for (const name of ['crew_name', 'departed_at', 'destination', 'oars']) {
+    expect(r.rowCount).toBe(6)
+    for (const name of ['crew_name', 'departed_at', 'destination', 'boat_id', 'status', 'weather', 'manifest']) {
       expect(r.columns.map(c => c.name)).toContain(name)
     }
     expect(r.nextPageToken).toBeUndefined()
@@ -35,10 +35,12 @@ describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`
   it('filters with a WHERE clause', async () => {
     const a = dynamodbFactory.create(cfg)
     await a.connect(cfg)
-    const r = await a.execute("SELECT * FROM voyages WHERE crew_name='ada'", opts())
+    const r = await a.execute(
+      "SELECT * FROM voyages WHERE crew_name='ada' AND departed_at='2026-07-01T08:00:00Z'", opts(),
+    )
     expect(r.rowCount).toBe(1)
     expect(r.rows[0][col(r, 'crew_name')]).toBe('ada')
-    expect(r.rows[0][col(r, 'oars')]).toBe(2)
+    expect(r.rows[0][col(r, 'boat_id')]).toBe('boat-1')
     await a.dispose()
   })
 
@@ -48,14 +50,14 @@ describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`
     const first = await a.execute('SELECT * FROM voyages', opts({ pageSize: 2 }))
     expect(first.rows).toHaveLength(2)
     expect(first.nextPageToken).toBeTruthy()
-    const rest = await a.execute('SELECT * FROM voyages', opts({ pageSize: 2, pageToken: first.nextPageToken }))
-    expect(rest.rows).toHaveLength(1)
-    expect(rest.nextPageToken).toBeUndefined()
-    const crews = [
-      ...first.rows.map(row => row[col(first, 'crew_name')]),
-      ...rest.rows.map(row => row[col(rest, 'crew_name')]),
-    ].sort()
-    expect(crews).toEqual(['ada', 'grace', 'linus'])
+    const pages = [first]
+    let page = first
+    while (page.nextPageToken) {
+      page = await a.execute('SELECT * FROM voyages', opts({ pageSize: 2, pageToken: page.nextPageToken }))
+      pages.push(page)
+    }
+    const crews = pages.flatMap(result => result.rows.map(row => row[col(result, 'crew_name')])).sort()
+    expect(crews).toEqual(['ada', 'ada', 'donald', 'grace', 'linus', 'margaret'])
     await a.dispose()
   })
 
@@ -85,12 +87,13 @@ describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`
     const root = await a.getChildren(null)
     expect(root.map(n => [n.label, n.kind, n.hasChildren])).toContainEqual(['voyages', 'table', true])
     const children = await a.getChildren(root.find(n => n.label === 'voyages')!)
-    expect(children.map(n => [n.label, n.kind, n.detail, n.hasChildren])).toEqual([
+    expect(children.map(n => [n.label, n.kind, n.detail, n.hasChildren])).toEqual(expect.arrayContaining([
       ['crew_name', 'key', 'partition key (S)', false],
       ['departed_at', 'key', 'sort key (S)', false],
       ['by-destination', 'index', 'GSI', true],
-    ])
-    const gsiKeys = await a.getChildren(children.find(n => n.kind === 'index')!)
+      ['by-boat-and-time', 'index', 'GSI', true],
+    ]))
+    const gsiKeys = await a.getChildren(children.find(n => n.label === 'by-destination')!)
     expect(gsiKeys.map(n => [n.label, n.kind, n.detail])).toEqual([['destination', 'key', 'partition key (S)']])
     await a.dispose()
   })

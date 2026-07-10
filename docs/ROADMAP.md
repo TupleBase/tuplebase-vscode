@@ -22,6 +22,7 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 
 - [x] "New Query" command: opens an untitled `sql`/`redis` scratch buffer, runnable immediately (toolbar button on the explorer + command palette)
 - [x] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
+- [ ] SQL completion: resolve columns for table-qualified references without an alias (for example, `FROM crew ... crew.id`)
 - [x] Redis command completion (static table) + key completion via SCAN
 - [x] PartiQL keywords + table/attribute completion from the Dynamo cache
 - [x] Query history: JSONL per workspace, history tree in the sidebar, click to rerun — redact sensitive commands (redis `AUTH`), size cap + pruning

@@ -26,7 +26,7 @@ describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgre
     })
     expect(r.columns.map(c => c.name)).toEqual(['name', 'role'])
     expect(r.rows[0]).toEqual(['ada', 'captain'])
-    expect(r.rowCount).toBe(3)
+    expect(r.rowCount).toBe(8)
     expect(r.elapsedMs).toBeGreaterThanOrEqual(0)
     await a.dispose()
   })
@@ -49,7 +49,9 @@ describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgre
     const pub = schemas.find(s => s.label === 'public')!
     expect(pub.kind).toBe('schema')
     const tables = await a.getChildren(pub)
-    expect(tables.map(t => t.label).sort()).toEqual(['crew', 'voyages'])
+    expect(tables.map(t => t.label)).toEqual(expect.arrayContaining([
+      'boats', 'cargo_manifests', 'crew', 'maintenance_logs', 'ports', 'voyage_crew', 'voyages',
+    ]))
     const cols = await a.getChildren(tables.find(t => t.label === 'crew')!)
     expect(cols.map(c => c.label)).toContain('name')
     expect(cols[0].hasChildren).toBe(false)

@@ -47,7 +47,7 @@ describe.skipIf(!process.env.RB_IT)('redis adapter (needs `npm run db:redis`)', 
     const r = await a.execute('# comment\nLRANGE queue:departures 0 -1', {
       pageSize: 2, signal: new AbortController().signal,
     })
-    expect(r.rows).toEqual([[1, 'upstream'], [2, 'downstream']])
+    expect(r.rows).toEqual([[1, 'voyage:103'], [2, 'voyage:104']])
     expect(r.rowCount).toBe(3)
     expect(r.warnings[0]).toMatch(/first 2 of 3/)
     await a.dispose()
@@ -75,19 +75,17 @@ describe.skipIf(!process.env.RB_IT)('redis adapter (needs `npm run db:redis`)', 
     const a = redisFactory.create(cfg)
     await a.connect(cfg)
     const root = await a.getChildren(null)
-    expect(root.map(n => [n.label, n.kind, n.detail])).toEqual([
-      ['boat', 'namespace', '2 keys'],
-      ['crew', 'namespace', '6 keys'],
-      ['queue', 'namespace', '1 key'],
-      ['stats', 'namespace', '1 key'],
-    ])
+    expect(root.map(n => n.label)).toEqual(expect.arrayContaining([
+      'boat', 'config', 'crew', 'events', 'leaderboard', 'metrics', 'port', 'queue', 'stats',
+    ]))
     const crew = await a.getChildren(root.find(n => n.label === 'crew')!)
-    expect(crew.map(n => n.label)).toEqual(['1', '2', '3'])
+    expect(crew.map(n => n.label)).toEqual(expect.arrayContaining(['1', '2', '3', '4', '5', 'active', 'shore-leave']))
     const crew1 = await a.getChildren(crew[0])
-    expect(crew1.map(n => [n.label, n.kind, n.detail, n.hasChildren])).toEqual([
+    expect(crew1.map(n => [n.label, n.kind, n.detail, n.hasChildren])).toEqual(expect.arrayContaining([
       ['name', 'key', 'string', false],
       ['role', 'key', 'string', false],
-    ])
+      ['status', 'key', 'string', false],
+    ]))
     const queue = await a.getChildren(root.find(n => n.label === 'queue')!)
     expect(queue[0].detail).toBe('list')
     await a.dispose()
@@ -97,7 +95,7 @@ describe.skipIf(!process.env.RB_IT)('redis adapter (needs `npm run db:redis`)', 
     const a = redisFactory.create(cfg)
     await a.connect(cfg)
     const items = await a.searchItems('key', 'crew:1:')
-    expect(items.map(i => i.name)).toEqual(['crew:1:name', 'crew:1:role'])
+    expect(items.map(i => i.name)).toEqual(['crew:1:name', 'crew:1:role', 'crew:1:status'])
     await a.dispose()
   })
 

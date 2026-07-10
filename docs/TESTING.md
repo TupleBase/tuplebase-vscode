@@ -27,6 +27,7 @@ npm run watch   # esbuild watch, leave running
    - **Environment picker** — status bar item; switch environments.
    - **Run a query** — open a `.sql` file, write a query, press **cmd+enter**. Results render in the Tabulator grid with paging and cancel.
    - **Redis** — open `scratch.redis` (one command per line, `#` comments), cursor on a line, **cmd+enter**. The explorer shows key namespaces grouped on `:`.
+   - **Fixtures** — the local harbor dataset includes joined Postgres tables, Redis strings/hashes/lists/sets/sorted sets/streams, and DynamoDB composite-key tables with LSI/GSI metadata and nested document values.
    - **Password prompt** — first connection asks for the password (`rowboat`) and stores it in the OS keychain (VS Code SecretStorage). It won't ask again.
 
 While `watch` is running, reload the dev host with **cmd+R** after a code change. Breakpoints in `src/` hit in the main window's debugger.
