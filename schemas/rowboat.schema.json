@@ -10,7 +10,13 @@
       "description": "Named environments, each grouping named connections",
       "additionalProperties": {
         "type": "object",
-        "additionalProperties": { "$ref": "#/definitions/connection" }
+        "properties": {
+          "readonly": { "type": "boolean", "description": "Blocks write statements in this environment" }
+        },
+        "patternProperties": {
+          "^(?!readonly$).*": { "$ref": "#/definitions/connection" }
+        },
+        "additionalProperties": false
       }
     }
   },

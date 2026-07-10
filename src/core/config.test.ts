@@ -34,6 +34,12 @@ describe('parseConfig', () => {
     expect(config?.environments.dev['orders-db'].env).toBe('dev')
     expect(config?.environments.dev['orders-db'].name).toBe('orders-db')
   })
+  it('reads an environment-level readonly guardrail', () => {
+    const { config, errors } = parseConfig('{"environments":{"prod":{"readonly":true,"c":{"adapter":"postgres"}}}}')
+    expect(errors).toEqual([])
+    expect(config?.readonlyEnvironments.prod).toBe(true)
+    expect(config?.environments.prod.c.adapter).toBe('postgres')
+  })
   it('rejects unknown adapter', () => {
     const { errors } = parseConfig('{"environments":{"dev":{"c":{"adapter":"oracle"}}}}')
     expect(errors[0].message).toMatch(/unknown adapter/i)

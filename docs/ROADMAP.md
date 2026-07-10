@@ -33,6 +33,7 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 - [ ] Prod guardrails: `"readonly": true` flag on an environment → block (or confirm) writes; nothing stops cmd+enter `DELETE` on prod today. Write detection is per-adapter: SQL DML/DDL, redis mutating commands (`SET`/`DEL`/`FLUSHALL`…), PartiQL `INSERT`/`UPDATE`/`DELETE` — one SQL regex won't cover it
 - [ ] Default query timeout (cancel exists; timeout catches the forgotten runaway)
 - [ ] Grid export/copy: CSV/JSON export, copy cell/row/column
+- [ ] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
 - [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
 - [ ] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
 

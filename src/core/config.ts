@@ -10,6 +10,7 @@ export interface ConfigError { path: string; message: string }
 export interface RowboatConfig {
   defaultEnvironment?: string
   environments: Record<string, Record<string, ConnectionConfig>>
+  readonlyEnvironments: Record<string, boolean>
 }
 
 const VAR_RE = /\$\{env:([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}/g
@@ -40,13 +41,21 @@ export function parseConfig(
   }
 
   const environments: RowboatConfig['environments'] = {}
+  const readonlyEnvironments: RowboatConfig['readonlyEnvironments'] = {}
   for (const [envName, conns] of Object.entries(raw.environments as Record<string, unknown>)) {
     environments[envName] = {}
     if (typeof conns !== 'object' || conns === null) {
       errors.push({ path: `environments.${envName}`, message: 'must be an object of connections' })
       continue
     }
-    for (const [connName, connRaw] of Object.entries(conns as Record<string, unknown>)) {
+    const entries = Object.entries(conns as Record<string, unknown>)
+    const readonly = entries.find(([name]) => name === 'readonly')?.[1]
+    if (readonly !== undefined && typeof readonly !== 'boolean') {
+      errors.push({ path: `environments.${envName}.readonly`, message: 'must be a boolean' })
+    }
+    readonlyEnvironments[envName] = readonly === true
+    for (const [connName, connRaw] of entries) {
+      if (connName === 'readonly') continue
       const path = `environments.${envName}.${connName}`
       if (typeof connRaw !== 'object' || connRaw === null) {
         errors.push({ path, message: 'connection must be an object' })
@@ -76,7 +85,7 @@ export function parseConfig(
     }
   }
   return {
-    config: { defaultEnvironment: raw.defaultEnvironment, environments },
+    config: { defaultEnvironment: raw.defaultEnvironment, environments, readonlyEnvironments },
     errors,
   }
 }

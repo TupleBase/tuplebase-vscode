@@ -7,6 +7,7 @@ import { errorMessage } from './errors'
 import { getFileConnection, resolveConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
 import { refreshQueryCodeLenses } from '../ui/queryCodeLens'
+import { isWriteStatement } from './querySafety'
 import type { HistoryEntry } from './history'
 
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
@@ -89,6 +90,10 @@ export function registerRunQuery(
     if (!connName) return
     const env = manager.activeEnvironment ?? ''
     const adapterId = store.connections(env).find(c => c.name === connName)?.adapter ?? ''
+    if (store.isReadonly(env) && isWriteStatement(adapterId, stmt)) {
+      void vscode.window.showWarningMessage(`${BRAND}: writes are blocked in readonly environment "${env}"`)
+      return
+    }
     const record = (ok: boolean, elapsedMs: number, rowCount?: number) => {
       try {
         onRan?.({

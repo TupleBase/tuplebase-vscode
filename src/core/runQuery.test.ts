@@ -64,7 +64,7 @@ function makeEditor(doc: unknown, cursorOffset: number) {
   return { document: doc, selection: { isEmpty: true, active: cursorOffset } }
 }
 
-function setup() {
+function setup(readonly = false) {
   const executed: string[] = []
   const adapter = {
     execute: async (stmt: string) => {
@@ -79,6 +79,7 @@ function setup() {
   } as unknown as ConnectionManager
   const store = {
     connections: () => [{ env: 'dev', name: 'local-pg', adapter: 'postgres' }],
+    isReadonly: () => readonly,
   } as unknown as ConfigStore
   const panel = {
     show: async () => {},
@@ -116,5 +117,15 @@ describe('runQuery argument dispatch', () => {
     windowMock.activeTextEditor = makeEditor(makeDoc('select 7', 'file:///a.sql'), 0)
     await handlers.run!(undefined)
     expect(executed).toEqual(['select 7'])
+  })
+
+  it('blocks writes before opening a readonly environment connection', async () => {
+    const { executed } = setup(true)
+    windowMock.activeTextEditor = makeEditor(makeDoc('DELETE FROM crew', 'file:///prod.sql'), 0)
+    await handlers.run!(undefined)
+    expect(executed).toEqual([])
+    expect(windowMock.showWarningMessage).toHaveBeenCalledWith(
+      expect.stringMatching(/writes are blocked in readonly environment "dev"/),
+    )
   })
 })

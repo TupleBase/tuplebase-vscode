@@ -48,6 +48,10 @@ export class ConfigStore implements vscode.Disposable {
     return Object.values(this._config?.environments[env] ?? {})
   }
 
+  isReadonly(env: string): boolean {
+    return this._config?.readonlyEnvironments[env] === true
+  }
+
   private publishDiagnostics(uri: vscode.Uri, errors: ConfigError[]) {
     this.diagnostics.set(
       uri,
