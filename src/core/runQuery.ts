@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { statementAt } from './statements'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
+import { errorMessage } from './errors'
 import { getFileConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
 import type { HistoryEntry } from './history'
@@ -90,7 +91,7 @@ export function registerRunQuery(
     } catch (e) {
       if (cancelledOrSuperseded()) return
       record(false, Date.now() - started)
-      const message = (e as Error).message
+      const message = errorMessage(e)
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
         const retry = await vscode.window.showErrorMessage(

@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { ConnectionConfig, TreeNode } from '../adapters/types'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
+import { errorMessage } from '../core/errors'
 
 export type ExplorerNode =
   | { type: 'connection'; conn: ConnectionConfig }
@@ -61,7 +62,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const children = await adapter.getChildren(el.node)
       return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
-      void vscode.window.showErrorMessage(`Rowboat: ${(e as Error).message}`)
+      void vscode.window.showErrorMessage(`Rowboat: ${errorMessage(e)}`)
       return []
     }
   }
