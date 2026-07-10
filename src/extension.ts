@@ -8,9 +8,10 @@ import { ResultsPanel } from './ui/resultsPanel'
 import { registerRunQuery } from './core/runQuery'
 import { registerSqlCompletion } from './completion/sql'
 import { registerRedisCompletion } from './completion/redis'
-import { registerNewQuery } from './core/newQuery'
+import { registerNewQuery, registerNewQueryOnConnection } from './core/newQuery'
 import { HistoryStore } from './core/history'
 import { registerHistoryTree } from './ui/historyTree'
+import { registerUntitledBindingCleanup } from './core/fileConn'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -36,6 +37,8 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSqlCompletion(manager, store, context.workspaceState),
     registerRedisCompletion(manager, store, context.workspaceState),
     registerNewQuery(),
+    registerNewQueryOnConnection(manager, context.workspaceState),
+    registerUntitledBindingCleanup(context.workspaceState),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
       const deleted = await vault.clearAll()
       void vscode.window.showInformationMessage(`Rowboat: cleared ${deleted.length} stored secret(s)`)

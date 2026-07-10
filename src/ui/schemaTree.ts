@@ -30,10 +30,14 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
 
   getTreeItem(el: ExplorerNode): vscode.TreeItem {
     if (el.type === 'connection') {
+      const connected = this.manager.isConnected(el.conn.name)
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
       item.description = el.conn.adapter
-      item.iconPath = new vscode.ThemeIcon('plug')
-      item.contextValue = 'rowboat.connection'
+      item.iconPath = connected
+        ? new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'))
+        : new vscode.ThemeIcon('plug')
+      item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
+      item.contextValue = connected ? 'rowboat.connection.connected' : 'rowboat.connection.disconnected'
       return item
     }
     const item = new vscode.TreeItem(
@@ -75,7 +79,20 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeEnvironment(() => provider.refresh()),
+    manager.onDidChangeConnections(() => provider.refresh()),
     vscode.commands.registerCommand('rowboat.refreshExplorer', () => provider.refresh()),
+    vscode.commands.registerCommand('rowboat.connect', async (el?: ExplorerNode) => {
+      if (el?.type !== 'connection') return
+      try {
+        await manager.getAdapter(el.conn.name)
+      } catch (e) {
+        const msg = errorMessage(e)
+        // Esc at the password prompt is a user choice, not an error
+        if (!msg.startsWith('Connection cancelled')) {
+          void vscode.window.showErrorMessage(`Rowboat: ${msg}`)
+        }
+      }
+    }),
     vscode.commands.registerCommand('rowboat.disconnect', async (el?: ExplorerNode) => {
       if (el?.type === 'connection') {
         try {
@@ -83,7 +100,6 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
         } catch {
           await manager.disposeAll()
         }
-        provider.refresh()
       }
     }),
   )

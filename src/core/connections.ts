@@ -16,8 +16,11 @@ export class ConnectionManager implements vscode.Disposable {
   ])
   private live = new Map<string, Adapter>()   // key: `${env}/${conn}`
   private pending = new Map<string, Promise<Adapter>>()
+  private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
   private envEmitter = new vscode.EventEmitter<string>()
   readonly onDidChangeEnvironment = this.envEmitter.event
+  private connEmitter = new vscode.EventEmitter<void>()
+  readonly onDidChangeConnections = this.connEmitter.event
 
   constructor(
     private store: ConfigStore,
@@ -76,6 +79,10 @@ export class ConnectionManager implements vscode.Disposable {
     return env ? this.live.get(`${env}/${connName}`) : undefined
   }
 
+  isConnected(connName: string): boolean {
+    return this.liveAdapter(connName) !== undefined
+  }
+
   async getAdapter(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     const key = `${cfg.env}/${cfg.name}`
@@ -83,12 +90,19 @@ export class ConnectionManager implements vscode.Disposable {
     if (existing) return existing
     const inFlight = this.pending.get(key)
     if (inFlight) return inFlight
+    const myEpoch = this.epoch
     const p = (async () => {
       const factory = this.factories.get(cfg.adapter)!
       const resolved = await this.resolve(cfg)
       const adapter = factory.create(resolved)
       await adapter.connect(resolved)
+      if (this.epoch !== myEpoch) {
+        // disposeAll ran while we were connecting (env switch/shutdown) — don't resurrect
+        await adapter.dispose().catch(() => {})
+        throw new Error('Connection cancelled — environment changed while connecting')
+      }
       this.live.set(key, adapter)
+      this.connEmitter.fire()
       return adapter
     })()
     this.pending.set(key, p)
@@ -104,25 +118,29 @@ export class ConnectionManager implements vscode.Disposable {
     const key = `${cfg.env}/${cfg.name}`
     const adapter = this.live.get(key)
     if (adapter) await adapter.dispose().catch(() => {})
-    this.live.delete(key)
+    if (this.live.delete(key)) this.connEmitter.fire()
   }
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     const key = `${cfg.env}/${cfg.name}`
     await this.live.get(key)?.dispose()
-    this.live.delete(key)
+    if (this.live.delete(key)) this.connEmitter.fire()
     await this.vault.deleteConnection(cfg.env, cfg.name)
     return this.getAdapter(connName)
   }
 
   async disposeAll() {
+    this.epoch++
+    const hadLive = this.live.size > 0
     for (const a of this.live.values()) await a.dispose().catch(() => {})
     this.live.clear()
+    if (hadLive) this.connEmitter.fire()
   }
 
   dispose() {
-    void this.disposeAll()
+    // disposeAll fires connEmitter — only dispose it once that finishes
+    void this.disposeAll().finally(() => this.connEmitter.dispose())
     this.envEmitter.dispose()
   }
 }

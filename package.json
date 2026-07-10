@@ -130,8 +130,22 @@
         "title": "Rowboat: Create Config File"
       },
       {
+        "command": "rowboat.connect",
+        "title": "Connect",
+        "category": "Rowboat",
+        "icon": "$(plug)"
+      },
+      {
         "command": "rowboat.disconnect",
-        "title": "Rowboat: Disconnect"
+        "title": "Disconnect",
+        "category": "Rowboat",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "rowboat.newQueryOnConnection",
+        "title": "New Query on This Connection",
+        "category": "Rowboat",
+        "icon": "$(file-code)"
       },
       {
         "command": "rowboat.history.rerun",
@@ -170,12 +184,45 @@
       ],
       "view/item/context": [
         {
+          "command": "rowboat.connect",
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
+          "group": "inline@1"
+        },
+        {
+          "command": "rowboat.newQueryOnConnection",
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected",
+          "group": "inline@1"
+        },
+        {
           "command": "rowboat.disconnect",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection"
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected",
+          "group": "inline@2"
+        },
+        {
+          "command": "rowboat.connect",
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected"
+        },
+        {
+          "command": "rowboat.disconnect",
+          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected"
         },
         {
           "command": "rowboat.history.rerun",
           "when": "view == rowboat.history"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "rowboat.connect",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.disconnect",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.newQueryOnConnection",
+          "when": "false"
         }
       ]
     },
