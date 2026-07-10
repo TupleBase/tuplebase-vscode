@@ -16,6 +16,7 @@ const KIND_ICONS: Record<string, string> = {
   key: 'key',
   index: 'list-tree',
   info: 'info',
+  connect: 'plug',
 }
 
 export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode> {
@@ -47,6 +48,17 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.description = el.node.detail
     item.iconPath = new vscode.ThemeIcon(KIND_ICONS[el.node.kind] ?? 'circle-outline')
     item.contextValue = `rowboat.${el.node.kind}`
+    if (el.node.kind === 'connect') {
+      const env = this.manager.activeEnvironment
+      const conn = env ? this.store.connections(env).find(c => c.name === el.connName) : undefined
+      if (conn) {
+        item.command = {
+          command: 'rowboat.connect',
+          title: 'Connect',
+          arguments: [{ type: 'connection', conn } satisfies ExplorerNode],
+        }
+      }
+    }
     return item
   }
 
@@ -57,12 +69,22 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
         if (!env) return []
         return this.store.connections(env).map(conn => ({ type: 'connection' as const, conn }))
       }
+      // read-only view of live adapters — expanding never connects, otherwise a
+      // refresh after disconnect would silently reconnect expanded nodes
       if (el.type === 'connection') {
-        const adapter = await this.manager.getAdapter(el.conn.name)
+        const adapter = this.manager.liveAdapter(el.conn.name)
+        if (!adapter) {
+          return [{
+            type: 'dbnode' as const,
+            connName: el.conn.name,
+            node: { id: `${el.conn.name}/connect`, label: 'Not connected — click to connect', kind: 'connect', hasChildren: false },
+          }]
+        }
         const children = await adapter.getChildren(null)
         return children.map(node => ({ type: 'dbnode' as const, connName: el.conn.name, node }))
       }
-      const adapter = await this.manager.getAdapter(el.connName)
+      const adapter = this.manager.liveAdapter(el.connName)
+      if (!adapter) return []
       const children = await adapter.getChildren(el.node)
       return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
