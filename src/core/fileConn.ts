@@ -17,6 +17,14 @@ export function clearFileConnection(state: Memento, fsPath: string): Thenable<vo
   return state.update(PREFIX + fsPath, undefined)
 }
 
+// which connection to run against without prompting: the remembered one if
+// still valid, else the only candidate; undefined means ask the user
+export function resolveConnection(remembered: string | undefined, available: string[]): string | undefined {
+  if (remembered && available.includes(remembered)) return remembered
+  if (available.length === 1) return available[0]
+  return undefined
+}
+
 // untitled buffers die with their editor, but VS Code recycles the Untitled-N
 // name — drop the binding on close so the next Untitled-N doesn't silently
 // run against the old connection

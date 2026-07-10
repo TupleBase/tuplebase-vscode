@@ -5,7 +5,7 @@
       "name": "Run Extension",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["${workspaceFolder}/dev/playground", "--extensionDevelopmentPath=${workspaceFolder}"],
+      "args": ["${workspaceFolder}/dev/playground", "--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: build"
     },
@@ -13,7 +13,7 @@
       "name": "Run Extension (empty workspace)",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["${workspaceFolder}/dev/empty-ws", "--extensionDevelopmentPath=${workspaceFolder}"],
+      "args": ["${workspaceFolder}/dev/empty-ws", "--extensionDevelopmentPath=${workspaceFolder}", "--disable-extensions"],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "preLaunchTask": "npm: build"
     }

@@ -3,7 +3,7 @@ import { statementAt } from './statements'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { errorMessage } from './errors'
-import { getFileConnection, setFileConnection } from './fileConn'
+import { getFileConnection, resolveConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
 import type { HistoryEntry } from './history'
 
@@ -34,7 +34,11 @@ export function registerRunQuery(
       void vscode.window.showWarningMessage(`Rowboat: no ${languageId} connections in environment "${env}"`)
       return undefined
     }
-    if (remembered && available.includes(remembered)) return remembered
+    const resolved = resolveConnection(remembered, available)
+    if (resolved) {
+      if (resolved !== remembered) await setFileConnection(workspaceState, fsPath, resolved)
+      return resolved
+    }
     const picked = await vscode.window.showQuickPick(available, {
       placeHolder: `Run against which ${env} connection?`,
     })

@@ -241,7 +241,10 @@
         "mac": "cmd+enter",
         "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
       }
-    ]
+    ],
+    "configurationDefaults": {
+      "workbench.hover.delay": 200
+    }
   },
   "scripts": {
     "build": "node esbuild.mjs",

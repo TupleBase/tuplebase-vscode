@@ -11,7 +11,7 @@ vi.mock('vscode', () => ({
 }))
 
 import type { Memento } from 'vscode'
-import { getFileConnection, registerUntitledBindingCleanup, setFileConnection } from './fileConn'
+import { getFileConnection, registerUntitledBindingCleanup, resolveConnection, setFileConnection } from './fileConn'
 
 function makeMemento(): Memento {
   const map = new Map<string, unknown>()
@@ -43,5 +43,24 @@ describe('untitled binding cleanup', () => {
     closeHandler!({ uri: { scheme: 'file', fsPath: '/w/query.sql' } })
     expect(getFileConnection(state, '/w/query.sql')).toBe('local-pg')
     sub.dispose()
+  })
+})
+
+describe('resolveConnection', () => {
+  it('honours a valid remembered binding', () => {
+    expect(resolveConnection('pg', ['pg', 'dyn'])).toBe('pg')
+  })
+
+  it('auto-picks when exactly one connection matches', () => {
+    expect(resolveConnection(undefined, ['pg'])).toBe('pg')
+  })
+
+  it('prompts (undefined) when several match and nothing is remembered', () => {
+    expect(resolveConnection(undefined, ['pg', 'dyn'])).toBeUndefined()
+  })
+
+  it('ignores a remembered binding that is no longer available', () => {
+    expect(resolveConnection('gone', ['pg', 'dyn'])).toBeUndefined()
+    expect(resolveConnection('gone', ['pg'])).toBe('pg')
   })
 })
