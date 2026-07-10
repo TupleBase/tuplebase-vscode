@@ -104,30 +104,36 @@
     "commands": [
       {
         "command": "rowboat.runQuery",
-        "title": "Rowboat: Run Query",
+        "title": "Run Query (statement at cursor or selection)",
+        "category": "Rowboat",
         "icon": "$(play)"
       },
       {
         "command": "rowboat.newQuery",
-        "title": "Rowboat: New Query",
+        "title": "New Query Scratch (pick engine)",
+        "category": "Rowboat",
         "icon": "$(add)"
       },
       {
         "command": "rowboat.selectEnvironment",
-        "title": "Rowboat: Select Environment"
+        "title": "Select Environment",
+        "category": "Rowboat"
       },
       {
         "command": "rowboat.refreshExplorer",
-        "title": "Rowboat: Refresh Explorer",
+        "title": "Refresh Explorer",
+        "category": "Rowboat",
         "icon": "$(refresh)"
       },
       {
         "command": "rowboat.clearCredentials",
-        "title": "Rowboat: Clear Stored Credentials"
+        "title": "Clear Stored Credentials",
+        "category": "Rowboat"
       },
       {
         "command": "rowboat.createConfig",
-        "title": "Rowboat: Create Config File"
+        "title": "Create Config File",
+        "category": "Rowboat"
       },
       {
         "command": "rowboat.connect",
@@ -149,11 +155,13 @@
       },
       {
         "command": "rowboat.history.rerun",
-        "title": "Rowboat: Rerun From History"
+        "title": "Rerun From History",
+        "category": "Rowboat"
       },
       {
         "command": "rowboat.history.clear",
-        "title": "Rowboat: Clear Query History",
+        "title": "Clear Query History",
+        "category": "Rowboat",
         "icon": "$(clear-all)"
       }
     ],

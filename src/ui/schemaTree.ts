@@ -48,7 +48,9 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.description = el.node.detail
     item.iconPath = new vscode.ThemeIcon(KIND_ICONS[el.node.kind] ?? 'circle-outline')
     item.contextValue = `rowboat.${el.node.kind}`
+    item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
     if (el.node.kind === 'connect') {
+      item.tooltip = `Connect to ${el.connName}`
       const env = this.manager.activeEnvironment
       const conn = env ? this.store.connections(env).find(c => c.name === el.connName) : undefined
       if (conn) {
