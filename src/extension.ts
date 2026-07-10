@@ -1,4 +1,5 @@
 import * as vscode from 'vscode'
+import { BRAND } from './core/brand'
 import { ConfigStore } from './core/configStore'
 import { SecretVault } from './core/secrets'
 import { ConnectionManager } from './core/connections'
@@ -12,6 +13,7 @@ import { registerNewQuery, registerNewQueryOnConnection } from './core/newQuery'
 import { HistoryStore } from './core/history'
 import { registerHistoryTree } from './ui/historyTree'
 import { registerUntitledBindingCleanup } from './core/fileConn'
+import { registerQueryCodeLens } from './ui/queryCodeLens'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -39,14 +41,15 @@ export async function activate(context: vscode.ExtensionContext) {
     registerNewQuery(),
     registerNewQueryOnConnection(manager, context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),
+    registerQueryCodeLens(manager, store, context.workspaceState),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
       const deleted = await vault.clearAll()
-      void vscode.window.showInformationMessage(`Rowboat: cleared ${deleted.length} stored secret(s)`)
+      void vscode.window.showInformationMessage(`${BRAND}: cleared ${deleted.length} stored secret(s)`)
     }),
     vscode.commands.registerCommand('rowboat.createConfig', async () => {
       const folder = vscode.workspace.workspaceFolders?.[0]
       if (!folder) {
-        void vscode.window.showErrorMessage('Rowboat: open a folder first — the config file lives at the workspace root.')
+        void vscode.window.showErrorMessage(`${BRAND}: open a folder first — the config file lives at the workspace root.`)
         return
       }
       const uri = vscode.Uri.joinPath(folder.uri, '.rowboat.json')

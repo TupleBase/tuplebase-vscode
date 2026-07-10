@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import type { ConnectionConfig, TreeNode } from '../adapters/types'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
+import { BRAND } from '../core/brand'
 import { errorMessage } from '../core/errors'
 
 export type ExplorerNode =
@@ -90,7 +91,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const children = await adapter.getChildren(el.node)
       return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
-      void vscode.window.showErrorMessage(`Rowboat: ${errorMessage(e)}`)
+      void vscode.window.showErrorMessage(`${BRAND}: ${errorMessage(e)}`)
       return []
     }
   }
@@ -113,7 +114,7 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
         const msg = errorMessage(e)
         // Esc at the password prompt is a user choice, not an error
         if (!msg.startsWith('Connection cancelled')) {
-          void vscode.window.showErrorMessage(`Rowboat: ${msg}`)
+          void vscode.window.showErrorMessage(`${BRAND}: ${msg}`)
         }
       }
     }),

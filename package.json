@@ -154,6 +154,11 @@
         "icon": "$(file-code)"
       },
       {
+        "command": "rowboat.selectConnectionForFile",
+        "title": "Select Connection for Current File",
+        "category": "Rowboat"
+      },
+      {
         "command": "rowboat.history.rerun",
         "title": "Rerun From History",
         "category": "Rowboat"
@@ -220,6 +225,10 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "rowboat.selectConnectionForFile",
+          "when": "editorLangId == sql || editorLangId == redis"
+        },
         {
           "command": "rowboat.connect",
           "when": "false"

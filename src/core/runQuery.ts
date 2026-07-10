@@ -1,10 +1,12 @@
 import * as vscode from 'vscode'
+import { BRAND } from './brand'
 import { statementAt } from './statements'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { errorMessage } from './errors'
 import { getFileConnection, resolveConnection, setFileConnection } from './fileConn'
 import { ResultsPanel } from '../ui/resultsPanel'
+import { refreshQueryCodeLenses } from '../ui/queryCodeLens'
 import type { HistoryEntry } from './history'
 
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
@@ -22,7 +24,7 @@ export function registerRunQuery(
   const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
     const env = manager.activeEnvironment
     if (!env) {
-      void vscode.window.showWarningMessage('Rowboat: no .rowboat.json config found')
+      void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json config found`)
       return undefined
     }
     const remembered = getFileConnection(workspaceState, fsPath)
@@ -31,30 +33,56 @@ export function registerRunQuery(
       .filter(c => manager.factories.get(c.adapter)?.languageId === languageId)
       .map(c => c.name)
     if (available.length === 0) {
-      void vscode.window.showWarningMessage(`Rowboat: no ${languageId} connections in environment "${env}"`)
+      void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in environment "${env}"`)
       return undefined
     }
     const resolved = resolveConnection(remembered, available)
     if (resolved) {
-      if (resolved !== remembered) await setFileConnection(workspaceState, fsPath, resolved)
+      if (resolved !== remembered) {
+        await setFileConnection(workspaceState, fsPath, resolved)
+        refreshQueryCodeLenses()
+      }
       return resolved
     }
     const picked = await vscode.window.showQuickPick(available, {
       placeHolder: `Run against which ${env} connection?`,
     })
-    if (picked) await setFileConnection(workspaceState, fsPath, picked)
+    if (picked) {
+      await setFileConnection(workspaceState, fsPath, picked)
+      refreshQueryCodeLenses()
+    }
     return picked
   }
 
-  const run = async () => {
-    const editor = vscode.window.activeTextEditor
-    if (!editor) return
-    const doc = editor.document
-    const stmt = editor.selection.isEmpty
-      ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active), doc.languageId)?.text
-      : doc.getText(editor.selection)
+  const findDocument = (uri: vscode.Uri): vscode.TextDocument | undefined => {
+    const uriString = uri.toString()
+    return vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === uriString)?.document
+      ?? vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uriString)
+  }
+
+  const run = async (arg?: vscode.Uri | { uri?: vscode.Uri; offset?: number }) => {
+    let doc: vscode.TextDocument
+    let stmt: string | undefined
+    if (arg && 'uri' in arg && arg.uri && typeof arg.offset === 'number') {
+      const found = findDocument(arg.uri)
+      if (!found) return
+      doc = found
+      stmt = statementAt(doc.getText(), Math.min(arg.offset, doc.getText().length), doc.languageId)?.text
+    } else if (arg && 'fsPath' in arg) {
+      const found = findDocument(arg)
+      if (!found) return
+      doc = found
+      stmt = statementAt(doc.getText(), 0, doc.languageId)?.text
+    } else {
+      const editor = vscode.window.activeTextEditor
+      if (!editor) return
+      doc = editor.document
+      stmt = editor.selection.isEmpty
+        ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active), doc.languageId)?.text
+        : doc.getText(editor.selection)
+    }
     if (!stmt || !stmt.trim()) {
-      void vscode.window.showWarningMessage('Rowboat: no statement at cursor')
+      void vscode.window.showWarningMessage(`${BRAND}: no statement at cursor`)
       return
     }
     const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
@@ -99,11 +127,11 @@ export function registerRunQuery(
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
         const retry = await vscode.window.showErrorMessage(
-          `Rowboat: authentication failed for ${connName}`, 'Re-enter password'
+          `${BRAND}: authentication failed for ${connName}`, 'Re-enter password'
         )
         if (retry) {
           await manager.reconnectWithFreshSecret(connName)
-          await run()
+          await run(arg)
         }
       }
     } finally {

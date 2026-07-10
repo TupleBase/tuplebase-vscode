@@ -1,3 +1,4 @@
+import { BRAND } from './brand'
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
 import type { ConnectionConfig } from '../adapters/types'
 
@@ -54,7 +55,7 @@ export function parseConfig(
       const conn = { ...(connRaw as Record<string, unknown>) }
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
-          errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — Rowboat keeps secrets out of config (prompted and stored on your machine)` })
+          errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — ${BRAND} keeps secrets out of config (prompted and stored on your machine)` })
           delete conn[field]
         }
       }

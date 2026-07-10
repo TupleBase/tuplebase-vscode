@@ -6,7 +6,10 @@ export function splitStatements(text: string): StatementRange[] {
   let i = 0
   const push = (end: number) => {
     const raw = text.slice(start, end)
-    if (raw.trim().length > 0) out.push({ text: raw.trim(), start, end })
+    const trimmed = raw.trim()
+    if (trimmed.length > 0 && hasSqlCode(trimmed)) {
+      out.push({ text: trimmed, start: start + raw.search(/\S/), end })
+    }
     start = end + 1
   }
   while (i < text.length) {
@@ -38,6 +41,25 @@ export function splitStatements(text: string): StatementRange[] {
   }
   push(text.length)
   return out
+}
+
+function hasSqlCode(text: string): boolean {
+  let index = 0
+  while (index < text.length) {
+    if (/\s/.test(text[index])) {
+      index++
+    } else if (text[index] === '-' && text[index + 1] === '-') {
+      index = text.indexOf('\n', index + 2)
+      if (index === -1) return false
+    } else if (text[index] === '/' && text[index + 1] === '*') {
+      const close = text.indexOf('*/', index + 2)
+      if (close === -1) return false
+      index = close + 2
+    } else {
+      return true
+    }
+  }
+  return false
 }
 
 export function splitRedisCommands(text: string): StatementRange[] {

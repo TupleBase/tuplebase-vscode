@@ -3,6 +3,7 @@ import type { Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection } fr
 import { dynamodbFactory } from '../adapters/dynamodb'
 import { postgresFactory } from '../adapters/postgres'
 import { redisFactory } from '../adapters/redis'
+import { BRAND } from './brand'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 
@@ -45,7 +46,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   private findConfig(connName: string): ConnectionConfig {
     const env = this.activeEnvironment
-    if (!env) throw new Error('No Rowboat environment configured (.rowboat.json)')
+    if (!env) throw new Error(`No ${BRAND} environment configured (.rowboat.json)`)
     const cfg = this.store.connections(env).find(c => c.name === connName)
     if (!cfg) throw new Error(`Connection "${connName}" not found in environment "${env}"`)
     return cfg

@@ -1,3 +1,4 @@
+import { BRAND } from '../core/brand'
 import * as vscode from 'vscode'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
@@ -8,8 +9,8 @@ export function createEnvStatusBar(manager: ConnectionManager, store: ConfigStor
   const render = () => {
     const env = manager.activeEnvironment
     if (env) {
-      item.text = `$(database) Rowboat: ${env}`
-      item.tooltip = 'Select Rowboat environment'
+      item.text = `$(database) ${BRAND}: ${env}`
+      item.tooltip = `Select ${BRAND} environment`
       item.show()
     } else {
       item.hide()
@@ -25,7 +26,7 @@ export function createEnvStatusBar(manager: ConnectionManager, store: ConfigStor
         void vscode.window.showWarningMessage('No environments in .rowboat.json')
         return
       }
-      const picked = await vscode.window.showQuickPick(names, { placeHolder: 'Rowboat environment' })
+      const picked = await vscode.window.showQuickPick(names, { placeHolder: `${BRAND} environment` })
       if (picked) await manager.setActiveEnvironment(picked)
     }),
   ]
