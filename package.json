@@ -253,6 +253,17 @@
     ],
     "configurationDefaults": {
       "workbench.hover.delay": 200
+    },
+    "configuration": {
+      "title": "Rowboat",
+      "properties": {
+        "rowboat.queryTimeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1,
+          "description": "Maximum time in milliseconds for a query before Rowboat cancels it."
+        }
+      }
     }
   },
   "scripts": {

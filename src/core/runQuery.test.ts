@@ -19,7 +19,10 @@ const { FakeUri, windowMock, workspaceMock, handlers } = vi.hoisted(() => {
       showErrorMessage: vi.fn(),
       showQuickPick: vi.fn(),
     },
-    workspaceMock: { textDocuments: [] as any[] },
+    workspaceMock: {
+      textDocuments: [] as any[],
+      getConfiguration: () => ({ get: () => 30_000 }),
+    },
     handlers: { run: undefined as ((arg?: unknown) => Promise<void>) | undefined },
   }
 })

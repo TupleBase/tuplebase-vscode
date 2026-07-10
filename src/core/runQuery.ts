@@ -8,6 +8,7 @@ import { getFileConnection, resolveConnection, setFileConnection } from './fileC
 import { ResultsPanel } from '../ui/resultsPanel'
 import { refreshQueryCodeLenses } from '../ui/queryCodeLens'
 import { isWriteStatement } from './querySafety'
+import { DEFAULT_QUERY_TIMEOUT_MS, queryTimeoutMs } from './queryTimeout'
 import type { HistoryEntry } from './history'
 
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
@@ -109,9 +110,17 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
+    const timeoutMs = queryTimeoutMs(vscode.workspace.getConfiguration('rowboat').get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    let timedOut = false
+    const timeout = setTimeout(() => {
+      timedOut = true
+      mine.abort()
+    }, timeoutMs)
     const cancelledOrSuperseded = () => {
       if (!signal.aborted) return false
-      if (inFlight === mine) panel.post({ type: 'error', message: 'Cancelled' })
+      if (inFlight === mine) panel.post({
+        type: 'error', message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled',
+      })
       return true
     }
 
@@ -140,6 +149,7 @@ export function registerRunQuery(
         }
       }
     } finally {
+      clearTimeout(timeout)
       if (inFlight === mine) inFlight = undefined
     }
   }

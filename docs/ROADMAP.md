@@ -30,8 +30,8 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 
 ## Plan 04: Safety + results-grid table stakes
 
-- [ ] Prod guardrails: `"readonly": true` flag on an environment → block (or confirm) writes; nothing stops cmd+enter `DELETE` on prod today. Write detection is per-adapter: SQL DML/DDL, redis mutating commands (`SET`/`DEL`/`FLUSHALL`…), PartiQL `INSERT`/`UPDATE`/`DELETE` — one SQL regex won't cover it
-- [ ] Default query timeout (cancel exists; timeout catches the forgotten runaway)
+- [x] Prod guardrails: `"readonly": true` flag on an environment blocks adapter-specific writes before connecting or executing.
+- [x] Default query timeout: `rowboat.queryTimeoutMs` cancels forgotten runaway queries after 30 seconds by default.
 - [ ] Grid export/copy: CSV/JSON export, copy cell/row/column
 - [ ] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
 - [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
