@@ -71,7 +71,13 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     <span id="status">Run a query to see results.</span>
     <button id="cancel" hidden>Cancel</button>
   </div>
-  <div id="grid"></div>
+  <div id="main">
+    <div id="grid"></div>
+    <div id="detail" hidden>
+      <div id="detail-head"><span>Row detail</span><button id="detail-close" title="Close">✕</button></div>
+      <pre id="detail-json"></pre>
+    </div>
+  </div>
   <script src="${js}"></script>
 </body>
 </html>`

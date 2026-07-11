@@ -23,7 +23,44 @@ body {
   cursor: pointer;
 }
 #cancel:hover { background: var(--vscode-button-secondaryHoverBackground); }
-#grid { height: calc(100vh - 30px); }
+#main { display: flex; height: calc(100vh - 30px); }
+#grid { flex: 1; min-width: 0; height: 100%; }
+#detail {
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+  min-width: 220px;
+  border-left: 1px solid var(--vscode-panel-border);
+  overflow: hidden;
+}
+#detail[hidden] { display: none; }
+#detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-descriptionForeground);
+}
+#detail-close {
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 13px;
+}
+#detail-close:hover { color: var(--vscode-errorForeground); }
+#detail-json {
+  flex: 1;
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  white-space: pre;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--vscode-editor-font-size, var(--vscode-font-size));
+  color: var(--vscode-foreground);
+}
 .null { opacity: 0.6; font-style: italic; }
 
 /* Map Tabulator onto the active VS Code color theme (dark/light/high-contrast). */

@@ -1,4 +1,5 @@
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
+import { formatRow } from './detailJson'
 
 type Envelope = {
   columns: { name: string; type?: string }[]
@@ -15,9 +16,19 @@ type Incoming =
 const vscode = acquireVsCodeApi<{ last?: Incoming }>()
 const status = document.getElementById('status')!
 const cancelBtn = document.getElementById('cancel') as HTMLButtonElement
+const detail = document.getElementById('detail') as HTMLDivElement
+const detailJson = document.getElementById('detail-json')!
+const detailClose = document.getElementById('detail-close') as HTMLButtonElement
 let table: Tabulator | undefined
 
 cancelBtn.addEventListener('click', () => vscode.postMessage({ type: 'cancel' }))
+
+function hideDetail() {
+  if (detail.hidden) return
+  detail.hidden = true
+  table?.redraw()
+}
+detailClose.addEventListener('click', hideDetail)
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
@@ -36,6 +47,7 @@ function toPersistable(msg: Incoming): Incoming {
 }
 
 function render(msg: Incoming) {
+  hideDetail()
   if (msg.type === 'running') {
     status.textContent = `Running: ${msg.statement.slice(0, 120)}…`
     cancelBtn.hidden = false
@@ -66,6 +78,13 @@ function render(msg: Incoming) {
     columns,
     height: '100%',
     layout: 'fitDataStretch',
+  })
+  table.on('rowClick', (_e, row) => {
+    const rowData = row.getData() as Record<string, unknown>
+    const values = envelope.columns.map((_c, i) => rowData[`c${i}`])
+    detailJson.textContent = formatRow(envelope.columns, values)
+    detail.hidden = false
+    table?.redraw()
   })
   vscode.setState({ last: toPersistable(msg) })
 }
