@@ -3,7 +3,7 @@ import * as path from 'node:path'
 
 export interface HistoryEntry {
   ts: number
-  env: string
+  group: string
   conn: string
   adapter: string
   languageId: string

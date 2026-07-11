@@ -16,7 +16,7 @@ class HistoryTreeProvider implements vscode.TreeDataProvider<HistoryEntry> {
     const oneLine = entry.statement.replace(/\s+/g, ' ').trim()
     const item = new vscode.TreeItem(oneLine.slice(0, 60))
     item.description = entry.conn
-    item.tooltip = `${entry.statement}\n\n${entry.env}/${entry.conn} — ${entry.ok ? 'ok' : 'failed'} in ${entry.elapsedMs}ms`
+    item.tooltip = `${entry.statement}\n\n${entry.group}/${entry.conn} — ${entry.ok ? 'ok' : 'failed'} in ${entry.elapsedMs}ms`
     item.iconPath = new vscode.ThemeIcon(entry.ok ? 'history' : 'error')
     item.contextValue = 'rowboat.historyEntry'
     item.command = { command: 'rowboat.history.open', title: 'Open From History', arguments: [entry] }

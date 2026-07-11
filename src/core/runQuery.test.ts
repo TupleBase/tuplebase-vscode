@@ -76,13 +76,14 @@ function setup(readonly = false) {
     },
   }
   const manager = {
-    activeEnvironment: 'dev',
     factories: new Map([['postgres', { languageId: 'sql' }]]),
     getAdapter: async () => adapter,
   } as unknown as ConnectionManager
   const store = {
-    connections: () => [{ env: 'dev', name: 'local-pg', adapter: 'postgres' }],
-    isReadonly: () => readonly,
+    connections: () => [{ group: 'dev', name: 'local-pg', adapter: 'postgres', readonly }],
+    connection: (name: string) =>
+      name === 'local-pg' ? { group: 'dev', name: 'local-pg', adapter: 'postgres', readonly } : undefined,
+    isReadonly: (_name: string) => readonly,
   } as unknown as ConfigStore
   const panel = {
     show: async () => {},
@@ -128,7 +129,7 @@ describe('runQuery argument dispatch', () => {
     await handlers.run!(undefined)
     expect(executed).toEqual([])
     expect(windowMock.showWarningMessage).toHaveBeenCalledWith(
-      expect.stringMatching(/writes are blocked in readonly environment "dev"/),
+      expect.stringMatching(/writes are blocked on read-only connection "local-pg"/),
     )
   })
 })

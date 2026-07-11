@@ -5,7 +5,7 @@ import * as path from 'node:path'
 import { HistoryStore, HistoryEntry } from './history'
 
 const entry = (over: Partial<HistoryEntry> = {}): HistoryEntry => ({
-  ts: 1, env: 'dev', conn: 'local-pg', adapter: 'postgres', languageId: 'sql',
+  ts: 1, group: 'dev', conn: 'local-pg', adapter: 'postgres', languageId: 'sql',
   statement: 'select 1', ok: true, elapsedMs: 5, ...over,
 })
 

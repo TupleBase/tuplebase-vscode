@@ -24,20 +24,15 @@ export function registerRunQuery(
   let inFlight: AbortController | undefined
 
   const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
-    const env = manager.activeEnvironment
-    if (!env) {
-      void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json config found`)
-      return undefined
-    }
     const remembered = getFileConnection(workspaceState, fsPath)
-    // only connections whose adapter speaks this editor language
-    const available = store.connections(env)
+    // only connections whose adapter speaks this editor language, across all groups
+    const matching = store.connections()
       .filter(c => manager.factories.get(c.adapter)?.languageId === languageId)
-      .map(c => c.name)
-    if (available.length === 0) {
-      void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in environment "${env}"`)
+    if (matching.length === 0) {
+      void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in .rowboat.json`)
       return undefined
     }
+    const available = matching.map(c => c.name)
     const resolved = resolveConnection(remembered, available)
     if (resolved) {
       if (resolved !== remembered) {
@@ -46,14 +41,15 @@ export function registerRunQuery(
       }
       return resolved
     }
-    const picked = await vscode.window.showQuickPick(available, {
-      placeHolder: `Run against which ${env} connection?`,
-    })
+    const picked = await vscode.window.showQuickPick(
+      matching.map(c => ({ label: c.name, description: c.group })),
+      { placeHolder: 'Run against which connection?' },
+    )
     if (picked) {
-      await setFileConnection(workspaceState, fsPath, picked)
+      await setFileConnection(workspaceState, fsPath, picked.label)
       refreshQueryCodeLenses()
     }
-    return picked
+    return picked?.label
   }
 
   const findDocument = (uri: vscode.Uri): vscode.TextDocument | undefined => {
@@ -63,11 +59,11 @@ export function registerRunQuery(
   }
 
   const record = (
-    env: string, conn: string, adapter: string, languageId: string,
+    group: string, conn: string, adapter: string, languageId: string,
     statement: string, ok: boolean, elapsedMs: number, rowCount?: number,
   ) => {
     try {
-      onRan?.({ ts: Date.now(), env, conn, adapter, languageId, statement, ok, elapsedMs, rowCount })
+      onRan?.({ ts: Date.now(), group, conn, adapter, languageId, statement, ok, elapsedMs, rowCount })
     } catch {
       // history is best-effort — never fail the run over it
     }
@@ -100,10 +96,11 @@ export function registerRunQuery(
     }
     const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
     if (!connName) return
-    const env = manager.activeEnvironment ?? ''
-    const adapterId = store.connections(env).find(c => c.name === connName)?.adapter ?? ''
-    if (store.isReadonly(env) && isWriteStatement(adapterId, stmt)) {
-      void vscode.window.showWarningMessage(`${BRAND}: writes are blocked in readonly environment "${env}"`)
+    const conn = store.connection(connName)
+    const adapterId = conn?.adapter ?? ''
+    const group = conn?.group ?? ''
+    if (store.isReadonly(connName) && isWriteStatement(adapterId, stmt)) {
+      void vscode.window.showWarningMessage(`${BRAND}: writes are blocked on read-only connection "${connName}"`)
       return
     }
     inFlight?.abort()
@@ -133,11 +130,11 @@ export function registerRunQuery(
       if (cancelledOrSuperseded()) return
       const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
       if (cancelledOrSuperseded()) return
-      record(env, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
+      record(group, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
       panel.post({ type: 'result', index: 0, envelope, statement: stmt })
     } catch (e) {
       if (cancelledOrSuperseded()) return
-      record(env, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
+      record(group, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
       const message = errorMessage(e)
       panel.post({ type: 'error', index: 0, message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
@@ -169,9 +166,10 @@ export function registerRunQuery(
     }
     const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
     if (!connName) return
-    const env = manager.activeEnvironment ?? ''
-    const adapterId = store.connections(env).find(c => c.name === connName)?.adapter ?? ''
-    const readonly = store.isReadonly(env)
+    const conn = store.connection(connName)
+    const adapterId = conn?.adapter ?? ''
+    const group = conn?.group ?? ''
+    const readonly = store.isReadonly(connName)
 
     inFlight?.abort()
     const mine = new AbortController()
@@ -195,7 +193,7 @@ export function registerRunQuery(
       if (signal.aborted) break
       const stmt = statements[index]
       if (readonly && isWriteStatement(adapterId, stmt)) {
-        panel.post({ type: 'error', index, message: `Writes are blocked in readonly environment "${env}"` })
+        panel.post({ type: 'error', index, message: `Writes are blocked on read-only connection "${connName}"` })
         continue
       }
       panel.post({ type: 'running', index, statement: stmt })
@@ -208,14 +206,14 @@ export function registerRunQuery(
           if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
           break
         }
-        record(env, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
+        record(group, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
         panel.post({ type: 'result', index, statement: stmt, envelope })
       } catch (e) {
         if (signal.aborted) {
           if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
           break
         }
-        record(env, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
+        record(group, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
         panel.post({ type: 'error', index, message: `Error: ${errorMessage(e)}` })
       } finally {
         clearTimeout(timer)
