@@ -26,6 +26,15 @@ describe('splitStatements', () => {
     expect(splitStatements(';;  ;')).toEqual([])
   })
 
+  it('anchors a statement start past a previous line trailing comment', () => {
+    const text = 'select 1; -- note\nselect 2;'
+    const r = splitStatements(text)
+    // the trailing comment stays out of the next statement's text and offset,
+    // so the Run CodeLens anchors on the `select 2` line, not the comment above
+    expect(r.map(s => s.text)).toEqual(['select 1', 'select 2'])
+    expect(text.slice(r[1].start).startsWith('select 2')).toBe(true)
+  })
+
   it('ignores semicolons inside double-quoted identifiers', () => {
     const r = splitStatements('select 1 as ";not;a;split"; select 2')
     expect(r.map(s => s.text)).toEqual(['select 1 as ";not;a;split"', 'select 2'])

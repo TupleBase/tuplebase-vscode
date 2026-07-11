@@ -11,9 +11,12 @@ export function splitStatements(text: string, dollarQuoting = true): StatementRa
   let i = 0
   const push = (end: number) => {
     const raw = text.slice(start, end)
-    const trimmed = raw.trim()
-    if (trimmed.length > 0 && hasSqlCode(trimmed)) {
-      out.push({ text: trimmed, start: start + raw.search(/\S/), end })
+    // anchor on the first SQL token, skipping leading comments — a trailing
+    // inline comment on the previous line (before this `;`) would otherwise be
+    // swept in and shift the Run CodeLens off the actual query line
+    const code = firstCodeIndex(raw)
+    if (code >= 0) {
+      out.push({ text: raw.slice(code).trim(), start: start + code, end })
     }
     start = end + 1
   }
@@ -48,23 +51,26 @@ export function splitStatements(text: string, dollarQuoting = true): StatementRa
   return out
 }
 
-function hasSqlCode(text: string): boolean {
+// Index of the first SQL code character, skipping leading whitespace and any
+// leading line/block comments; -1 when the fragment is entirely blank/comment.
+function firstCodeIndex(text: string): number {
   let index = 0
   while (index < text.length) {
     if (/\s/.test(text[index])) {
       index++
     } else if (text[index] === '-' && text[index + 1] === '-') {
-      index = text.indexOf('\n', index + 2)
-      if (index === -1) return false
+      const nl = text.indexOf('\n', index + 2)
+      if (nl === -1) return -1
+      index = nl + 1
     } else if (text[index] === '/' && text[index + 1] === '*') {
       const close = text.indexOf('*/', index + 2)
-      if (close === -1) return false
+      if (close === -1) return -1
       index = close + 2
     } else {
-      return true
+      return index
     }
   }
-  return false
+  return -1
 }
 
 export function splitRedisCommands(text: string): StatementRange[] {
