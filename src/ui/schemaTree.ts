@@ -4,6 +4,9 @@ import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
 import { BRAND } from '../core/brand'
 import { errorMessage } from '../core/errors'
+import { moveConnection } from '../core/configWriter'
+
+const CONN_MIME = 'application/vnd.rowboat.connection'
 
 export type ExplorerNode =
   | { type: 'group'; name: string }
@@ -106,9 +109,48 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   }
 }
 
+// Drag a connection node onto a group to move it there — persisted to
+// .rowboat.json via jsonc writeback; the file watcher refreshes the tree.
+function connectionDragAndDrop(store: ConfigStore): vscode.TreeDragAndDropController<ExplorerNode> {
+  return {
+    dragMimeTypes: [CONN_MIME],
+    dropMimeTypes: [CONN_MIME],
+    handleDrag(source, dataTransfer) {
+      const moving = source
+        .filter((n): n is Extract<ExplorerNode, { type: 'connection' }> => n.type === 'connection')
+        .map(n => ({ name: n.conn.name, group: n.conn.group }))
+      if (moving.length) dataTransfer.set(CONN_MIME, new vscode.DataTransferItem(JSON.stringify(moving)))
+    },
+    async handleDrop(target, dataTransfer) {
+      const item = dataTransfer.get(CONN_MIME)
+      const toGroup = target?.type === 'group' ? target.name : target?.type === 'connection' ? target.conn.group : undefined
+      const uri = store.configUri
+      if (!item || !toGroup || !uri) return
+      let moving: { name: string; group: string }[]
+      try {
+        moving = JSON.parse(await item.asString())
+      } catch {
+        return
+      }
+      let text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8')
+      let changed = false
+      for (const m of moving) {
+        if (m.group !== toGroup) {
+          text = moveConnection(text, m.group, toGroup, m.name)
+          changed = true
+        }
+      }
+      if (changed) await vscode.workspace.fs.writeFile(uri, Buffer.from(text, 'utf8'))
+    },
+  }
+}
+
 export function registerSchemaTree(manager: ConnectionManager, store: ConfigStore): vscode.Disposable {
   const provider = new SchemaTreeProvider(manager, store)
-  const view = vscode.window.createTreeView('rowboat.explorer', { treeDataProvider: provider })
+  const view = vscode.window.createTreeView('rowboat.explorer', {
+    treeDataProvider: provider,
+    dragAndDropController: connectionDragAndDrop(store),
+  })
   return vscode.Disposable.from(
     view,
     store.onDidChange(() => provider.refresh()),
