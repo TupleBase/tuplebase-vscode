@@ -40,7 +40,7 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), SQL Server (adapter), ClickHouse (adapter), Cassandra (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), SQL Server (adapter), ClickHouse (adapter), Cassandra (adapter), Neo4j (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
 
 Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
 
@@ -54,7 +54,7 @@ Each has a local image/file, so it gets a real live-container integration test l
 | MongoDB | `mongo` | first non-SQL surface (MQL) |
 | ✅ MS SQL Server | `mcr.microsoft.com/mssql/server` | **shipped** — `src/adapters/mssql/`, tedious driver, `information_schema` tree; fetch+slice paging (T-SQL has no LIMIT) |
 | ✅ ClickHouse | `clickhouse/clickhouse-server` | **shipped** — `src/adapters/clickhouse/`, HTTP driver, `system.*` schema tree, optional password auth |
-| Neo4j | `neo4j` | Cypher, graph |
+| ✅ Neo4j | `neo4j` | **shipped** — `src/adapters/neo4j/`, Cypher over Bolt, labels→properties tree, own Cypher completion, SKIP/LIMIT paging |
 | ✅ Cassandra / ScyllaDB | `cassandra` / `scylladb/scylla` | **shipped** — `src/adapters/cassandra/`, CQL, native `pageState` paging, `system_schema.*` tree (ScyllaDB is CQL-compatible) |
 | Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | heavy; single-node + memory limits |
 | Kafka | `apache/kafka` | KRaft single-node; topic browse / consume, not a DB |

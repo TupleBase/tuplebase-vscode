@@ -9,6 +9,7 @@ import { presentation as sqlite } from './sqlite/presentation'
 import { presentation as mssql } from './mssql/presentation'
 import { presentation as clickhouse } from './clickhouse/presentation'
 import { presentation as cassandra } from './cassandra/presentation'
+import { presentation as neo4j } from './neo4j/presentation'
 import { presentation as redis } from './redis/presentation'
 import { presentation as dynamodb } from './dynamodb/presentation'
 
@@ -20,7 +21,7 @@ import { presentation as dynamodb } from './dynamodb/presentation'
 // first time one of its connections is opened. Config validation, the JSON
 // schema, the connection form, tree icons, completion and the connection manager
 // all read from here.
-const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, mssql, clickhouse, cassandra, redis, dynamodb]
+const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, mssql, clickhouse, cassandra, neo4j, redis, dynamodb]
 
 interface AdapterChunk { factory: AdapterFactory; completion?: CompletionContribution }
 

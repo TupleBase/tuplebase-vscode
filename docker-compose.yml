@@ -59,6 +59,18 @@ services:
       timeout: 10s
       retries: 40
       start_period: 40s
+  neo4j:
+    image: neo4j:5
+    profiles: ["neo4j", "all"]
+    ports: ["7474:7474", "7687:7687"]
+    environment:
+      NEO4J_AUTH: neo4j/rowboatpass
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p rowboatpass 'RETURN 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]

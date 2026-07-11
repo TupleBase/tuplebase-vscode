@@ -59,6 +59,13 @@
         "port": 9042,
         "datacenter": "datacenter1",
         "keyspace": "rowboat"
+      },
+      "local-neo4j": {
+        "adapter": "neo4j",
+        "host": "localhost",
+        "port": 7687,
+        "database": "neo4j",
+        "user": "neo4j"
       }
     },
     "Test": {

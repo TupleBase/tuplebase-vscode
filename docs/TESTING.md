@@ -13,6 +13,7 @@ npm run db:mariadb    # dockerized MariaDB on :3307, seeded (reached via the mys
 npm run db:clickhouse # dockerized ClickHouse on :8123, seeded
 npm run db:mssql      # dockerized SQL Server on :1433, seeded (heavy image; SA password in db:mssql)
 npm run db:cassandra  # dockerized Cassandra on :9042, seeded (slow JVM boot)
+npm run db:neo4j      # dockerized Neo4j on :7687 (Bolt) / :7474, seeded
 npm run db:seed:big   # opt-in high-volume seeds for paging (pg 10k rows, redis 5k keys, dynamo 2k items)
 ```
 
@@ -46,7 +47,7 @@ Three layers:
 
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
-RB_IT=1 npx vitest run   # unit + integration — needs db:postgres + db:mysql + db:mariadb + db:mssql + db:clickhouse + db:cassandra + db:redis + db:dynamo
+RB_IT=1 npx vitest run   # unit + integration — needs db:postgres + db:mysql + db:mariadb + db:mssql + db:clickhouse + db:cassandra + db:neo4j + db:redis + db:dynamo
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```
