@@ -64,7 +64,6 @@ const columnResult = (name: string, detail: string | undefined): CompletionResul
   ({ label: name, insertText: name, kind: 'column', ...(detail ? { detail } : {}) })
 
 export const postgresCompletion: CompletionContribution = {
-  triggerCharacters: ['.', ' ', '"'],
   async provide(ctx: CompletionContext): Promise<CompletionResult[]> {
     // live adapters only — never connect, never prompt (mirrors redis keys)
     if (!ctx.connected) return []

@@ -72,7 +72,6 @@ export function wordPrefix(linePrefix: string): string {
 }
 
 export const redisCompletion: CompletionContribution = {
-  triggerCharacters: [' '],
   async provide(ctx: CompletionContext): Promise<CompletionResult[]> {
     const kind = lineContext(ctx.linePrefix)
     if (kind === 'none') return []

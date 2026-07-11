@@ -208,8 +208,6 @@ class DynamoDBAdapter implements Adapter {
 
 export const dynamodbFactory: AdapterFactory = {
   id: 'dynamodb',
-  languageId: 'sql',
-  statementSyntax: 'partiql',
   validate(raw) {
     return typeof raw.region === 'string' && raw.region !== '' ? [] : ['region is required']
   },

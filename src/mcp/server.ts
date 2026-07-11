@@ -4,7 +4,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { parseConfig, type RowboatConfig } from '../core/config'
-import { adapterFactories } from '../adapters/registry'
+import { loadFactories } from '../adapters/registry'
 import { envSecretSource } from './secrets'
 import { McpService } from './service'
 
@@ -34,7 +34,7 @@ const asError = (e: unknown) => ({
 async function main() {
   const allowWrites = /^(1|true|yes)$/i.test(process.env.ROWBOAT_MCP_ALLOW_WRITES ?? '')
   const maxRows = Number(process.env.ROWBOAT_MCP_MAX_ROWS) || undefined
-  const service = new McpService(loadConfig(), adapterFactories(), envSecretSource(), { allowWrites, maxRows })
+  const service = new McpService(loadConfig(), await loadFactories(), envSecretSource(), { allowWrites, maxRows })
 
   const server = new McpServer({ name: 'rowboat', version: '0.1.0' })
 

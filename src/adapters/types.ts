@@ -66,13 +66,13 @@ export interface Adapter {
 
 // How a file of statements is split into runnable units. 'sql' is postgres-tuned
 // (dollar-quoting); 'partiql' is DynamoDB's SQL dialect (no dollar-quoting);
-// 'redis' is one command per line. Defaults to 'sql' when a factory omits it.
+// 'redis' is one command per line. Defaults to 'sql' when a presentation omits it.
 export type StatementSyntax = 'sql' | 'partiql' | 'redis'
 
+// The connect-time half of an adapter: what the driver needs. Loaded lazily
+// (loadFactory) so its driver import doesn't run until a connection is opened.
 export interface AdapterFactory {
   id: AdapterId
-  languageId: string   // editor language whose files run against this adapter ('sql', 'redis', …)
-  statementSyntax?: StatementSyntax
   validate(raw: Record<string, unknown>): string[]
   requiredSecrets(cfg: ConnectionConfig): string[]
   create(cfg: ResolvedConnection): Adapter
@@ -92,13 +92,19 @@ export interface Field {
   description?: string   // surfaced in the generated JSON schema
 }
 
+// Eager per-adapter metadata — pure data, no driver/vscode imports. This is the
+// "manifest" the extension loads at activation to render the tree, the picker and
+// the connection form and to route queries, all without loading any adapter code.
 export interface AdapterPresentation {
   id: AdapterId
   label: string
-  codicon: string   // fallback tree icon when no bundled SVG
-  emoji: string     // connection-form type card
-  blurb: string     // one-line card subtitle
-  iconFile?: string // basename of the adapter's bundled SVG (Task 2), resolved under dist/adapters/<id>/
+  codicon: string          // fallback tree icon when no bundled SVG
+  emoji: string            // connection-form type card
+  blurb: string            // one-line card subtitle
+  iconFile?: string        // basename of the adapter's bundled SVG, resolved under dist/adapters/<id>/
+  languageId: string       // editor language whose files run against this adapter ('sql', 'redis', …)
+  statementSyntax?: StatementSyntax
+  completionTriggers?: string[]   // trigger chars for completion (eager — the provider loads lazily)
   fields: Field[]
 }
 
@@ -132,15 +138,16 @@ export interface CompletionContext {
 }
 
 export interface CompletionContribution {
-  triggerCharacters: string[]
   provide(ctx: CompletionContext): Promise<CompletionResult[]>
 }
 
-// ── Descriptor ───────────────────────────────────────────────────────────────
-// One self-contained plugin per database type: everything the host needs to
-// register it, collected in src/adapters/<id>/index.ts.
-export interface AdapterDescriptor {
+// ── Module ───────────────────────────────────────────────────────────────────
+// One self-contained plugin per database type (src/adapters/<id>/index.ts). The
+// presentation is eager data; the factory and completion are loaded on demand via
+// dynamic import so their driver/parsing code stays out of the activation path.
+// This is what lets the registry scale to hundreds of adapters with flat startup.
+export interface AdapterModule {
   presentation: AdapterPresentation
-  factory: AdapterFactory
-  completion?: CompletionContribution
+  loadFactory(): Promise<AdapterFactory>
+  loadCompletion?(): Promise<CompletionContribution>
 }

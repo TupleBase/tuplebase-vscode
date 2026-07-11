@@ -1,24 +1,8 @@
-import type { AdapterDescriptor } from '../types'
-import { dynamodbFactory } from './adapter'
-import { dynamodbCompletion } from './completion'
+import type { AdapterModule } from '../types'
+import { presentation } from './presentation'
 
-export const dynamodb: AdapterDescriptor = {
-  presentation: {
-    id: 'dynamodb',
-    label: 'DynamoDB',
-    codicon: 'cloud',
-    emoji: '🟧',
-    blurb: 'AWS · PartiQL',
-    iconFile: 'dynamodb.svg',
-    fields: [
-      { key: 'region', label: 'Region', kind: 'text', required: true },
-      { key: 'profile', label: 'AWS profile', kind: 'text' },
-      {
-        key: 'endpoint', label: 'Endpoint', kind: 'text',
-        description: 'Custom endpoint, e.g. http://localhost:8000 for dynamodb-local',
-      },
-    ],
-  },
-  factory: dynamodbFactory,
-  completion: dynamodbCompletion,
+export const dynamodb: AdapterModule = {
+  presentation,
+  loadFactory: () => import('./adapter').then(m => m.dynamodbFactory),
+  loadCompletion: () => import('./completion').then(m => m.dynamodbCompletion),
 }

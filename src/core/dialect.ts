@@ -1,6 +1,6 @@
 import type * as vscode from 'vscode'
 import type { StatementSyntax } from '../adapters/types'
-import { ConnectionManager } from './connections'
+import { presentationOf } from '../adapters/registry'
 import { ConfigStore } from './configStore'
 import { getFileConnection } from './fileConn'
 
@@ -9,7 +9,6 @@ import { getFileConnection } from './fileConn'
 // is SQL). Lets DynamoDB files split as PartiQL while postgres files keep
 // dollar-quoting, even though both use the 'sql' editor language.
 export function fileStatementSyntax(
-  manager: ConnectionManager,
   store: ConfigStore,
   workspaceState: vscode.Memento,
   fsPath: string,
@@ -17,6 +16,6 @@ export function fileStatementSyntax(
 ): StatementSyntax {
   const connName = getFileConnection(workspaceState, fsPath)
   const adapter = connName ? store.connection(connName)?.adapter : undefined
-  const syntax = adapter ? manager.factories.get(adapter)?.statementSyntax : undefined
+  const syntax = adapter ? presentationOf(adapter)?.statementSyntax : undefined
   return syntax ?? (languageId === 'redis' ? 'redis' : 'sql')
 }

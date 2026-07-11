@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSchemaTree(manager, store, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store),
     registerExplorerCommands(store),
-    registerMcpConfig(context.extensionUri, store, manager, vault),
+    registerMcpConfig(context.extensionUri, store, vault),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {
       history?.append(entry)
       historyTree?.refresh()
@@ -42,7 +42,7 @@ export async function activate(context: vscode.ExtensionContext) {
     ...(historyTree ? [historyTree] : []),
     registerCompletions(manager, store, context.workspaceState),
     registerNewQuery(),
-    registerNewQueryOnConnection(manager, context.workspaceState),
+    registerNewQueryOnConnection(context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),
     registerQueryCodeLens(manager, store, context.workspaceState),
     vscode.commands.registerCommand('rowboat.addGroup', async () => {

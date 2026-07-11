@@ -21,7 +21,6 @@ function fakeFactory(recorder: { executed: string[] }, requiredSecrets: string[]
   }
   return {
     id: 'postgres',
-    languageId: 'sql',
     validate: () => [],
     requiredSecrets: () => requiredSecrets,
     create: () => adapter,

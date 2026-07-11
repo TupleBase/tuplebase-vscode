@@ -15,7 +15,7 @@ vi.mock('vscode', () => ({
   window: {},
 }))
 
-import type { Adapter, AdapterFactory } from '../adapters/types'
+import type { Adapter, AdapterFactory, AdapterModule } from '../adapters/types'
 import { ConnectionManager } from './connections'
 import type { ConfigStore } from './configStore'
 import type { SecretVault } from './secrets'
@@ -36,7 +36,6 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
   })
   const factory: AdapterFactory = {
     id: 'fake',
-    languageId: 'sql',
     validate: () => [],
     requiredSecrets: () => [],
     create: cfg => {
@@ -44,6 +43,12 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
       return makeAdapter(cfg.name)
     },
   }
+  const modules = new Map<string, AdapterModule>([
+    ['fake', {
+      presentation: { id: 'fake', label: 'Fake', codicon: 'database', emoji: '?', blurb: '', languageId: 'sql', fields: [] },
+      loadFactory: async () => factory,
+    }],
+  ])
   const store = {
     connection: (name: string) =>
       name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false } : undefined,
@@ -54,8 +59,7 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
     store: async () => {},
     deleteConnection: async (name: string) => { deleted.push(name) },
   } as unknown as SecretVault
-  const manager = new ConnectionManager(store, vault)
-  manager.factories.set('fake', factory)
+  const manager = new ConnectionManager(store, vault, modules)
   return { manager, connects, disposed, deleted }
 }
 

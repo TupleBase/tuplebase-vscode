@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 import { BRAND } from '../core/brand'
 import { ConfigStore } from '../core/configStore'
-import { ConnectionManager } from '../core/connections'
 import { SecretVault } from '../core/secrets'
+import { adapterById } from '../adapters/registry'
 import { secretEnvVar } from '../mcp/secrets'
 
 // Emit a ready-to-paste MCP client config that launches the bundled server with
@@ -11,7 +11,6 @@ import { secretEnvVar } from '../mcp/secrets'
 export function registerMcpConfig(
   extensionUri: vscode.Uri,
   store: ConfigStore,
-  manager: ConnectionManager,
   vault: SecretVault,
 ): vscode.Disposable {
   return vscode.commands.registerCommand('rowboat.showMcpConfig', async () => {
@@ -21,7 +20,8 @@ export function registerMcpConfig(
 
     let missing = 0
     for (const cfg of store.connections()) {
-      const fields = [...(manager.factories.get(cfg.adapter)?.requiredSecrets(cfg) ?? [])]
+      const factory = await adapterById.get(cfg.adapter)?.loadFactory()
+      const fields = [...(factory?.requiredSecrets(cfg) ?? [])]
       if (cfg.ssh?.passphrase) fields.push('ssh:passphrase')
       if (cfg.ssh?.password) fields.push('ssh:password')
       for (const field of fields) {

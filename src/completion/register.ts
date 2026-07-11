@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import type { CompletionContext, CompletionResult } from '../adapters/types'
+import type { CompletionContext, CompletionContribution, CompletionResult } from '../adapters/types'
 import { ADAPTERS, adapterById } from '../adapters/registry'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
@@ -28,20 +28,29 @@ function toItem(r: CompletionResult, position: vscode.Position): vscode.Completi
 
 // One vscode completion provider per query language, dispatching to the adapter
 // bound to the file's connection — so postgres SQL and DynamoDB PartiQL share the
-// 'sql' language yet get their own completions. Registering a new database's
-// completion needs only its descriptor; nothing here changes.
+// 'sql' language yet get their own completions. Trigger characters come from the
+// eager presentation; the provider itself loads lazily (and is cached) on first
+// use. Registering a new database's completion needs only its module.
 export function registerCompletions(
   manager: ConnectionManager,
   store: ConfigStore,
   workspaceState: vscode.Memento,
 ): vscode.Disposable {
   const triggersByLang = new Map<string, Set<string>>()
-  for (const d of ADAPTERS) {
-    if (!d.completion) continue
-    const lang = d.factory.languageId
-    const set = triggersByLang.get(lang) ?? new Set<string>()
-    for (const t of d.completion.triggerCharacters) set.add(t)
-    triggersByLang.set(lang, set)
+  for (const m of ADAPTERS) {
+    if (!m.loadCompletion) continue
+    const set = triggersByLang.get(m.presentation.languageId) ?? new Set<string>()
+    for (const t of m.presentation.completionTriggers ?? []) set.add(t)
+    triggersByLang.set(m.presentation.languageId, set)
+  }
+
+  const loaded = new Map<string, CompletionContribution>()
+  const loadCompletion = async (adapterId: string): Promise<CompletionContribution | undefined> => {
+    const cached = loaded.get(adapterId)
+    if (cached) return cached
+    const contribution = await adapterById.get(adapterId)?.loadCompletion?.()
+    if (contribution) loaded.set(adapterId, contribution)
+    return contribution
   }
 
   const disposables: vscode.Disposable[] = []
@@ -52,8 +61,8 @@ export function registerCompletions(
         if (!connName) return []
         const cfg = store.connection(connName)
         if (!cfg) return []
-        const descriptor = adapterById.get(cfg.adapter)
-        if (!descriptor?.completion || descriptor.factory.languageId !== languageId) return []
+        const module = adapterById.get(cfg.adapter)
+        if (!module?.loadCompletion || module.presentation.languageId !== languageId) return []
         const adapter = manager.liveAdapter(connName)
         const ctx: CompletionContext = {
           languageId,
@@ -71,7 +80,9 @@ export function registerCompletions(
             try { return await adapter.searchItems(kind, prefix) } catch { return [] }
           },
         }
-        const results = await descriptor.completion.provide(ctx)
+        const contribution = await loadCompletion(cfg.adapter)
+        if (!contribution) return []
+        const results = await contribution.provide(ctx)
         return results.map(r => toItem(r, position))
       },
     }

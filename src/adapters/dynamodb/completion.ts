@@ -52,7 +52,6 @@ const KINDS: Record<PartiqlItem['kind'], CompletionResult['kind']> =
   { keyword: 'keyword', function: 'function', table: 'table', attribute: 'column' }
 
 export const dynamodbCompletion: CompletionContribution = {
-  triggerCharacters: ['.', ' ', '"'],
   async provide(ctx: CompletionContext): Promise<CompletionResult[]> {
     // DynamoDB speaks PartiQL over the same 'sql' language files as postgres;
     // the host routes here by the file's connection adapter, not the language.

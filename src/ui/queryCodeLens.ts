@@ -5,6 +5,7 @@ import { BRAND } from '../core/brand'
 import { getFileConnection, setFileConnection } from '../core/fileConn'
 import { splitAll } from '../core/statements'
 import { fileStatementSyntax } from '../core/dialect'
+import { presentationOf } from '../adapters/registry'
 
 const emitter = new vscode.EventEmitter<void>()
 
@@ -20,7 +21,7 @@ export function buildQueryCodeLenses(
   store: ConfigStore,
 ): vscode.CodeLens[] {
   const text = doc.getText()
-  const syntax = fileStatementSyntax(manager, store, workspaceState, doc.uri.fsPath, doc.languageId)
+  const syntax = fileStatementSyntax(store, workspaceState, doc.uri.fsPath, doc.languageId)
   const statements = splitAll(text, syntax)
   const bound = getFileConnection(workspaceState, doc.uri.fsPath)
   const lenses: vscode.CodeLens[] = []
@@ -64,7 +65,7 @@ export function registerQueryCodeLens(
         : vscode.window.activeTextEditor?.document
       if (!doc) return
       const matching = store.connections()
-        .filter(c => manager.factories.get(c.adapter)?.languageId === doc.languageId)
+        .filter(c => presentationOf(c.adapter)?.languageId === doc.languageId)
       if (matching.length === 0) {
         void vscode.window.showWarningMessage(`${BRAND}: no ${doc.languageId} connections in .rowboat.json`)
         return

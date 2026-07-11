@@ -2,30 +2,43 @@ import * as vscode from 'vscode'
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import type { Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection } from '../adapters/types'
-import { adapterById, adapterFactories } from '../adapters/registry'
+import type { Adapter, AdapterFactory, AdapterModule, ConnectionConfig, ResolvedConnection } from '../adapters/types'
+import { adapterById } from '../adapters/registry'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 import { openTunnel, type Tunnel, type TunnelSecrets } from './sshTunnel'
 
 export class ConnectionManager implements vscode.Disposable {
-  readonly factories: Map<string, AdapterFactory> = adapterFactories()
-  private live = new Map<string, Adapter>()   // key: connection name (globally unique)
-  private tunnels = new Map<string, Tunnel>() // SSH tunnel backing a live connection, same key
-  private pending = new Map<string, Promise<Adapter>>()
+  private readonly live = new Map<string, Adapter>()   // key: connection name (globally unique)
+  private readonly tunnels = new Map<string, Tunnel>() // SSH tunnel backing a live connection, same key
+  private readonly pending = new Map<string, Promise<Adapter>>()
+  private readonly factoryCache = new Map<string, AdapterFactory>()   // lazily loaded, once per adapter type
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
-  private connEmitter = new vscode.EventEmitter<void>()
+  private readonly connEmitter = new vscode.EventEmitter<void>()
   readonly onDidChangeConnections = this.connEmitter.event
 
   constructor(
-    private store: ConfigStore,
-    private vault: SecretVault,
+    private readonly store: ConfigStore,
+    private readonly vault: SecretVault,
+    private readonly modules: ReadonlyMap<string, AdapterModule> = adapterById,
   ) {}
 
   private findConfig(name: string): ConnectionConfig {
     const cfg = this.store.connection(name)
     if (!cfg) throw new Error(`Connection "${name}" not found (.rowboat.json)`)
     return cfg
+  }
+
+  // Load (and cache) an adapter's factory the first time one of its connections
+  // is opened — its driver import doesn't run until then.
+  private async factory(adapterId: string): Promise<AdapterFactory> {
+    const cached = this.factoryCache.get(adapterId)
+    if (cached) return cached
+    const module = this.modules.get(adapterId)
+    if (!module) throw new Error(`No adapter registered for "${adapterId}"`)
+    const factory = await module.loadFactory()
+    this.factoryCache.set(adapterId, factory)
+    return factory
   }
 
   // Fetch a secret from the keychain, prompting (and storing) on first use.
@@ -39,9 +52,7 @@ export class ConnectionManager implements vscode.Disposable {
     return value
   }
 
-  private async resolve(cfg: ConnectionConfig): Promise<ResolvedConnection> {
-    const factory = this.factories.get(cfg.adapter)
-    if (!factory) throw new Error(`No adapter registered for "${cfg.adapter}"`)
+  private async resolve(cfg: ConnectionConfig, factory: AdapterFactory): Promise<ResolvedConnection> {
     const errs = factory.validate(cfg)
     if (errs.length) throw new Error(`Invalid config for ${cfg.group}/${cfg.name}: ${errs.join(', ')}`)
     const secrets: Record<string, string> = {}
@@ -71,7 +82,7 @@ export class ConnectionManager implements vscode.Disposable {
     if (ssh.password === true) {
       secrets.password = await this.getSecret(cfg.name, 'ssh:password', `SSH password for ${cfg.group}/${cfg.name}`)
     }
-    const portField = adapterById.get(cfg.adapter)?.presentation.fields.find(f => f.key === 'port')
+    const portField = this.modules.get(cfg.adapter)?.presentation.fields.find(f => f.key === 'port')
     const defaultPort = typeof portField?.default === 'number' ? portField.default : 22
     const target = { host: typeof cfg.host === 'string' ? cfg.host : 'localhost', port: Number(cfg.port ?? defaultPort) }
     return openTunnel(ssh, target, secrets)
@@ -95,8 +106,8 @@ export class ConnectionManager implements vscode.Disposable {
     if (inFlight) return inFlight
     const myEpoch = this.epoch
     const p = (async () => {
-      const factory = this.factories.get(cfg.adapter)!
-      const resolved = await this.resolve(cfg)
+      const factory = await this.factory(cfg.adapter)
+      const resolved = await this.resolve(cfg, factory)
       const tunnel = await this.openSshTunnel(cfg)
       // route the adapter through the tunnel's local endpoint when there is one
       const effective = tunnel ? { ...resolved, host: tunnel.host, port: tunnel.port } : resolved

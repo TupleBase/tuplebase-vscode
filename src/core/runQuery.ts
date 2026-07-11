@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { BRAND } from './brand'
 import { splitAll, statementAt } from './statements'
 import { fileStatementSyntax } from './dialect'
+import { presentationOf } from '../adapters/registry'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { errorMessage } from './errors'
@@ -26,13 +27,13 @@ export function registerRunQuery(
   let inFlight: AbortController | undefined
 
   const syntaxOf = (doc: vscode.TextDocument) =>
-    fileStatementSyntax(manager, store, workspaceState, doc.uri.fsPath, doc.languageId)
+    fileStatementSyntax(store, workspaceState, doc.uri.fsPath, doc.languageId)
 
   const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
     const remembered = getFileConnection(workspaceState, fsPath)
     // only connections whose adapter speaks this editor language, across all groups
     const matching = store.connections()
-      .filter(c => manager.factories.get(c.adapter)?.languageId === languageId)
+      .filter(c => presentationOf(c.adapter)?.languageId === languageId)
     if (matching.length === 0) {
       void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in .rowboat.json`)
       return undefined
