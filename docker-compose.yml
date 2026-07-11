@@ -46,6 +46,19 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  cassandra:
+    image: cassandra:5
+    profiles: ["cassandra", "all"]
+    ports: ["9042:9042"]
+    environment:
+      HEAP_NEWSIZE: 128M
+      MAX_HEAP_SIZE: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe cluster' || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 40
+      start_period: 40s
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]

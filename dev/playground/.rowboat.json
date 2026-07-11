@@ -52,6 +52,13 @@
         "port": 1433,
         "database": "rowboat",
         "user": "sa"
+      },
+      "local-cassandra": {
+        "adapter": "cassandra",
+        "host": "localhost",
+        "port": 9042,
+        "datacenter": "datacenter1",
+        "keyspace": "rowboat"
       }
     },
     "Test": {

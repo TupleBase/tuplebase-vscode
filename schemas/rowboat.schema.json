@@ -46,6 +46,7 @@
             "sqlite",
             "mssql",
             "clickhouse",
+            "cassandra",
             "redis",
             "dynamodb"
           ]
@@ -401,6 +402,91 @@
               "host",
               "database",
               "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "cassandra"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 9042
+              },
+              "datacenter": {
+                "type": "string"
+              },
+              "keyspace": {
+                "type": "string",
+                "description": "Default keyspace for unqualified queries (optional)."
+              },
+              "user": {
+                "type": "string",
+                "description": "Only used when Password auth is enabled."
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "datacenter"
             ],
             "additionalProperties": false
           }
