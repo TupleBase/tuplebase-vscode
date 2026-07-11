@@ -18,9 +18,9 @@ const host = {
 }
 
 const webview = {
-  entryPoints: ['src/webview/results.ts'],
+  entryPoints: ['src/webview/results.ts', 'src/webview/connForm.ts'],
   bundle: true,
-  outfile: 'dist/webview/results.js',
+  outdir: 'dist/webview',
   platform: 'browser',
   format: 'iife',
   sourcemap: true,
@@ -39,6 +39,7 @@ const copyAssets = () => {
   mkdirSync('dist/webview', { recursive: true })
   cpSync('node_modules/tabulator-tables/dist/css/tabulator.min.css', 'dist/webview/tabulator.min.css')
   cpSync('src/webview/results.css', 'dist/webview/results.css')
+  cpSync('src/webview/connForm.css', 'dist/webview/connForm.css')
 }
 
 const assetPlugin = { name: 'copy-assets', setup(b) { b.onEnd(copyAssets) } }
