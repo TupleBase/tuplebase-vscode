@@ -1,64 +1,59 @@
 # Rowboat Roadmap
 
-Design spec lives outside the repo (personal vault). Detailed per-task plans are written when a plan starts; this file is the quick overview.
+Rowboat is a VS Code multi-database workbench — Postgres · Redis · DynamoDB — driven by a secret-free `.rowboat.json`. Detailed per-plan specs live in the personal vault; this file is the map.
 
-## Done — Plan 01: Walking skeleton (merged 2026-07-05)
+**Status:** Plans 01–05 shipped. Publishing (Plan 06) and agent access (Plan 07) remain.
 
-Postgres end-to-end: `.rowboat.json` config (JSONC, secret-free, `${env:VAR}` interpolation, JSON-schema IntelliSense) → activity-bar schema explorer → environment picker in status bar → run SQL from editor (cmd+enter) → Tabulator results grid with cancel and paging. Passwords prompted once, stored in OS keychain (SecretStorage). Dockerized dev postgres (`npm run db:postgres`), 31 tests (unit + live-container integration), VS Code smoke test, CI on GitHub Actions.
+**Database support** — shipped adapters and candidates are tracked in [`DATABASES.md`](DATABASES.md).
 
-## Next — Plan 02: Redis + DynamoDB adapters
+---
 
-- [x] Statement splitter upgrade: double-quoted identifiers + dollar-quoted strings (bites first when dogfooding Postgres)
-- [x] Compose services + seed script for redis and dynamodb-local (`db:redis`, `db:dynamo`, `db:seed`)
-- [x] Redis adapter: commands from `.redis` files (one per line, `#` comments), key-namespace tree, optional `"auth": true` → password prompt
-- [x] `.redis` language contribution + per-language run extraction (SQL statement vs redis line)
-- [x] DynamoDB adapter: PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain (profile/SSO/env — never stored), `endpoint` for dynamodb-local
-- [x] Postgres TLS options: `sslmode`, CA cert path in connection config (hosted DBs require it)
-- [x] Cleanup batch: deferred minors from Plan 01 reviews (dot-safe tree ids, tightened auth-error regex, CI dedup, testConnection(cfg) contract, webview pending queue, pg cancellation IT test)
+## What Rowboat does today
 
-## Plan 03: Workbench — autocomplete + query history
+Connect to Postgres, Redis and DynamoDB from one explorer. Connections live in **groups** (folders) in `.rowboat.json` — `version: 1`, secret-free, `${env:VAR}` interpolation, JSON-schema IntelliSense. Browse each connection's schema/keys, author queries with per-engine autocomplete and history, and run them (`cmd+enter` for the statement under the cursor, `cmd+shift+enter` for the whole file) into a VS Code-themed Tabulator grid — multiple statements become result tabs, a row opens a JSON detail view. Create/edit/remove connections and groups entirely from the UI (2-stage webview form, context menus, drag-and-drop); every edit is written back to the config with comments preserved. Passwords are prompted once and kept in the OS keychain. Read-only connections block writes; runaway queries time out.
 
-Goal: type queries with IntelliSense and run them in place. Running from any `.sql` file already works (Plan 01); this plan adds the completion layer and the frictionless entry points.
+---
 
-- [x] "New Query" command: opens an untitled `sql`/`redis` scratch buffer, runnable immediately (toolbar button on the explorer + command palette)
-- [x] SQL completion from the schema-tree cache (tables after FROM/JOIN, columns after `alias.`) — heuristics first, dt-sql-parser later if needed
-- [ ] SQL completion: resolve columns for table-qualified references without an alias (for example, `FROM crew ... crew.id`)
-- [x] Redis command completion (static table) + key completion via SCAN
-- [x] PartiQL keywords + table/attribute completion from the Dynamo cache
-- [x] Query history: JSONL per workspace, history tree in the sidebar, click to rerun — redact sensitive commands (redis `AUTH`), size cap + pruning
-- [ ] Marketplace publisher setup + first 0.1.x pre-release — decided 2026-07-07: publishing happens LAST, after Plans 04/05 (needs owner's Azure DevOps/Entra account)
+## Shipped
 
-## Plan 04: Safety + results-grid table stakes
+### ✅ Plan 01 — Walking skeleton · merged 2026-07-05
+Postgres end-to-end: config → schema explorer → run SQL → Tabulator grid (cancel + paging). Keychain secrets, dockerized dev Postgres, unit + live-container integration + VS Code smoke tests, CI.
 
-- [x] Prod guardrails: `"readonly": true` flag on an environment blocks adapter-specific writes before connecting or executing.
-- [x] Default query timeout: `rowboat.queryTimeoutMs` cancels forgotten runaway queries after 30 seconds by default.
-- [x] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
-- [x] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
-- [x] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
+### ✅ Plan 02 — Redis + DynamoDB adapters
+Redis (`.redis` command files, key-namespace tree, optional `auth`) and DynamoDB (PartiQL via AWS SDK v3, tables/keys/GSI tree, AWS credential chain, dynamodb-local endpoint). Postgres TLS (`sslmode` + CA cert). Statement-splitter hardening; compose + seed scripts.
 
-## Plan 05: Groups + connection CRUD from the UI
+### ✅ Plan 03 — Workbench: autocomplete + history
+New-query scratch buffers; schema-cache SQL completion; Redis command + SCAN key completion; PartiQL completion; per-workspace query history (JSONL, click-to-rerun, redaction, pruning).
+- ◻︎ **Open:** SQL completion for table-qualified columns without an alias (`FROM crew … crew.id`).
 
-Redesigned 2026-07-11: **environments are removed** — connections are the unit, groups/folders only organise, and there is no active environment (a run resolves via the file's bound connection). Design: `~/memory/2026-07-11-rowboat-plan05-phase1-groups-design.md`. Built in phases, each its own spec → plan → build:
+### ✅ Plan 04 — Safety + results-grid table stakes
+Read-only write guardrail; default query timeout (`rowboat.queryTimeoutMs`); VS Code-themed grid; run-whole-file → result tabs; row → JSON detail view for non-tabular values.
 
-- [x] **Phase 1 — Foundation (groups model)**: `.rowboat.json` → `version: 1` + `groups`; `readonly` per-connection (+ optional group default); `ConnectionManager` and the secret vault keyed by connection name; explorer lists all connections flat; environment status bar removed. Pushed 1bd749e.
-- [x] **Phase 2 — Explorer accordion**: groups as collapsible folder nodes (group › connection › schema); jsonc writeback module. Pushed 78cf19a.
-- [x] **Phase 3 — Group CRUD**: New Group toolbar command; group **rename**/**delete** context menu; **drag** a connection between groups (TreeDragAndDropController) — all synced to `.rowboat.json`. (Group duplicate deferred — YAGNI.)
-- [x] **Phase 4 — Connection CRUD webview**: per-group "+" → 2-stage add form (DB-type cards → per-adapter form); connection **Edit** (pre-filled form, incl. rename) + **Remove** context menu; per-type icons from a shared catalog; New Query is now per-connection.
-- [x] **Phase 5 — Settings**: `rowboat.resultsPageSize` + `rowboat.maxRows` (`rowboat.queryTimeoutMs` already existed).
-- [x] Multi-root workspaces: config resolves from the first folder — documented in README.
+### ✅ Plan 05 — Groups + connection CRUD from the UI
+**Environments removed** — connections are the unit, groups are folders, and a run targets the connection bound to its file (no active environment).
+- **Model** → `version: 1` + `groups`; per-connection `readonly` (+ optional group default); connection manager and secret vault keyed by connection name.
+- **Explorer** → group-first (group › connection › schema); per-type icons from a shared adapter catalog.
+- **CRUD from the UI** → New Group; group rename/delete; 2-stage new-connection webview form (DB-type cards → per-adapter fields); connection edit (pre-filled) / remove; drag a connection between groups — all via jsonc writeback, comments preserved.
+- New Query is per-connection; settings `rowboat.resultsPageSize` + `rowboat.maxRows`.
 
-Legacy `environments` configs are not supported (new shape only); `version` is the future migration seam.
+---
 
-## Plan 06: Publishing
+## Remaining
 
-- [ ] Publisher setup + first pre-release pulled forward to Plan 03 (Entra ID auth — PATs die Dec 2026); here: icon/keywords/manifest polish, odd/even minor = pre-release/release
-- [ ] Open VSX too (Cursor/Windsurf/VSCodium)
-- [ ] CI publish job on tag; THIRD-PARTY-NOTICES generation
-- [ ] Monetization seam only: `license.ts` with `isProEnabled() => true` — nothing else
-- [ ] CHANGELOG.md (marketplace renders it) + README screenshots/gif — page quality drives installs
+### Plan 06 — Publishing · owner-gated, deliberately last
+Needs the owner's Azure DevOps / Entra account — not startable here.
+- Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
+- Open VSX too (Cursor / Windsurf / VSCodium)
+- CI publish-on-tag + THIRD-PARTY-NOTICES generation
+- Monetization seam only: `license.ts` with `isProEnabled() => true`
+- CHANGELOG.md + README screenshots/gif (page quality drives installs)
+- Public website / landing page — install links, docs, screenshots, gifs
 
-## Deferred (tracked, not scheduled)
+### Plan 07 — MCP server: let agents query sources
+Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
 
-Statement-splitter for PartiQL edge cases, SSH tunnels (decided: deferred until asked for).
+### Deferred · tracked, not scheduled
+Statement-splitter PartiQL edge cases · SSH tunnels.
 
-Later / pro territory (deliberately skipped for now): grid cell editing with write-back, EXPLAIN visualizer, telemetry.
+### Later / pro · skipped by design
+Grid cell editing with write-back · EXPLAIN visualizer · telemetry.
