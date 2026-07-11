@@ -66,6 +66,12 @@
         "port": 7687,
         "database": "neo4j",
         "user": "neo4j"
+      },
+      "local-mongodb": {
+        "adapter": "mongodb",
+        "host": "localhost",
+        "port": 27017,
+        "database": "rowboat"
       }
     },
     "Test": {

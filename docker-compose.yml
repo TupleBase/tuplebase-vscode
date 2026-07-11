@@ -71,6 +71,15 @@ services:
       timeout: 5s
       retries: 40
       start_period: 15s
+  mongodb:
+    image: mongo:7
+    profiles: ["mongodb", "all"]
+    ports: ["27017:27017"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]

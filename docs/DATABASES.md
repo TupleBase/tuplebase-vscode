@@ -13,6 +13,7 @@ Which databases Rowboat speaks, and which are candidates. Each database is a sel
 | ClickHouse | `clickhouse` | SQL | analytics; HTTP driver (`@clickhouse/client`), `database`/`user` + optional `auth`, `system.*` schema tree |
 | Cassandra | `cassandra` | CQL | wide-column; `cassandra-driver`, `datacenter`/`keyspace` + optional `auth`; native `pageState` paging, `system_schema.*` tree |
 | Neo4j | `neo4j` | Cypher | graph; `neo4j-driver` (Bolt), labels→properties tree, own Cypher completion, `SKIP`/`LIMIT` paging |
+| MongoDB | `mongodb` | MQL (`db.coll.method(json)`) | document store; `find`/`aggregate`/`count`/`distinct` + inserts/updates/deletes, collections→sampled-fields tree, `skip`/`limit` paging |
 | Redis | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
 | CockroachDB | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
@@ -24,7 +25,6 @@ Add a row when a database is requested; graduate it to **Shipped** when an adapt
 
 | Database | Query surface | Notes / wire compatibility |
 |---|---|---|
-| MongoDB | MQL / aggregation | document store |
 | ScyllaDB | CQL | wide-column — Cassandra-compatible, use the `cassandra` adapter |
 | Elasticsearch / OpenSearch | query DSL | search |
 | Snowflake / BigQuery | SQL | cloud warehouses |
