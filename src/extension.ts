@@ -15,6 +15,7 @@ import { registerQueryCodeLens } from './ui/queryCodeLens'
 import { addGroup } from './core/configWriter'
 import { registerNewConnectionForm } from './ui/connFormPanel'
 import { registerExplorerCommands } from './ui/explorerCommands'
+import { registerMcpConfig } from './ui/mcpConfig'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -33,6 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSchemaTree(manager, store, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store),
     registerExplorerCommands(store),
+    registerMcpConfig(context.extensionUri, store, manager, vault),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {
       history?.append(entry)
       historyTree?.refresh()

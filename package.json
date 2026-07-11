@@ -178,6 +178,11 @@
         "category": "Rowboat"
       },
       {
+        "command": "rowboat.showMcpConfig",
+        "title": "Show MCP Server Config",
+        "category": "Rowboat"
+      },
+      {
         "command": "rowboat.connect",
         "title": "Connect",
         "category": "Rowboat",

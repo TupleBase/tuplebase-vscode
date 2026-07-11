@@ -37,6 +37,15 @@ const smokeTest = {
   external: [...host.external, 'mocha'],
 }
 
+// Standalone MCP server. No 'vscode' in externals — the build fails if anything
+// in this graph imports the extension host, keeping it a plain node process.
+const mcp = {
+  ...host,
+  entryPoints: ['src/mcp/server.ts'],
+  outfile: 'dist/mcp/server.js',
+  external: ['pg-native', 'cpu-features', '*.node'],
+}
+
 const copyAssets = () => {
   mkdirSync('dist/webview', { recursive: true })
   cpSync('node_modules/tabulator-tables/dist/css/tabulator.min.css', 'dist/webview/tabulator.min.css')
@@ -57,8 +66,8 @@ const assetPlugin = { name: 'copy-assets', setup(b) { b.onEnd(copyAssets) } }
 webview.plugins = [assetPlugin]
 
 if (watch) {
-  const ctxs = await Promise.all([esbuild.context(host), esbuild.context(webview), esbuild.context(smokeTest)])
+  const ctxs = await Promise.all([host, webview, smokeTest, mcp].map(c => esbuild.context(c)))
   await Promise.all(ctxs.map(c => c.watch()))
 } else {
-  await Promise.all([esbuild.build(host), esbuild.build(webview), esbuild.build(smokeTest)])
+  await Promise.all([host, webview, smokeTest, mcp].map(c => esbuild.build(c)))
 }
