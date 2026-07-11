@@ -30,7 +30,7 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnostics,
     store,
     manager,
-    registerSchemaTree(manager, store),
+    registerSchemaTree(manager, store, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store),
     registerExplorerCommands(store),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {

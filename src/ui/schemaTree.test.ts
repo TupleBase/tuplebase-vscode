@@ -22,6 +22,9 @@ vi.mock('vscode', () => ({
   ThemeColor: class {
     constructor(public id: string) {}
   },
+  Uri: {
+    joinPath: (base: { path: string }, ...parts: string[]) => ({ path: [base.path, ...parts].join('/') }),
+  },
 }))
 
 import type { Adapter, ConnectionConfig, TreeNode } from '../adapters/types'
@@ -31,7 +34,7 @@ import { SchemaTreeProvider, type ExplorerNode } from './schemaTree'
 
 const CONN: ConnectionConfig = { group: 'dev', name: 'db1', adapter: 'postgres', readonly: false }
 
-function makeProvider(live: boolean) {
+function makeProvider(live: boolean, extensionUri?: { path: string }) {
   const table: TreeNode = { id: 't1', label: 'users', kind: 'table', hasChildren: true }
   const adapter = {
     getChildren: async (node: TreeNode | null) => (node === null ? [table] : []),
@@ -49,7 +52,7 @@ function makeProvider(live: boolean) {
     connections: () => [CONN],
     connection: (name: string) => (name === 'db1' ? CONN : undefined),
   } as unknown as ConfigStore
-  return new SchemaTreeProvider(manager, store)
+  return new SchemaTreeProvider(manager, store, extensionUri as never)
 }
 
 const connEl: ExplorerNode = { type: 'connection', conn: CONN }
@@ -106,6 +109,18 @@ describe('SchemaTreeProvider with a live adapter', () => {
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
     expect(item.contextValue).toBe('rowboat.connection.disconnected')
     expect(item.iconPath?.id).toBe('database')
+  })
+
+  it('uses the bundled adapter SVG, connected variant, when the extension URI is known', () => {
+    const provider = makeProvider(true, { path: '/ext' })
+    const item = provider.getTreeItem(connEl) as { iconPath?: { path?: string } }
+    expect(item.iconPath?.path).toBe('/ext/dist/adapters/postgres/postgres-connected.svg')
+  })
+
+  it('uses the base adapter SVG when disconnected', () => {
+    const provider = makeProvider(false, { path: '/ext' })
+    const item = provider.getTreeItem(connEl) as { iconPath?: { path?: string } }
+    expect(item.iconPath?.path).toBe('/ext/dist/adapters/postgres/postgres.svg')
   })
 })
 

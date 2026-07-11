@@ -6,6 +6,7 @@ import { BRAND } from '../core/brand'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
+import { adapterById } from '../adapters/registry'
 
 const CONN_MIME = 'application/vnd.rowboat.connection'
 
@@ -29,10 +30,25 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   private emitter = new vscode.EventEmitter<ExplorerNode | undefined>()
   readonly onDidChangeTreeData = this.emitter.event
 
-  constructor(private manager: ConnectionManager, private store: ConfigStore) {}
+  constructor(
+    private manager: ConnectionManager,
+    private store: ConfigStore,
+    private extensionUri?: vscode.Uri,
+  ) {}
 
   refresh() {
     this.emitter.fire(undefined)
+  }
+
+  // A bundled adapter SVG (green-dot variant when connected) if one exists and we
+  // know where dist/ lives; otherwise the themed codicon (green tint = connected).
+  private connectionIcon(adapter: string, connected: boolean): vscode.ThemeIcon | vscode.Uri {
+    const iconFile = adapterById.get(adapter)?.presentation.iconFile
+    if (iconFile && this.extensionUri) {
+      const file = connected ? iconFile.replace(/\.svg$/, '-connected.svg') : iconFile
+      return vscode.Uri.joinPath(this.extensionUri, 'dist', 'adapters', adapter, file)
+    }
+    return new vscode.ThemeIcon(adapterIcon(adapter), connected ? new vscode.ThemeColor('charts.green') : undefined)
   }
 
   getTreeItem(el: ExplorerNode): vscode.TreeItem {
@@ -48,10 +64,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const connected = this.manager.isConnected(el.conn.name)
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
       item.description = el.conn.adapter
-      item.iconPath = new vscode.ThemeIcon(
-        adapterIcon(el.conn.adapter),
-        connected ? new vscode.ThemeColor('charts.green') : undefined,
-      )
+      item.iconPath = this.connectionIcon(el.conn.adapter, connected)
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
       item.contextValue = connected ? 'rowboat.connection.connected' : 'rowboat.connection.disconnected'
       return item
@@ -147,8 +160,12 @@ function connectionDragAndDrop(store: ConfigStore): vscode.TreeDragAndDropContro
   }
 }
 
-export function registerSchemaTree(manager: ConnectionManager, store: ConfigStore): vscode.Disposable {
-  const provider = new SchemaTreeProvider(manager, store)
+export function registerSchemaTree(
+  manager: ConnectionManager,
+  store: ConfigStore,
+  extensionUri?: vscode.Uri,
+): vscode.Disposable {
+  const provider = new SchemaTreeProvider(manager, store, extensionUri)
   const view = vscode.window.createTreeView('rowboat.explorer', {
     treeDataProvider: provider,
     dragAndDropController: connectionDragAndDrop(store),

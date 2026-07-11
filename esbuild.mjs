@@ -1,5 +1,5 @@
 import * as esbuild from 'esbuild'
-import { cpSync, mkdirSync } from 'node:fs'
+import { cpSync, mkdirSync, readdirSync } from 'node:fs'
 
 const watch = process.argv.includes('--watch')
 
@@ -40,6 +40,15 @@ const copyAssets = () => {
   cpSync('node_modules/tabulator-tables/dist/css/tabulator.min.css', 'dist/webview/tabulator.min.css')
   cpSync('src/webview/results.css', 'dist/webview/results.css')
   cpSync('src/webview/connForm.css', 'dist/webview/connForm.css')
+  // per-adapter icon SVGs → dist/adapters/<id>/ (resolved by the schema tree)
+  for (const entry of readdirSync('src/adapters', { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue
+    const dir = `src/adapters/${entry.name}`
+    const svgs = readdirSync(dir).filter(f => f.endsWith('.svg'))
+    if (svgs.length === 0) continue
+    mkdirSync(`dist/adapters/${entry.name}`, { recursive: true })
+    for (const f of svgs) cpSync(`${dir}/${f}`, `dist/adapters/${entry.name}/${f}`)
+  }
 }
 
 const assetPlugin = { name: 'copy-assets', setup(b) { b.onEnd(copyAssets) } }
