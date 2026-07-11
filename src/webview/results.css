@@ -1,5 +1,67 @@
-body { padding: 0; margin: 0; font-family: var(--vscode-font-family); color: var(--vscode-foreground); }
-#toolbar { display: flex; gap: 8px; align-items: center; padding: 4px 8px; }
+body {
+  padding: 0;
+  margin: 0;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+}
+#toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+#status { color: var(--vscode-descriptionForeground); }
+#cancel {
+  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-secondaryBackground);
+  border: none;
+  padding: 2px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+}
+#cancel:hover { background: var(--vscode-button-secondaryHoverBackground); }
 #grid { height: calc(100vh - 30px); }
-.null { opacity: 0.5; font-style: italic; }
-.tabulator { background: transparent; font-size: var(--vscode-font-size); }
+.null { opacity: 0.6; font-style: italic; }
+
+/* Map Tabulator onto the active VS Code color theme (dark/light/high-contrast). */
+.tabulator {
+  background: transparent;
+  font-size: var(--vscode-font-size);
+  border: none;
+}
+.tabulator .tabulator-header {
+  background: var(--vscode-editor-background);
+  color: var(--vscode-foreground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  font-weight: 600;
+}
+.tabulator .tabulator-header .tabulator-col {
+  background: transparent;
+  border-right: 1px solid var(--vscode-panel-border);
+}
+.tabulator .tabulator-header .tabulator-col:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+.tabulator .tabulator-tableholder .tabulator-table { background: transparent; }
+.tabulator .tabulator-row {
+  background: transparent;
+  color: var(--vscode-foreground);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+.tabulator .tabulator-row.tabulator-row-even {
+  background: var(--vscode-tree-tableOddRowsBackground, transparent);
+}
+.tabulator .tabulator-row.tabulator-selectable:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--vscode-foreground);
+}
+.tabulator .tabulator-row.tabulator-selected {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+.tabulator .tabulator-cell {
+  border-right: 1px solid var(--vscode-panel-border);
+}
