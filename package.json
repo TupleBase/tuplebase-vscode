@@ -127,6 +127,23 @@
         "icon": "$(add)"
       },
       {
+        "command": "rowboat.renameGroup",
+        "title": "Rename Group",
+        "category": "Rowboat"
+      },
+      {
+        "command": "rowboat.deleteGroup",
+        "title": "Delete Group",
+        "category": "Rowboat",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "rowboat.removeConnection",
+        "title": "Remove Connection",
+        "category": "Rowboat",
+        "icon": "$(trash)"
+      },
+      {
         "command": "rowboat.newQuery",
         "title": "New Query Scratch (pick engine)",
         "category": "Rowboat",
@@ -225,6 +242,26 @@
           "group": "inline@1"
         },
         {
+          "command": "rowboat.addConnection",
+          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "rowboat.renameGroup",
+          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "group": "1_modify@2"
+        },
+        {
+          "command": "rowboat.deleteGroup",
+          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "group": "1_modify@3"
+        },
+        {
+          "command": "rowboat.removeConnection",
+          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "group": "1_modify@9"
+        },
+        {
           "command": "rowboat.connect",
           "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
           "group": "inline@1"
@@ -271,6 +308,18 @@
         },
         {
           "command": "rowboat.addConnection",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.deleteGroup",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.removeConnection",
           "when": "false"
         }
       ]
