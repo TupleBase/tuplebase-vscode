@@ -3,7 +3,9 @@ on:
   push: { branches: [main] }
   pull_request:
 jobs:
-  test:
+  # No containers: type-check, bundle, unit tests (+ the file-based SQLite IT,
+  # which runs without a server), and the VS Code activation smoke test.
+  unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,8 +14,35 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run build
-      - run: docker compose --profile postgres up -d --wait
-      - run: npm run db:redis
-      - run: npm run db:dynamo
-      - run: RB_IT=1 npx vitest run
+      - run: npm test
       - run: xvfb-run -a npm run test:vscode
+
+  # Live-container integration, one engine per job — the heavy images (SQL Server,
+  # Cassandra, Elasticsearch, …) can't all co-reside on a single runner, so each
+  # boots only its own container and runs only that adapter's IT.
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { engine: postgres,      up: npm run db:postgres,      tests: src/adapters/postgres }
+          - { engine: mysql,         up: npm run db:mysql,         tests: src/adapters/mysql/adapter.it.test.ts src/adapters/mysql/adapter.test.ts }
+          - { engine: mariadb,       up: npm run db:mariadb,       tests: src/adapters/mysql/mariadb.it.test.ts }
+          - { engine: redis,         up: npm run db:redis,         tests: src/adapters/redis }
+          - { engine: dynamodb,      up: npm run db:dynamo,        tests: src/adapters/dynamodb }
+          - { engine: mssql,         up: npm run db:mssql,         tests: src/adapters/mssql }
+          - { engine: clickhouse,    up: npm run db:clickhouse,    tests: src/adapters/clickhouse }
+          - { engine: cassandra,     up: npm run db:cassandra,     tests: src/adapters/cassandra }
+          - { engine: neo4j,         up: npm run db:neo4j,         tests: src/adapters/neo4j }
+          - { engine: mongodb,       up: npm run db:mongodb,       tests: src/adapters/mongodb }
+          - { engine: elasticsearch, up: npm run db:elasticsearch, tests: src/adapters/elasticsearch }
+          - { engine: kafka,         up: npm run db:kafka,         tests: src/adapters/kafka }
+    name: integration (${{ matrix.engine }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: ${{ matrix.up }}
+      - run: RB_IT=1 npx vitest run ${{ matrix.tests }}

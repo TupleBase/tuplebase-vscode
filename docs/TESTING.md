@@ -55,7 +55,7 @@ npm run test:vscode      # extension-host smoke test — downloads VS Code, laun
                          # extension inside it, runs @vscode/test suite
 ```
 
-CI runs all three on every push and PR (`.github/workflows/ci.yml`), with postgres via docker compose and the smoke test under `xvfb-run`.
+CI (`.github/workflows/ci.yml`) runs on every push and PR as two jobs: a **unit** job (check + build + `npm test` + VS Code smoke, no containers) and an **integration** matrix — one job per engine, each booting only its own container and running that adapter's IT. The heavy images (SQL Server, Cassandra, Elasticsearch, …) can't all co-reside on a single runner, so they're split per job rather than run together.
 
 ## Resetting state
 
