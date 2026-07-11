@@ -2,7 +2,7 @@
 
 Rowboat is a VS Code multi-database workbench — Postgres · Redis · DynamoDB — driven by a secret-free `.rowboat.json`. Detailed per-plan specs live in the personal vault; this file is the map.
 
-**Status:** Plans 01–05 shipped. Next up: the adapter-modularization refactor, then MCP agent access (Plan 06); publishing (Plan 07) is the final goal.
+**Status:** Plans 01–05 shipped, plus the adapter-modularization refactor, per-adapter icons, the PartiQL splitter fix, SSH tunnels and the MCP server (Plan 06). Publishing (Plan 07) is the only item left — owner-gated.
 
 **Database support** — shipped adapters and candidates are tracked in [`DATABASES.md`](DATABASES.md).
 
@@ -10,7 +10,7 @@ Rowboat is a VS Code multi-database workbench — Postgres · Redis · DynamoDB 
 
 ## What Rowboat does today
 
-Connect to Postgres, Redis and DynamoDB from one explorer. Connections live in **groups** (folders) in `.rowboat.json` — `version: 1`, secret-free, `${env:VAR}` interpolation, JSON-schema IntelliSense. Browse each connection's schema/keys, author queries with per-engine autocomplete and history, and run them (`cmd+enter` for the statement under the cursor, `cmd+shift+enter` for the whole file) into a VS Code-themed Tabulator grid — multiple statements become result tabs, a row opens a JSON detail view. Create/edit/remove connections and groups entirely from the UI (2-stage webview form, context menus, drag-and-drop); every edit is written back to the config with comments preserved. Passwords are prompted once and kept in the OS keychain. Read-only connections block writes; runaway queries time out.
+Connect to Postgres, Redis and DynamoDB from one explorer. Connections live in **groups** (folders) in `.rowboat.json` — `version: 1`, secret-free, `${env:VAR}` interpolation, JSON-schema IntelliSense. Browse each connection's schema/keys, author queries with per-engine autocomplete and history, and run them (`cmd+enter` for the statement under the cursor, `cmd+shift+enter` for the whole file) into a VS Code-themed Tabulator grid — multiple statements become result tabs, a row opens a JSON detail view. Create/edit/remove connections and groups entirely from the UI (2-stage webview form, context menus, drag-and-drop); every edit is written back to the config with comments preserved. Passwords are prompted once and kept in the OS keychain (reset a bad one per-connection without clearing the rest). Read-only connections block writes; runaway queries time out. Reach databases behind a bastion with a per-connection `ssh` tunnel. The same connections are exposed to AI agents through a read-only-by-default MCP server.
 
 ---
 
@@ -36,23 +36,26 @@ Read-only write guardrail; default query timeout (`rowboat.queryTimeoutMs`); VS 
 - **CRUD from the UI** → New Group; group rename/delete; 2-stage new-connection webview form (DB-type cards → per-adapter fields); connection edit (pre-filled) / remove; drag a connection between groups — all via jsonc writeback, comments preserved.
 - New Query is per-connection; settings `rowboat.resultsPageSize` + `rowboat.maxRows`.
 
+### ✅ Adapter modularization
+Each connection type is a self-contained plugin: **one folder** (`src/adapters/<db>/`) holds its adapter, form fields, presentation (icon/label/blurb), completion and icon SVGs, exposed as a single `AdapterDescriptor`. `src/adapters/registry.ts` is the one place a new database is registered; config validation, the connection form, tree icons, completion and the connection manager all read from it, and `schemas/rowboat.schema.json` is generated from the descriptors (`npm run gen:schema`). Prerequisite for every candidate in [`DATABASES.md`](DATABASES.md).
+
+### ✅ Per-adapter icons
+Bundled SVG per adapter (with a green-dot connected variant) replaces the generic codicons; the tree resolves `dist/adapters/<id>/<id>.svg`, falling back to the codicon. Marks are clean, original brand-coloured placeholders — an official SVG can be dropped into the adapter folder to replace them.
+
+### ✅ Statement-splitter PartiQL edge cases
+Adapters declare a `statementSyntax` (`sql` / `partiql` / `redis`); the run path, code lenses and completion resolve it from the file's connection. PartiQL mode drops postgres-only dollar-quoting, so quoted attribute paths, `?` parameters and single-quoted values split correctly.
+
+### ✅ SSH tunnels
+A connection may carry an `ssh` block (bastion host/port/user, private-key path, passphrase/password prompt flags). At connect the manager opens an ssh2 tunnel and points the adapter at the local end; the passphrase/password is prompted once and kept in the keychain. Rejected for adapters without a host (DynamoDB).
+
+### ✅ Plan 06 — MCP server
+A standalone Model Context Protocol server (`dist/mcp/server.js`) exposes `list_connections`, `inspect_schema` and `run_query` over the same adapters, config and read-only guardrail — read-only for agents by default. Secrets arrive as env vars; **Rowboat: Show MCP Server Config** emits a client config with them pulled from the keychain.
+
 ---
 
 ## Remaining
 
-In the order we'll tackle them.
-
-1. **Adapter modularization** — *do this first.* Make each connection type a self-contained plugin: **one folder** (`src/adapters/<db>/`) holds everything for it — adapter, form fields, catalog entry (icon/label/blurb), completion provider, language bits, dev seed — exposed as a single descriptor. Registering a new database becomes "drop a folder + one line" instead of editing `config.ts`, the JSON schema, `connFormSpec.ts`, `adapterCatalog.ts`, `connections.ts` and the completion providers separately. Prerequisite for every candidate in [`DATABASES.md`](DATABASES.md).
-
-2. **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines). If official assets can't be sourced cleanly, the owner supplies them — target format: one SVG per adapter, ~16×16 viewBox, ideally a light + dark pair (VS Code `TreeItem.iconPath` takes `{ light, dark }`), or a single `currentColor` mark that themes both.
-
-3. **MCP server — let agents query sources** *(Plan 06).* Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
-
-4. **Statement-splitter PartiQL edge cases** — the `;` splitter is tuned for Postgres SQL (quotes, dollar-quoting, `--` and `/* */` comments); DynamoDB PartiQL files ride the same splitter and can mis-split on PartiQL-specific syntax (quoted attribute paths, `?` parameters). Harden when a real PartiQL file breaks.
-
-5. **SSH tunnels** — reach a database behind a bastion / jump host: forward a local port over SSH and connect the adapter through it, per connection. Common for hosted/production DBs.
-
-6. **Publishing — the final goal** *(Plan 07, owner-gated: needs the owner's Azure DevOps / Entra account).*
+**Publishing — the final goal** *(Plan 07, owner-gated: needs the owner's Azure DevOps / Entra account).*
    - Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
    - Open VSX too (Cursor / Windsurf / VSCodium)
    - CI publish-on-tag + THIRD-PARTY-NOTICES generation
