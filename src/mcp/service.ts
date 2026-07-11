@@ -13,6 +13,7 @@ import { secretEnvVar, type SecretSource } from './secrets'
 export interface McpServiceOptions {
   allowWrites?: boolean   // default false — agents are read-only
   maxRows?: number        // default 200
+  baseDir?: string        // .rowboat.json directory — relative file paths (SQLite) resolve against it
 }
 
 export interface ConnectionSummary {
@@ -39,6 +40,7 @@ export class McpService {
   private readonly tunnels = new Map<string, Tunnel>()
   private readonly maxRows: number
   private readonly allowWrites: boolean
+  private readonly baseDir: string | undefined
 
   constructor(
     private readonly config: RowboatConfig,
@@ -48,6 +50,7 @@ export class McpService {
   ) {
     this.maxRows = options.maxRows ?? 200
     this.allowWrites = options.allowWrites ?? false
+    this.baseDir = options.baseDir
   }
 
   private effectiveReadonly(cfg: ConnectionConfig): boolean {
@@ -79,7 +82,7 @@ export class McpService {
       }
       secrets[field] = value
     }
-    return { ...cfg, secrets }
+    return { ...cfg, secrets, ...(this.baseDir ? { baseDir: this.baseDir } : {}) }
   }
 
   private async openSshTunnel(cfg: ConnectionConfig): Promise<Tunnel | undefined> {

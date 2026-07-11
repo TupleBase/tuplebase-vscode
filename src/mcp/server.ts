@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { dirname, resolve } from 'node:path'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
@@ -11,18 +11,19 @@ import { McpService } from './service'
 // stdout is the MCP transport — everything else goes to stderr
 const log = (msg: string) => process.stderr.write(`[rowboat-mcp] ${msg}\n`)
 
-function loadConfig(): RowboatConfig {
+function loadConfig(): { config: RowboatConfig; baseDir: string } {
   const path = resolve(process.env.ROWBOAT_CONFIG ?? process.argv[2] ?? '.rowboat.json')
+  const baseDir = dirname(path)
   let text: string
   try {
     text = readFileSync(path, 'utf8')
   } catch {
     log(`no config at ${path} — starting with no connections (set ROWBOAT_CONFIG)`)
-    return { version: 1, groups: [], connections: {} }
+    return { config: { version: 1, groups: [], connections: {} }, baseDir }
   }
   const { config, errors } = parseConfig(text)
   for (const e of errors) log(`config: ${e.path}: ${e.message}`)
-  return config ?? { version: 1, groups: [], connections: {} }
+  return { config: config ?? { version: 1, groups: [], connections: {} }, baseDir }
 }
 
 const asText = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value, null, 2) }] })
@@ -34,7 +35,8 @@ const asError = (e: unknown) => ({
 async function main() {
   const allowWrites = /^(1|true|yes)$/i.test(process.env.ROWBOAT_MCP_ALLOW_WRITES ?? '')
   const maxRows = Number(process.env.ROWBOAT_MCP_MAX_ROWS) || undefined
-  const service = new McpService(loadConfig(), await loadFactories(), envSecretSource(), { allowWrites, maxRows })
+  const { config, baseDir } = loadConfig()
+  const service = new McpService(config, await loadFactories(), envSecretSource(), { allowWrites, maxRows, baseDir })
 
   const server = new McpServer({ name: 'rowboat', version: '0.1.0' })
 

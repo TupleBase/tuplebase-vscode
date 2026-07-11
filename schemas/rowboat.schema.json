@@ -239,7 +239,7 @@
               },
               "path": {
                 "type": "string",
-                "description": "Path to the SQLite database file — absolute, or relative to the working directory; ${env:VAR} is interpolated."
+                "description": "Path to the SQLite database file — absolute, or relative to the .rowboat.json location; ${env:VAR} is interpolated."
               }
             },
             "required": [

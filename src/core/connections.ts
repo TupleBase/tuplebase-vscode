@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import type { Adapter, AdapterFactory, AdapterModule, ConnectionConfig, ResolvedConnection } from '../adapters/types'
 import { adapterById } from '../adapters/registry'
 import { ConfigStore } from './configStore'
@@ -62,7 +62,9 @@ export class ConnectionManager implements vscode.Disposable {
     for (const field of factory.requiredSecrets(cfg)) {
       secrets[field] = await this.getSecret(cfg.name, field, `${field} for ${cfg.group}/${cfg.name}`, persist)
     }
-    return { ...cfg, secrets }
+    // config paths (e.g. SQLite `path`) resolve against the .rowboat.json directory
+    const baseDir = this.store.configUri ? dirname(this.store.configUri.fsPath) : undefined
+    return { ...cfg, secrets, ...(baseDir ? { baseDir } : {}) }
   }
 
   // Open the SSH bastion tunnel a connection asks for (if any). Returns the local

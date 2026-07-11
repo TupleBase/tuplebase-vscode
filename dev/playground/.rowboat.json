@@ -37,7 +37,7 @@
       },
       "local-sqlite": {
         "adapter": "sqlite",
-        "path": "dev/seed/sqlite/demo.sqlite"
+        "path": "../seed/sqlite/demo.sqlite"
       },
       "local-clickhouse": {
         "adapter": "clickhouse",
@@ -82,9 +82,7 @@
         "adapter": "kafka",
         "host": "localhost",
         "port": 9092
-      }
-    },
-    "Test": {
+      },
       "Test": {
         "adapter": "dynamodb",
         "region": "local",

@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { isAbsolute, resolve } from 'node:path'
 import type {
   Adapter, AdapterFactory, ExecuteOptions,
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
@@ -26,6 +26,14 @@ export function parseSqNodeId(id: string): string[] {
   return id.slice(3).split('.').map(decodeURIComponent)
 }
 
+// Resolve the database file path. Absolute paths pass through; a relative path is
+// resolved against the .rowboat.json directory (baseDir) so config paths are
+// relative to the config file, not the (unpredictable) extension-host cwd.
+export function resolveDbPath(cfg: { path?: unknown; baseDir?: string }): string {
+  const p = String(cfg.path ?? '')
+  return isAbsolute(p) ? p : resolve(cfg.baseDir ?? process.cwd(), p)
+}
+
 // BLOBs come back as Uint8Array; render them as \x<hex> for the grid, pass the
 // rest (number/string/null) through untouched.
 const cell = (v: SqlValue): unknown =>
@@ -37,7 +45,7 @@ class SQLiteAdapter implements Adapter {
   private path: string
 
   constructor(private cfg: ResolvedConnection) {
-    this.path = resolve(String(cfg.path))
+    this.path = resolveDbPath(cfg)
   }
 
   private async open(): Promise<Database> {
@@ -80,7 +88,7 @@ class SQLiteAdapter implements Adapter {
 
   async testConnection(cfg: ResolvedConnection) {
     this.cfg = cfg
-    this.path = resolve(String(cfg.path))
+    this.path = resolveDbPath(cfg)
     const db = await this.open()
     db.prepare('select 1').free()   // parse-check the connection is usable
   }

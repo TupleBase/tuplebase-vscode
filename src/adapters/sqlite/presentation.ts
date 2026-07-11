@@ -19,7 +19,7 @@ export const presentation: AdapterPresentation = {
       label: 'File path',
       kind: 'text',
       required: true,
-      description: 'Path to the SQLite database file — absolute, or relative to the working directory; ${env:VAR} is interpolated.',
+      description: 'Path to the SQLite database file — absolute, or relative to the .rowboat.json location; ${env:VAR} is interpolated.',
     },
   ],
 }
