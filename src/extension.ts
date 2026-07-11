@@ -13,6 +13,7 @@ import { HistoryStore } from './core/history'
 import { registerHistoryTree } from './ui/historyTree'
 import { registerUntitledBindingCleanup } from './core/fileConn'
 import { registerQueryCodeLens } from './ui/queryCodeLens'
+import { addGroup } from './core/configWriter'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -40,6 +41,22 @@ export async function activate(context: vscode.ExtensionContext) {
     registerNewQueryOnConnection(manager, context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),
     registerQueryCodeLens(manager, store, context.workspaceState),
+    vscode.commands.registerCommand('rowboat.addGroup', async () => {
+      const uri = store.configUri
+      if (!uri) {
+        void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json — run "Rowboat: Create Config File" first`)
+        return
+      }
+      const existing = new Set(store.groupNames())
+      const name = await vscode.window.showInputBox({
+        prompt: 'New group name',
+        validateInput: v =>
+          !v.trim() ? 'Name required' : existing.has(v.trim()) ? `Group "${v.trim()}" already exists` : undefined,
+      })
+      if (!name) return
+      const text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8')
+      await vscode.workspace.fs.writeFile(uri, Buffer.from(addGroup(text, name.trim()), 'utf8'))
+    }),
     vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
       const deleted = await vault.clearAll()
       void vscode.window.showInformationMessage(`${BRAND}: cleared ${deleted.length} stored secret(s)`)

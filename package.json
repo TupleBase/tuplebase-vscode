@@ -115,10 +115,16 @@
         "icon": "$(run-all)"
       },
       {
+        "command": "rowboat.addGroup",
+        "title": "New Group",
+        "category": "Rowboat",
+        "icon": "$(new-folder)"
+      },
+      {
         "command": "rowboat.newQuery",
         "title": "New Query Scratch (pick engine)",
         "category": "Rowboat",
-        "icon": "$(add)"
+        "icon": "$(file-code)"
       },
       {
         "command": "rowboat.refreshExplorer",
@@ -186,14 +192,19 @@
       ],
       "view/title": [
         {
-          "command": "rowboat.newQuery",
+          "command": "rowboat.addGroup",
           "when": "view == rowboat.explorer",
           "group": "navigation@1"
         },
         {
-          "command": "rowboat.refreshExplorer",
+          "command": "rowboat.newQuery",
           "when": "view == rowboat.explorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "rowboat.refreshExplorer",
+          "when": "view == rowboat.explorer",
+          "group": "navigation@3"
         },
         {
           "command": "rowboat.history.clear",
