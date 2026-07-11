@@ -98,14 +98,14 @@ describe('SchemaTreeProvider with a live adapter', () => {
     const provider = makeProvider(true)
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
     expect(item.contextValue).toBe('rowboat.connection.connected')
-    expect(item.iconPath?.id).toBe('circle-filled')
+    expect(item.iconPath?.id).toBe('database')
   })
 
   it('renders disconnected state on the connection item', () => {
     const provider = makeProvider(false)
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
     expect(item.contextValue).toBe('rowboat.connection.disconnected')
-    expect(item.iconPath?.id).toBe('plug')
+    expect(item.iconPath?.id).toBe('database')
   })
 })
 

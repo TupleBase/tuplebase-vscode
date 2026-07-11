@@ -5,6 +5,7 @@ import { ConfigStore } from '../core/configStore'
 import { BRAND } from '../core/brand'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
+import { adapterIcon } from '../core/adapterCatalog'
 
 const CONN_MIME = 'application/vnd.rowboat.connection'
 
@@ -47,9 +48,10 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const connected = this.manager.isConnected(el.conn.name)
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
       item.description = el.conn.adapter
-      item.iconPath = connected
-        ? new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'))
-        : new vscode.ThemeIcon('plug')
+      item.iconPath = new vscode.ThemeIcon(
+        adapterIcon(el.conn.adapter),
+        connected ? new vscode.ThemeColor('charts.green') : undefined,
+      )
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
       item.contextValue = connected ? 'rowboat.connection.connected' : 'rowboat.connection.disconnected'
       return item

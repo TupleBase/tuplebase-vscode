@@ -1,4 +1,5 @@
 import { ADAPTERS, fieldsFor, validate, type Field } from './connFormSpec'
+import { ADAPTER_CATALOG } from '../core/adapterCatalog'
 
 const vscode = acquireVsCodeApi()
 const app = document.getElementById('app')!
@@ -18,11 +19,7 @@ type State = { stage: 'pick' } | { stage: 'form'; adapter: string }
 let state: State = init.mode === 'edit' ? { stage: 'form', adapter: init.adapter } : { stage: 'pick' }
 let currentErrBox: HTMLElement | undefined
 
-const META: Record<string, { label: string; icon: string; blurb: string }> = {
-  postgres: { label: 'PostgreSQL', icon: '🐘', blurb: 'Relational · SQL' },
-  redis: { label: 'Redis', icon: '⚡', blurb: 'Key-value · commands' },
-  dynamodb: { label: 'DynamoDB', icon: '🟧', blurb: 'AWS · PartiQL' },
-}
+const META = ADAPTER_CATALOG
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const n = document.createElement(tag)
@@ -46,7 +43,7 @@ function renderPick() {
     const m = META[adapter]
     const card = el('button', 'card')
     card.type = 'button'
-    card.appendChild(el('span', 'card-icon', m.icon))
+    card.appendChild(el('span', 'card-icon', m.emoji))
     card.appendChild(el('span', 'card-label', m.label))
     card.appendChild(el('span', 'card-blurb', m.blurb))
     card.addEventListener('click', () => {
