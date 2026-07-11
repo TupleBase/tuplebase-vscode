@@ -369,6 +369,18 @@
           "default": 30000,
           "minimum": 1,
           "description": "Maximum time in milliseconds for a query before Rowboat cancels it."
+        },
+        "rowboat.resultsPageSize": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "description": "How many rows a query fetches per run (capped by rowboat.maxRows)."
+        },
+        "rowboat.maxRows": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1,
+          "description": "Hard upper bound on rows fetched in a single run."
         }
       }
     }

@@ -9,6 +9,7 @@ import { ResultsPanel } from '../ui/resultsPanel'
 import { refreshQueryCodeLenses } from '../ui/queryCodeLens'
 import { isWriteStatement } from './querySafety'
 import { DEFAULT_QUERY_TIMEOUT_MS, queryTimeoutMs } from './queryTimeout'
+import { DEFAULT_MAX_ROWS, DEFAULT_PAGE_SIZE, resolvePageSize } from './resultLimits'
 import type { HistoryEntry } from './history'
 
 // SASL deliberately excluded: pg config/protocol errors mention it without credentials being wrong; 28P01 covers pg SCRAM rejections
@@ -107,7 +108,9 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
-    const timeoutMs = queryTimeoutMs(vscode.workspace.getConfiguration('rowboat').get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
+    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
     let timedOut = false
     const timeout = setTimeout(() => {
       timedOut = true
@@ -128,7 +131,7 @@ export function registerRunQuery(
     try {
       const adapter = await manager.getAdapter(connName)
       if (cancelledOrSuperseded()) return
-      const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
+      const envelope = await adapter.execute(stmt, { pageSize, signal })
       if (cancelledOrSuperseded()) return
       record(group, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
       panel.post({ type: 'result', index: 0, envelope, statement: stmt })
@@ -175,7 +178,9 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
-    const timeoutMs = queryTimeoutMs(vscode.workspace.getConfiguration('rowboat').get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
+    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
 
     await panel.show()
     panel.post({ type: 'batch', total: statements.length })
@@ -201,7 +206,7 @@ export function registerRunQuery(
       const timer = setTimeout(() => { timedOut = true; mine.abort() }, timeoutMs)
       const started = Date.now()
       try {
-        const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
+        const envelope = await adapter.execute(stmt, { pageSize, signal })
         if (signal.aborted) {
           if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
           break
