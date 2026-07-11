@@ -3,7 +3,7 @@ import { postgresFactory } from './postgres'
 import type { ResolvedConnection } from './types'
 
 const cfg: ResolvedConnection = {
-  env: 'test', name: 'it', adapter: 'postgres',
+  group: 'test', name: 'it', adapter: 'postgres', readonly: false,
   host: 'localhost', port: 5432, database: 'rowboat', user: 'rowboat',
   secrets: { password: 'rowboat' },
 }

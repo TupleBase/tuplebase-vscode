@@ -29,7 +29,7 @@ import type { ConnectionManager } from '../core/connections'
 import type { ConfigStore } from '../core/configStore'
 import { SchemaTreeProvider, type ExplorerNode } from './schemaTree'
 
-const CONN: ConnectionConfig = { env: 'dev', name: 'db1', adapter: 'postgres' }
+const CONN: ConnectionConfig = { group: 'dev', name: 'db1', adapter: 'postgres', readonly: false }
 
 function makeProvider(live: boolean) {
   const table: TreeNode = { id: 't1', label: 'users', kind: 'table', hasChildren: true }
@@ -37,7 +37,6 @@ function makeProvider(live: boolean) {
     getChildren: async (node: TreeNode | null) => (node === null ? [table] : []),
   } as unknown as Adapter
   const manager = {
-    activeEnvironment: 'dev',
     isConnected: () => live,
     liveAdapter: () => (live ? adapter : undefined),
     getAdapter: () => {
@@ -45,7 +44,8 @@ function makeProvider(live: boolean) {
     },
   } as unknown as ConnectionManager
   const store = {
-    connections: (env: string) => (env === 'dev' ? [CONN] : []),
+    connections: () => [CONN],
+    connection: (name: string) => (name === 'db1' ? CONN : undefined),
   } as unknown as ConfigStore
   return new SchemaTreeProvider(manager, store)
 }

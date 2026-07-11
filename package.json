@@ -121,11 +121,6 @@
         "icon": "$(add)"
       },
       {
-        "command": "rowboat.selectEnvironment",
-        "title": "Select Environment",
-        "category": "Rowboat"
-      },
-      {
         "command": "rowboat.refreshExplorer",
         "title": "Refresh Explorer",
         "category": "Rowboat",

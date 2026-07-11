@@ -3,7 +3,7 @@ import { dynamodbFactory } from './dynamodb'
 import type { ExecuteOptions, ResolvedConnection, ResultEnvelope } from './types'
 
 const cfg: ResolvedConnection = {
-  env: 'test', name: 'it', adapter: 'dynamodb',
+  group: 'test', name: 'it', adapter: 'dynamodb', readonly: false,
   region: 'local', endpoint: 'http://localhost:8000',
   secrets: {},
 }

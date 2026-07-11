@@ -55,30 +55,24 @@ export function registerQueryCodeLens(
   return vscode.Disposable.from(
     vscode.languages.registerCodeLensProvider([{ language: 'sql' }, { language: 'redis' }], provider),
     manager.onDidChangeConnections(() => emitter.fire()),
-    manager.onDidChangeEnvironment(() => emitter.fire()),
     store.onDidChange(() => emitter.fire()),
     vscode.commands.registerCommand('rowboat.selectConnectionForFile', async (uri?: vscode.Uri) => {
       const doc = uri
         ? vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString())
         : vscode.window.activeTextEditor?.document
       if (!doc) return
-      const env = manager.activeEnvironment
-      if (!env) {
-        void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json config found`)
-        return
-      }
-      const available = store.connections(env)
+      const matching = store.connections()
         .filter(c => manager.factories.get(c.adapter)?.languageId === doc.languageId)
-        .map(c => c.name)
-      if (available.length === 0) {
-        void vscode.window.showWarningMessage(`${BRAND}: no ${doc.languageId} connections in environment "${env}"`)
+      if (matching.length === 0) {
+        void vscode.window.showWarningMessage(`${BRAND}: no ${doc.languageId} connections in .rowboat.json`)
         return
       }
-      const picked = await vscode.window.showQuickPick(available, {
-        placeHolder: `Run this file against which ${env} connection?`,
-      })
+      const picked = await vscode.window.showQuickPick(
+        matching.map(c => ({ label: c.name, description: c.group })),
+        { placeHolder: 'Run this file against which connection?' },
+      )
       if (!picked) return
-      await setFileConnection(workspaceState, doc.uri.fsPath, picked)
+      await setFileConnection(workspaceState, doc.uri.fsPath, picked.label)
       emitter.fire()
     }),
   )

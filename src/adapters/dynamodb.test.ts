@@ -35,6 +35,6 @@ describe('dynamodbFactory', () => {
   })
 
   it('stores no secrets — the AWS credential chain handles auth', () => {
-    expect(dynamodbFactory.requiredSecrets({ env: 'e', name: 'n', adapter: 'dynamodb' })).toEqual([])
+    expect(dynamodbFactory.requiredSecrets({ group: 'e', name: 'n', adapter: 'dynamodb', readonly: false })).toEqual([])
   })
 })

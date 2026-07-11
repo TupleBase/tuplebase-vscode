@@ -113,7 +113,7 @@ export function registerSqlCompletion(
       // live adapters only — never connect, never prompt (mirrors redis)
       const connName = getFileConnection(workspaceState, doc.uri.fsPath)
       if (!connName) return []
-      const cfg = store.connections(manager.activeEnvironment ?? '').find(c => c.name === connName)
+      const cfg = store.connection(connName)
       if (!cfg || manager.factories.get(cfg.adapter)?.languageId !== 'sql') return []
       const adapter = manager.liveAdapter(connName)
       if (!adapter) return []

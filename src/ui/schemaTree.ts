@@ -52,8 +52,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
     if (el.node.kind === 'connect') {
       item.tooltip = `Connect to ${el.connName}`
-      const env = this.manager.activeEnvironment
-      const conn = env ? this.store.connections(env).find(c => c.name === el.connName) : undefined
+      const conn = this.store.connection(el.connName)
       if (conn) {
         item.command = {
           command: 'rowboat.connect',
@@ -68,9 +67,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   async getChildren(el?: ExplorerNode): Promise<ExplorerNode[]> {
     try {
       if (!el) {
-        const env = this.manager.activeEnvironment
-        if (!env) return []
-        return this.store.connections(env).map(conn => ({ type: 'connection' as const, conn }))
+        return this.store.connections().map(conn => ({ type: 'connection' as const, conn }))
       }
       // read-only view of live adapters — expanding never connects, otherwise a
       // refresh after disconnect would silently reconnect expanded nodes
@@ -103,7 +100,6 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
   return vscode.Disposable.from(
     view,
     store.onDidChange(() => provider.refresh()),
-    manager.onDidChangeEnvironment(() => provider.refresh()),
     manager.onDidChangeConnections(() => provider.refresh()),
     vscode.commands.registerCommand('rowboat.refreshExplorer', () => provider.refresh()),
     vscode.commands.registerCommand('rowboat.connect', async (el?: ExplorerNode) => {

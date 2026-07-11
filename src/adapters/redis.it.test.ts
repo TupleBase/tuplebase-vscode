@@ -3,7 +3,7 @@ import { redisFactory } from './redis'
 import type { ResolvedConnection } from './types'
 
 const cfg: ResolvedConnection = {
-  env: 'test', name: 'it', adapter: 'redis',
+  group: 'test', name: 'it', adapter: 'redis', readonly: false,
   host: 'localhost', port: 6379,
   secrets: {},
 }
