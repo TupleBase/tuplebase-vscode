@@ -7,48 +7,26 @@ import { BRAND } from './brand'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 
-const ACTIVE_ENV_KEY = 'rowboat.activeEnv'
-
 export class ConnectionManager implements vscode.Disposable {
   readonly factories = new Map<string, AdapterFactory>([
     [postgresFactory.id, postgresFactory],
     [redisFactory.id, redisFactory],
     [dynamodbFactory.id, dynamodbFactory],
   ])
-  private live = new Map<string, Adapter>()   // key: `${env}/${conn}`
+  private live = new Map<string, Adapter>()   // key: connection name (globally unique)
   private pending = new Map<string, Promise<Adapter>>()
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
-  private envEmitter = new vscode.EventEmitter<string>()
-  readonly onDidChangeEnvironment = this.envEmitter.event
   private connEmitter = new vscode.EventEmitter<void>()
   readonly onDidChangeConnections = this.connEmitter.event
 
   constructor(
     private store: ConfigStore,
     private vault: SecretVault,
-    private workspaceState: vscode.Memento,
   ) {}
 
-  get activeEnvironment(): string | undefined {
-    const names = this.store.environmentNames()
-    const saved = this.workspaceState.get<string>(ACTIVE_ENV_KEY)
-    if (saved && names.includes(saved)) return saved
-    const def = this.store.config?.defaultEnvironment
-    if (def && names.includes(def)) return def
-    return names[0]
-  }
-
-  async setActiveEnvironment(env: string) {
-    await this.disposeAll()
-    await this.workspaceState.update(ACTIVE_ENV_KEY, env)
-    this.envEmitter.fire(env)
-  }
-
-  private findConfig(connName: string): ConnectionConfig {
-    const env = this.activeEnvironment
-    if (!env) throw new Error(`No ${BRAND} environment configured (.rowboat.json)`)
-    const cfg = this.store.connections(env).find(c => c.name === connName)
-    if (!cfg) throw new Error(`Connection "${connName}" not found in environment "${env}"`)
+  private findConfig(name: string): ConnectionConfig {
+    const cfg = this.store.connection(name)
+    if (!cfg) throw new Error(`Connection "${name}" not found (.rowboat.json)`)
     return cfg
   }
 
@@ -56,18 +34,18 @@ export class ConnectionManager implements vscode.Disposable {
     const factory = this.factories.get(cfg.adapter)
     if (!factory) throw new Error(`No adapter registered for "${cfg.adapter}"`)
     const errs = factory.validate(cfg)
-    if (errs.length) throw new Error(`Invalid config for ${cfg.env}/${cfg.name}: ${errs.join(', ')}`)
+    if (errs.length) throw new Error(`Invalid config for ${cfg.group}/${cfg.name}: ${errs.join(', ')}`)
     const secrets: Record<string, string> = {}
     for (const field of factory.requiredSecrets(cfg)) {
-      let value = await this.vault.get(cfg.env, cfg.name, field)
+      let value = await this.vault.get(cfg.name, field)
       if (value === undefined) {
         value = await vscode.window.showInputBox({
           password: true,
           ignoreFocusOut: true,
-          prompt: `${field} for ${cfg.env}/${cfg.name}`,
+          prompt: `${field} for ${cfg.group}/${cfg.name}`,
         })
         if (value === undefined) throw new Error('Connection cancelled')
-        await this.vault.store(cfg.env, cfg.name, field, value)
+        await this.vault.store(cfg.name, field, value)
       }
       secrets[field] = value
     }
@@ -76,8 +54,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   // live-only lookup for completion providers — never connects, never prompts
   liveAdapter(connName: string): Adapter | undefined {
-    const env = this.activeEnvironment
-    return env ? this.live.get(`${env}/${connName}`) : undefined
+    return this.live.get(connName)
   }
 
   isConnected(connName: string): boolean {
@@ -86,7 +63,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   async getAdapter(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
-    const key = `${cfg.env}/${cfg.name}`
+    const key = cfg.name
     const existing = this.live.get(key)
     if (existing) return existing
     const inFlight = this.pending.get(key)
@@ -98,9 +75,9 @@ export class ConnectionManager implements vscode.Disposable {
       const adapter = factory.create(resolved)
       await adapter.connect(resolved)
       if (this.epoch !== myEpoch) {
-        // disposeAll ran while we were connecting (env switch/shutdown) — don't resurrect
+        // disposeAll ran while we were connecting (shutdown/refresh) — don't resurrect
         await adapter.dispose().catch(() => {})
-        throw new Error('Connection cancelled — environment changed while connecting')
+        throw new Error('Connection cancelled — disposed while connecting')
       }
       this.live.set(key, adapter)
       this.connEmitter.fire()
@@ -115,19 +92,16 @@ export class ConnectionManager implements vscode.Disposable {
   }
 
   async disconnect(connName: string): Promise<void> {
-    const cfg = this.findConfig(connName)
-    const key = `${cfg.env}/${cfg.name}`
-    const adapter = this.live.get(key)
+    const adapter = this.live.get(connName)
     if (adapter) await adapter.dispose().catch(() => {})
-    if (this.live.delete(key)) this.connEmitter.fire()
+    if (this.live.delete(connName)) this.connEmitter.fire()
   }
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
-    const key = `${cfg.env}/${cfg.name}`
-    await this.live.get(key)?.dispose()
-    if (this.live.delete(key)) this.connEmitter.fire()
-    await this.vault.deleteConnection(cfg.env, cfg.name)
+    await this.live.get(cfg.name)?.dispose()
+    if (this.live.delete(cfg.name)) this.connEmitter.fire()
+    await this.vault.deleteConnection(cfg.name)
     return this.getAdapter(connName)
   }
 
@@ -142,6 +116,5 @@ export class ConnectionManager implements vscode.Disposable {
   dispose() {
     // disposeAll fires connEmitter — only dispose it once that finishes
     void this.disposeAll().finally(() => this.connEmitter.dispose())
-    this.envEmitter.dispose()
   }
 }

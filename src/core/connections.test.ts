@@ -45,24 +45,15 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
     },
   }
   const store = {
-    config: { defaultEnvironment: 'dev' },
-    environmentNames: () => ['dev', 'prod'],
-    connections: (env: string) =>
-      env === 'dev' ? [{ env: 'dev', name: 'db1', adapter: 'fake' }] : [{ env: 'prod', name: 'db1', adapter: 'fake' }],
+    connection: (name: string) =>
+      name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false } : undefined,
   } as unknown as ConfigStore
   const vault = {
     get: async () => undefined,
     store: async () => {},
     deleteConnection: async () => {},
   } as unknown as SecretVault
-  let savedEnv: string | undefined
-  const memento = {
-    get: () => savedEnv,
-    update: async (_k: string, v: string) => {
-      savedEnv = v
-    },
-  } as never
-  const manager = new ConnectionManager(store, vault, memento)
+  const manager = new ConnectionManager(store, vault)
   manager.factories.set('fake', factory)
   return { manager, connects, disposed }
 }
@@ -112,10 +103,11 @@ describe('ConnectionManager connection state', () => {
     expect(fired).toHaveLength(1)
   })
 
-  it('unknown connection is never connected', async () => {
+  it('unknown connection is never connected and throws on getAdapter', async () => {
     const { manager } = makeManager()
     await manager.getAdapter('db1')
     expect(manager.isConnected('nope')).toBe(false)
+    await expect(manager.getAdapter('nope')).rejects.toThrow(/not found/i)
   })
 
   it('failed connect fires no event, stays disconnected, and can be retried', async () => {
@@ -135,18 +127,6 @@ describe('ConnectionManager connection state', () => {
     expect(connects).toHaveLength(2)
   })
 
-  it('connected state is scoped to the active environment', async () => {
-    const { manager, disposed } = makeManager()
-    await manager.getAdapter('db1')
-    expect(manager.isConnected('db1')).toBe(true)
-    const fired: number[] = []
-    manager.onDidChangeConnections(() => fired.push(1))
-    await manager.setActiveEnvironment('prod')
-    expect(manager.isConnected('db1')).toBe(false)
-    expect(fired).toHaveLength(1)
-    expect(disposed).toEqual(['db1'])
-  })
-
   it('reconnectWithFreshSecret fires the change event even when the reconnect fails', async () => {
     let calls = 0
     const { manager } = makeManager({
@@ -162,7 +142,7 @@ describe('ConnectionManager connection state', () => {
     expect(fired).toHaveLength(1)
   })
 
-  it('a connect still pending when the environment switches does not resurrect', async () => {
+  it('a connect still pending when disposeAll runs does not resurrect', async () => {
     let release!: () => void
     const gate = new Promise<void>(r => {
       release = r
@@ -170,10 +150,9 @@ describe('ConnectionManager connection state', () => {
     const { manager, disposed } = makeManager({ connect: () => gate })
     const pending = manager.getAdapter('db1')
     pending.catch(() => {})
-    await manager.setActiveEnvironment('prod')
+    await manager.disposeAll()
     release()
     await expect(pending).rejects.toThrow(/cancelled/i)
-    await manager.setActiveEnvironment('dev')
     expect(manager.isConnected('db1')).toBe(false)
     expect(disposed).toEqual(['db1'])
   })
