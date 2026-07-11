@@ -36,18 +36,18 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 - [x] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
 - [x] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
 
-## Plan 05: Environment/connection CRUD from the UI
+## Plan 05: Groups + connection CRUD from the UI
 
-- [ ] Explorer goes accordion: every environment becomes a top-level collapsible node (today the tree roots at the active env's connections only)
-- [ ] Environment CRUD (add/rename/delete/duplicate) entirely in the left panel: mini toolbar on the view title + context menu on environment nodes
-- [ ] Connection CRUD (add/edit/remove) opens a webview form in an editor tab on the right — not inline in the tree
-- [ ] Status-bar picker unchanged: still selects the *active* environment for query runs, even with all envs visible in the tree
-- [ ] All edits write back to `.rowboat.json` via jsonc-parser `modify`/`applyEdits` so comments and formatting survive
-- [ ] `"version": 1` field in `.rowboat.json` schema (migration seam — must land before the config shape has real users)
-- [ ] `contributes.configuration` settings: results page size, max rows, default query timeout
+Redesigned 2026-07-11: **environments are removed** — connections are the unit, groups/folders only organise, and there is no active environment (a run resolves via the file's bound connection). Design: `~/memory/2026-07-11-rowboat-plan05-phase1-groups-design.md`. Built in phases, each its own spec → plan → build:
+
+- [x] **Phase 1 — Foundation (groups model)**: `.rowboat.json` → `version: 1` + `groups`; `readonly` per-connection (+ optional group default); `ConnectionManager` and the secret vault keyed by connection name; explorer lists all connections flat; environment status bar removed. Pushed 1bd749e.
+- [ ] **Phase 2 — Explorer accordion**: groups as collapsible folder nodes; connections nested; ungrouped at root
+- [ ] **Phase 3 — Group CRUD**: add/rename/delete/duplicate group; jsonc-parser writeback that preserves comments/formatting
+- [ ] **Phase 4 — Connection CRUD webview**: editor-tab form with DB-source cards; add/edit/remove; reuse the cards for the "+" new-query panel
+- [ ] **Phase 5 — Settings**: `contributes.configuration` results page size + max rows (`rowboat.queryTimeoutMs` already exists)
 - [ ] Multi-root workspaces: config still resolves from the first folder — document the limitation (folder picker only if someone asks)
 
-Scope agreed 2026-07-06; design not finalized — brainstorm/design session required before implementing.
+Legacy `environments` configs are not supported (new shape only); `version` is the future migration seam.
 
 ## Plan 06: Publishing
 
