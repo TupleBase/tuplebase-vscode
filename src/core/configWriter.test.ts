@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from 'jsonc-parser'
-import { addConnection, addGroup } from './configWriter'
+import { addConnection, addGroup, deleteGroup, moveConnection, removeConnection, renameGroup } from './configWriter'
+
+const TWO = `{
+  "version": 1,
+  "groups": {
+    "local": {
+      "local-pg": { "adapter": "postgres", "host": "localhost" },
+      "cache": { "adapter": "redis", "host": "localhost" }
+    },
+    "prod": {
+      "orders": { "adapter": "postgres", "host": "p" }
+    }
+  }
+}`
 
 const CONFIG = `{
   // dev config — keep me
@@ -32,5 +45,34 @@ describe('configWriter', () => {
     const out = addConnection(addGroup(CONFIG, 'prod'), 'prod', 'orders', { adapter: 'postgres', host: 'p' })
     const cfg = parse(out)
     expect(cfg.groups.prod.orders.host).toBe('p')
+  })
+
+  it('deleteGroup removes a group and its connections', () => {
+    const cfg = parse(deleteGroup(TWO, 'local'))
+    expect(cfg.groups).not.toHaveProperty('local')
+    expect(cfg.groups.prod.orders).toBeDefined()
+  })
+
+  it('removeConnection removes one connection, leaving siblings', () => {
+    const cfg = parse(removeConnection(TWO, 'local', 'cache'))
+    expect(cfg.groups.local).not.toHaveProperty('cache')
+    expect(cfg.groups.local['local-pg']).toBeDefined()
+  })
+
+  it('renameGroup moves all connections under the new name', () => {
+    const cfg = parse(renameGroup(TWO, 'local', 'dev'))
+    expect(cfg.groups).not.toHaveProperty('local')
+    expect(Object.keys(cfg.groups.dev)).toEqual(['local-pg', 'cache'])
+    expect(cfg.groups.dev['local-pg'].adapter).toBe('postgres')
+  })
+
+  it('moveConnection relocates a connection to another group', () => {
+    const cfg = parse(moveConnection(TWO, 'local', 'prod', 'cache'))
+    expect(cfg.groups.local).not.toHaveProperty('cache')
+    expect(cfg.groups.prod.cache).toEqual({ adapter: 'redis', host: 'localhost' })
+  })
+
+  it('moveConnection is a no-op when the connection is not in the source group', () => {
+    expect(moveConnection(TWO, 'local', 'prod', 'missing')).toBe(TWO)
   })
 })
