@@ -3,8 +3,19 @@ import { ADAPTERS, fieldsFor, validate, type Field } from './connFormSpec'
 const vscode = acquireVsCodeApi()
 const app = document.getElementById('app')!
 
+type Init =
+  | { mode: 'new' }
+  | { mode: 'edit'; group: string; adapter: string; name: string; values: Record<string, unknown> }
+
+let init: Init = { mode: 'new' }
+try {
+  init = JSON.parse(document.body.dataset.init || '{"mode":"new"}') as Init
+} catch {
+  // fall back to the new-connection flow
+}
+
 type State = { stage: 'pick' } | { stage: 'form'; adapter: string }
-let state: State = { stage: 'pick' }
+let state: State = init.mode === 'edit' ? { stage: 'form', adapter: init.adapter } : { stage: 'pick' }
 let currentErrBox: HTMLElement | undefined
 
 const META: Record<string, { label: string; icon: string; blurb: string }> = {
@@ -47,13 +58,13 @@ function renderPick() {
   app.appendChild(grid)
 }
 
-function inputFor(f: Field): HTMLInputElement | HTMLSelectElement {
+function inputFor(f: Field, initial: unknown): HTMLInputElement | HTMLSelectElement {
   if (f.kind === 'checkbox') {
     const cb = el('input')
     cb.type = 'checkbox'
     cb.dataset.key = f.key
     cb.dataset.kind = 'checkbox'
-    if (f.default === true) cb.checked = true
+    cb.checked = initial !== undefined ? initial === true : f.default === true
     return cb
   }
   if (f.kind === 'select') {
@@ -65,37 +76,44 @@ function inputFor(f: Field): HTMLInputElement | HTMLSelectElement {
       opt.value = o
       sel.appendChild(opt)
     }
+    if (initial !== undefined) sel.value = String(initial)
     return sel
   }
   const inp = el('input')
   inp.type = f.kind === 'number' ? 'number' : 'text'
   inp.dataset.key = f.key
   inp.dataset.kind = f.kind
-  if (f.default !== undefined) inp.value = String(f.default)
+  const value = initial !== undefined ? initial : f.default
+  if (value !== undefined) inp.value = String(value)
   return inp
 }
 
-function fieldRow(f: Field): HTMLElement {
+function fieldRow(f: Field, initial: unknown): HTMLElement {
   const row = el('label', f.kind === 'checkbox' ? 'row row-check' : 'row')
   row.appendChild(el('span', 'row-label', f.required ? `${f.label} *` : f.label))
-  row.appendChild(inputFor(f))
+  row.appendChild(inputFor(f, initial))
   return row
 }
 
 function renderForm(adapter: string) {
+  const editing = init.mode === 'edit' && init.adapter === adapter
+  const prefill = editing ? (init as Extract<Init, { mode: 'edit' }>) : undefined
   const m = META[adapter]
-  const back = el('button', 'link', '← Back')
-  back.type = 'button'
-  back.addEventListener('click', () => {
-    state = { stage: 'pick' }
-    render()
-  })
-  app.appendChild(back)
-  app.appendChild(el('h1', undefined, `New ${m.label} connection`))
+
+  if (!editing) {
+    const back = el('button', 'link', '← Back')
+    back.type = 'button'
+    back.addEventListener('click', () => {
+      state = { stage: 'pick' }
+      render()
+    })
+    app.appendChild(back)
+  }
+  app.appendChild(el('h1', undefined, editing ? `Edit ${m.label} connection` : `New ${m.label} connection`))
 
   const form = el('form', 'form')
-  form.appendChild(fieldRow({ key: 'name', label: 'Connection name', kind: 'text', required: true }))
-  for (const f of fieldsFor(adapter)) form.appendChild(fieldRow(f))
+  form.appendChild(fieldRow({ key: 'name', label: 'Connection name', kind: 'text', required: true }, prefill?.name))
+  for (const f of fieldsFor(adapter)) form.appendChild(fieldRow(f, prefill?.values[f.key]))
 
   const errBox = el('div', 'errors')
   errBox.hidden = true
@@ -106,10 +124,10 @@ function renderForm(adapter: string) {
   const cancel = el('button', 'secondary', 'Cancel')
   cancel.type = 'button'
   cancel.addEventListener('click', () => vscode.postMessage({ type: 'cancel' }))
-  const create = el('button', 'primary', 'Create')
-  create.type = 'submit'
+  const submit = el('button', 'primary', editing ? 'Save' : 'Create')
+  submit.type = 'submit'
   actions.appendChild(cancel)
-  actions.appendChild(create)
+  actions.appendChild(submit)
   form.appendChild(actions)
 
   form.addEventListener('submit', e => {

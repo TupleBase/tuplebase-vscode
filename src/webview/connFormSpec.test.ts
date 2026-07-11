@@ -12,9 +12,9 @@ describe('fieldsFor', () => {
     expect(byKey.sslmode.kind).toBe('select')
   })
 
-  it('returns redis and dynamodb field sets', () => {
-    expect(fieldsFor('redis').map(f => f.key)).toEqual(['host', 'port', 'db', 'tls', 'username', 'auth'])
-    expect(fieldsFor('dynamodb').map(f => f.key)).toEqual(['region', 'profile', 'endpoint'])
+  it('returns redis and dynamodb field sets, each ending with the shared read-only toggle', () => {
+    expect(fieldsFor('redis').map(f => f.key)).toEqual(['host', 'port', 'db', 'tls', 'username', 'auth', 'readonly'])
+    expect(fieldsFor('dynamodb').map(f => f.key)).toEqual(['region', 'profile', 'endpoint', 'readonly'])
   })
 
   it('returns [] for an unknown adapter', () => {

@@ -138,6 +138,12 @@
         "icon": "$(trash)"
       },
       {
+        "command": "rowboat.editConnection",
+        "title": "Edit Connection",
+        "category": "Rowboat",
+        "icon": "$(edit)"
+      },
+      {
         "command": "rowboat.removeConnection",
         "title": "Remove Connection",
         "category": "Rowboat",
@@ -257,6 +263,11 @@
           "group": "1_modify@3"
         },
         {
+          "command": "rowboat.editConnection",
+          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "group": "1_modify@8"
+        },
+        {
           "command": "rowboat.removeConnection",
           "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
           "group": "1_modify@9"
@@ -316,6 +327,10 @@
         },
         {
           "command": "rowboat.deleteGroup",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.editConnection",
           "when": "false"
         },
         {

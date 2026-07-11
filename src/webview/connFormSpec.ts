@@ -12,6 +12,9 @@ export interface Field {
 
 export const ADAPTERS = ['postgres', 'redis', 'dynamodb'] as const
 
+// Common to every adapter: block writes on this connection (Plan 04 guardrail).
+const READONLY: Field = { key: 'readonly', label: 'Read-only', kind: 'checkbox', default: false }
+
 const SPECS: Record<string, Field[]> = {
   postgres: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
@@ -20,6 +23,7 @@ const SPECS: Record<string, Field[]> = {
     { key: 'user', label: 'User', kind: 'text', required: true },
     { key: 'sslmode', label: 'SSL mode', kind: 'select', options: ['', 'disable', 'require', 'verify-ca', 'verify-full'] },
     { key: 'sslrootcert', label: 'SSL root cert', kind: 'text' },
+    READONLY,
   ],
   redis: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
@@ -28,11 +32,13 @@ const SPECS: Record<string, Field[]> = {
     { key: 'tls', label: 'TLS', kind: 'checkbox', default: false },
     { key: 'username', label: 'Username', kind: 'text' },
     { key: 'auth', label: 'Password auth', kind: 'checkbox', default: false },
+    READONLY,
   ],
   dynamodb: [
     { key: 'region', label: 'Region', kind: 'text', required: true },
     { key: 'profile', label: 'AWS profile', kind: 'text' },
     { key: 'endpoint', label: 'Endpoint', kind: 'text' },
+    READONLY,
   ],
 }
 
