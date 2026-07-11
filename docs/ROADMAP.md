@@ -40,11 +40,34 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests + compose service & seed). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one.
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), CockroachDB (via `postgres`).
 
-- **Done:** MySQL (adapter), CockroachDB (via `postgres`).
-- **Next, by ask + effort:** SQLite (file-based, dev/demo — small); verify **MariaDB via the `mysql` adapter** (quick, like CockroachDB); then MongoDB (first non-SQL surface — MQL). Later: MS SQL Server, ClickHouse, Cassandra/Scylla, Elasticsearch/OpenSearch, Snowflake/BigQuery, Neo4j, Kafka.
-- **Support pieces as the count climbs:** a `new-adapter` scaffold, a shared conformance/contract test every adapter must pass, and `category`/`tags` on the presentation for a searchable, grouped picker.
+Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
+
+#### 1a. 🟢 Local-testable — do these first
+Each has a local image/file, so it gets a real live-container integration test like today.
+
+| DB | Local image / driver | Notes |
+|---|---|---|
+| SQLite | file, no server (`node:sqlite` / better-sqlite3) | easiest — start here; great for dev/demo |
+| MariaDB | `mariadb` | **verify it works through the `mysql` adapter first** — likely no new adapter |
+| MongoDB | `mongo` | first non-SQL surface (MQL) |
+| MS SQL Server | `mcr.microsoft.com/mssql/server` | Linux; `ACCEPT_EULA=Y` + SA password (heavy image) |
+| ClickHouse | `clickhouse/clickhouse-server` | analytics; HTTP/native |
+| Neo4j | `neo4j` | Cypher, graph |
+| Cassandra / ScyllaDB | `cassandra` / `scylladb/scylla` | CQL; slow to boot |
+| Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | heavy; single-node + memory limits |
+| Kafka | `apache/kafka` | KRaft single-node; topic browse / consume, not a DB |
+
+#### 1b. 🔒 Cloud-only — no solid local server
+Build the adapter + unit tests against a **mocked** client; gate live IT behind real credentials, off by default (skipped in CI).
+
+| DB | Why not local |
+|---|---|
+| Snowflake | account-only, no local server |
+| BigQuery | GCP project/credentials (a partial emulator exists) |
+
+**Support pieces as the count climbs:** a `new-adapter` scaffold, a shared conformance/contract test every adapter must pass, and `category`/`tags` on the presentation for a searchable, grouped picker.
 
 ### 🔒 2. Official brand icons
 
