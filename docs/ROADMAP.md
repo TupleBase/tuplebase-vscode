@@ -32,7 +32,6 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 
 - [x] Prod guardrails: `"readonly": true` flag on an environment blocks adapter-specific writes before connecting or executing.
 - [x] Default query timeout: `rowboat.queryTimeoutMs` cancels forgotten runaway queries after 30 seconds by default.
-- [ ] Grid export/copy: CSV/JSON export, copy cell/row/column
 - [ ] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
 - [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
 - [ ] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
