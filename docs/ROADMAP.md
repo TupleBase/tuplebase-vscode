@@ -2,7 +2,7 @@
 
 Rowboat is a VS Code multi-database workbench — Postgres · Redis · DynamoDB — driven by a secret-free `.rowboat.json`. Detailed per-plan specs live in the personal vault; this file is the map.
 
-**Status:** Plans 01–05 shipped. Publishing (Plan 06) and agent access (Plan 07) remain.
+**Status:** Plans 01–05 shipped. Next up: the adapter-modularization refactor, then MCP agent access (Plan 06); publishing (Plan 07) is the final goal.
 
 **Database support** — shipped adapters and candidates are tracked in [`DATABASES.md`](DATABASES.md).
 
@@ -45,7 +45,10 @@ Refactor so each connection type is a self-contained plugin: **one folder** (e.g
 
 - **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines).
 
-### Plan 06 — Publishing · owner-gated, deliberately last
+### Plan 06 — MCP server: let agents query sources
+Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
+
+### Plan 07 — Publishing · owner-gated, the final goal
 Needs the owner's Azure DevOps / Entra account — not startable here.
 - Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
 - Open VSX too (Cursor / Windsurf / VSCodium)
@@ -54,11 +57,9 @@ Needs the owner's Azure DevOps / Entra account — not startable here.
 - CHANGELOG.md + README screenshots/gif (page quality drives installs)
 - Public website / landing page — install links, docs, screenshots, gifs
 
-### Plan 07 — MCP server: let agents query sources
-Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
-
 ### Deferred · tracked, not scheduled
-Statement-splitter PartiQL edge cases · SSH tunnels.
+- **Statement-splitter PartiQL edge cases** — the `;` splitter is tuned for Postgres SQL (single/double quotes, dollar-quoting, `--` and `/* */` comments). DynamoDB PartiQL files ride the same splitter and can mis-split on PartiQL-specific syntax (e.g. quoted attribute paths, `?` parameters). Harden it when a real PartiQL file actually breaks.
+- **SSH tunnels** — reach a database behind a bastion / jump host: open a forwarded local port over SSH and connect the adapter through it, configured per connection. Common for hosted/production DBs; deferred until someone needs it.
 
 ### Later / pro · skipped by design
 Grid cell editing with write-back · EXPLAIN visualizer · telemetry.
