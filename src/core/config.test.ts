@@ -95,3 +95,51 @@ describe('parseConfig (groups model)', () => {
     expect(parseConfig(JSON.stringify({ version: 1 })).errors[0].message).toMatch(/groups/)
   })
 })
+
+describe('parseConfig ssh tunnels', () => {
+  const withSsh = (adapter: string, ssh: unknown, extra: Record<string, unknown> = {}) =>
+    base({ prod: { c: { adapter, ...extra, ssh } } })
+
+  it('parses a full ssh block and interpolates its string fields', () => {
+    const text = withSsh('postgres', { host: '${env:BASTION}', port: 2222, user: 'ec2-user', privateKey: '~/.ssh/id_ed25519' }, { host: 'db.internal', user: 'app' })
+    const { config, errors } = parseConfig(text, { BASTION: 'bastion.example.com' })
+    expect(errors).toEqual([])
+    expect(config!.connections['c'].ssh).toEqual({
+      host: 'bastion.example.com', port: 2222, user: 'ec2-user', privateKey: '~/.ssh/id_ed25519',
+    })
+  })
+
+  it('allows password auth without a private key', () => {
+    const { config, errors } = parseConfig(withSsh('redis', { host: 'b', user: 'u', password: true }, { host: 'r' }))
+    expect(errors).toEqual([])
+    expect(config!.connections['c'].ssh).toEqual({ host: 'b', user: 'u', password: true })
+  })
+
+  it('rejects ssh on an adapter with no host/port (dynamodb)', () => {
+    const { errors } = parseConfig(withSsh('dynamodb', { host: 'b', user: 'u', privateKey: 'k' }, { region: 'eu-west-1' }))
+    expect(errors.some(e => /not supported for adapter "dynamodb"/.test(e.message))).toBe(true)
+  })
+
+  it('requires host and user', () => {
+    const { errors } = parseConfig(withSsh('postgres', { privateKey: 'k' }, { host: 'db', user: 'app' }))
+    expect(errors.map(e => e.message)).toEqual(expect.arrayContaining([
+      expect.stringMatching(/ssh\.host is required/),
+      expect.stringMatching(/ssh\.user is required/),
+    ]))
+  })
+
+  it('rejects a secret string where a boolean flag is expected', () => {
+    const { errors } = parseConfig(withSsh('postgres', { host: 'b', user: 'u', password: 'hunter2' }, { host: 'db', user: 'app' }))
+    expect(errors.some(e => /ssh\.password must be true\/false/.test(e.message))).toBe(true)
+  })
+
+  it('needs at least one auth method', () => {
+    const { errors } = parseConfig(withSsh('postgres', { host: 'b', user: 'u' }, { host: 'db', user: 'app' }))
+    expect(errors.some(e => /privateKey path or "password": true/.test(e.message))).toBe(true)
+  })
+
+  it('flags unknown ssh fields', () => {
+    const { errors } = parseConfig(withSsh('postgres', { host: 'b', user: 'u', privateKey: 'k', proxyJump: 'x' }, { host: 'db', user: 'app' }))
+    expect(errors.some(e => /unknown ssh field "proxyJump"/.test(e.message))).toBe(true)
+  })
+})

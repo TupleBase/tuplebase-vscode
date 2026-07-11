@@ -1,9 +1,80 @@
 import { BRAND } from './brand'
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
-import type { ConnectionConfig } from '../adapters/types'
-import { adapterIds } from '../adapters/registry'
+import type { ConnectionConfig, SshConfig } from '../adapters/types'
+import { adapterIds, adapterById } from '../adapters/registry'
 
 export const KNOWN_ADAPTERS = adapterIds
+
+const SSH_KEYS = new Set(['host', 'port', 'user', 'privateKey', 'passphrase', 'password'])
+
+// Validate + interpolate a connection's optional `ssh` bastion block. Paths and
+// names are config; the passphrase / password are booleans here (prompted and
+// keychained at connect), never secret strings in the file.
+function parseSsh(
+  raw: unknown,
+  adapter: string,
+  path: string,
+  env: Record<string, string | undefined>,
+  errors: ConfigError[],
+): SshConfig | undefined {
+  if (raw === undefined) return undefined
+  const at = `${path}.ssh`
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    errors.push({ path: at, message: 'ssh must be an object' })
+    return undefined
+  }
+  const supportsHost = adapterById.get(adapter)?.presentation.fields.some(f => f.key === 'host')
+  if (!supportsHost) {
+    errors.push({ path: at, message: `ssh tunnelling is not supported for adapter "${adapter}"` })
+    return undefined
+  }
+  const o = raw as Record<string, unknown>
+  for (const k of Object.keys(o)) {
+    if (!SSH_KEYS.has(k)) errors.push({ path: `${at}.${k}`, message: `unknown ssh field "${k}"` })
+  }
+  const str = (k: 'host' | 'user' | 'privateKey', required: boolean): string | undefined => {
+    const v = o[k]
+    if (v === undefined || v === '') {
+      if (required) errors.push({ path: `${at}.${k}`, message: `ssh.${k} is required` })
+      return undefined
+    }
+    if (typeof v !== 'string') {
+      errors.push({ path: `${at}.${k}`, message: `ssh.${k} must be a string` })
+      return undefined
+    }
+    try { return interpolate(v, env) } catch (e) { errors.push({ path: `${at}.${k}`, message: (e as Error).message }); return undefined }
+  }
+  const bool = (k: 'passphrase' | 'password'): boolean | undefined => {
+    const v = o[k]
+    if (v === undefined) return undefined
+    if (typeof v !== 'boolean') {
+      errors.push({ path: `${at}.${k}`, message: `ssh.${k} must be true/false — ${BRAND} prompts for the secret and stores it in your keychain` })
+      return undefined
+    }
+    return v
+  }
+  const host = str('host', true)
+  const user = str('user', true)
+  const privateKey = str('privateKey', false)
+  const passphrase = bool('passphrase')
+  const password = bool('password')
+  let port: number | undefined
+  if (o.port !== undefined) {
+    if (typeof o.port !== 'number') errors.push({ path: `${at}.port`, message: 'ssh.port must be a number' })
+    else port = o.port
+  }
+  if (privateKey === undefined && password !== true) {
+    errors.push({ path: at, message: 'ssh needs a privateKey path or "password": true' })
+  }
+  if (host === undefined || user === undefined) return undefined
+  return {
+    host, user,
+    ...(port !== undefined ? { port } : {}),
+    ...(privateKey ? { privateKey } : {}),
+    ...(passphrase !== undefined ? { passphrase } : {}),
+    ...(password !== undefined ? { password } : {}),
+  }
+}
 const SECRET_FIELDS = ['password', 'passwd', 'secret', 'token', 'accesskeyid', 'secretaccesskey']
 
 export interface ConfigError { path: string; message: string }
@@ -83,6 +154,9 @@ export function parseConfig(
       }
       const connReadonly = typeof conn.readonly === 'boolean' ? conn.readonly : undefined
       delete conn.readonly
+      const sshRaw = conn.ssh
+      delete conn.ssh
+      const ssh = parseSsh(sshRaw, conn.adapter as string, path, env, errors)
       for (const [k, v] of Object.entries(conn)) {
         if (typeof v === 'string') {
           try {
@@ -98,6 +172,7 @@ export function parseConfig(
         name: connName,
         adapter: conn.adapter as string,
         readonly: connReadonly ?? groupReadonly === true,
+        ...(ssh ? { ssh } : {}),
       } as ConnectionConfig
     }
   }

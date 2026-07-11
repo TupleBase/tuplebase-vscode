@@ -12,7 +12,9 @@ const host = {
   // jsonc-parser's CJS/UMD build calls require() through a factory parameter,
   // which esbuild can't statically resolve when bundled — pick its ESM build instead.
   mainFields: ['module', 'main'],
-  external: ['vscode', 'pg-native'],
+  // ssh2 optionally require()s native .node bindings (sshcrypto, cpu-features) in
+  // try/catch and falls back to pure JS; keep them external so the bundle builds.
+  external: ['vscode', 'pg-native', 'cpu-features', '*.node'],
   sourcemap: true,
   minify: process.env.NODE_ENV === 'production',
 }

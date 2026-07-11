@@ -36,4 +36,10 @@ describe('buildJsonSchema', () => {
     expect(pg.properties.sslmode.enum).toEqual(['disable', 'require', 'verify-ca', 'verify-full'])
     expect(branchFor('redis').properties.tls).toMatchObject({ type: 'boolean', default: false })
   })
+
+  it('offers an ssh block only for host/port adapters', () => {
+    expect(branchFor('postgres').properties.ssh).toMatchObject({ type: 'object', required: ['host', 'user'] })
+    expect(branchFor('redis').properties.ssh).toBeDefined()
+    expect(branchFor('dynamodb').properties.ssh).toBeUndefined()
+  })
 })

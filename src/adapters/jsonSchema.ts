@@ -19,6 +19,22 @@ function propertyFor(f: Field): JsonSchema {
   return prop
 }
 
+// SSH bastion tunnel — common to any adapter that dials a host/port.
+const SSH_SCHEMA: JsonSchema = {
+  type: 'object',
+  description: 'Tunnel this connection through an SSH bastion / jump host',
+  required: ['host', 'user'],
+  properties: {
+    host: { type: 'string', description: 'Bastion hostname' },
+    port: { type: 'number', default: 22 },
+    user: { type: 'string', description: 'SSH username' },
+    privateKey: { type: 'string', description: 'Path to the private key file (use ${env:VAR} for machine-specific paths)' },
+    passphrase: { type: 'boolean', description: 'Prompt for the private key passphrase (stored in the OS keychain)' },
+    password: { type: 'boolean', description: 'Prompt for an SSH password (stored in the OS keychain)' },
+  },
+  additionalProperties: false,
+}
+
 function branchFor(p: AdapterPresentation): JsonSchema {
   const properties: JsonSchema = {
     adapter: true,
@@ -28,6 +44,8 @@ function branchFor(p: AdapterPresentation): JsonSchema {
     },
   }
   for (const f of p.fields) properties[f.key] = propertyFor(f)
+  // tunnelling rewrites host/port, so it applies only to host/port adapters
+  if (p.fields.some(f => f.key === 'host')) properties.ssh = SSH_SCHEMA
   return {
     if: { properties: { adapter: { const: p.id } } },
     then: {

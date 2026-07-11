@@ -1,10 +1,23 @@
 export type AdapterId = string
 
+// Tunnel a host/port connection through an SSH bastion. Paths and names live in
+// the config; the key passphrase / SSH password are prompted and kept in the OS
+// keychain (never in the file).
+export interface SshConfig {
+  host: string
+  port?: number
+  user: string
+  privateKey?: string   // path to the private key file
+  passphrase?: boolean  // prompt for the key passphrase
+  password?: boolean    // prompt for an SSH password
+}
+
 export interface ConnectionConfig {
   group: string
   name: string
   adapter: AdapterId
   readonly: boolean
+  ssh?: SshConfig
   [key: string]: unknown
 }
 
