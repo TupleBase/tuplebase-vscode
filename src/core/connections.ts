@@ -138,6 +138,13 @@ export class ConnectionManager implements vscode.Disposable {
     if (this.live.delete(connName)) this.connEmitter.fire()
   }
 
+  // Drop this connection's stored secrets (a bad saved password, say) without
+  // touching others — the next connect re-prompts. Disconnects first if live.
+  async forgetSecrets(connName: string): Promise<void> {
+    await this.disconnect(connName)
+    await this.vault.deleteConnection(connName)
+  }
+
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     await this.live.get(cfg.name)?.dispose()

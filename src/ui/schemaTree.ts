@@ -196,5 +196,12 @@ export function registerSchemaTree(
         }
       }
     }),
+    vscode.commands.registerCommand('rowboat.resetCredentials', async (el?: ExplorerNode) => {
+      if (el?.type !== 'connection') return
+      await manager.forgetSecrets(el.conn.name)
+      void vscode.window.showInformationMessage(
+        `${BRAND}: cleared saved credentials for "${el.conn.name}" — connect to re-enter.`,
+      )
+    }),
   )
 }

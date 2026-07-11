@@ -167,6 +167,12 @@
         "category": "Rowboat"
       },
       {
+        "command": "rowboat.resetCredentials",
+        "title": "Reset Credentials (re-enter password)",
+        "category": "Rowboat",
+        "icon": "$(key)"
+      },
+      {
         "command": "rowboat.createConfig",
         "title": "Create Config File",
         "category": "Rowboat"
@@ -268,6 +274,11 @@
           "group": "1_modify@9"
         },
         {
+          "command": "rowboat.resetCredentials",
+          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "group": "1_modify@10"
+        },
+        {
           "command": "rowboat.connect",
           "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
           "group": "inline@1"
@@ -316,6 +327,10 @@
         },
         {
           "command": "rowboat.disconnect",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.resetCredentials",
           "when": "false"
         },
         {
@@ -421,10 +436,12 @@
     "@aws-sdk/client-dynamodb": "^3.1080.0",
     "@aws-sdk/credential-providers": "^3.1080.0",
     "@aws-sdk/lib-dynamodb": "^3.1080.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@redis/client": "^6.1.0",
     "jsonc-parser": "^3.3.1",
     "pg": "^8.22.0",
     "ssh2": "^1.17.0",
-    "tabulator-tables": "^6.5.2"
+    "tabulator-tables": "^6.5.2",
+    "zod": "^3.25.76"
   }
 }

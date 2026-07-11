@@ -48,14 +48,15 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
     connection: (name: string) =>
       name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false } : undefined,
   } as unknown as ConfigStore
+  const deleted: string[] = []
   const vault = {
     get: async () => undefined,
     store: async () => {},
-    deleteConnection: async () => {},
+    deleteConnection: async (name: string) => { deleted.push(name) },
   } as unknown as SecretVault
   const manager = new ConnectionManager(store, vault)
   manager.factories.set('fake', factory)
-  return { manager, connects, disposed }
+  return { manager, connects, disposed, deleted }
 }
 
 describe('ConnectionManager connection state', () => {
@@ -71,6 +72,15 @@ describe('ConnectionManager connection state', () => {
     await manager.getAdapter('db1')
     expect(manager.isConnected('db1')).toBe(true)
     expect(fired).toHaveLength(1)
+  })
+
+  it('forgetSecrets disconnects and clears that connection\'s stored secrets', async () => {
+    const { manager, disposed, deleted } = makeManager()
+    await manager.getAdapter('db1')
+    await manager.forgetSecrets('db1')
+    expect(manager.isConnected('db1')).toBe(false)
+    expect(disposed).toContain('db1')
+    expect(deleted).toEqual(['db1'])
   })
 
   it('does not re-fire for an already-live adapter', async () => {
