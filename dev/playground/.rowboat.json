@@ -72,6 +72,11 @@
         "host": "localhost",
         "port": 27017,
         "database": "rowboat"
+      },
+      "local-elasticsearch": {
+        "adapter": "elasticsearch",
+        "host": "localhost",
+        "port": 9200
       }
     },
     "Test": {

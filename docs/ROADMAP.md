@@ -40,7 +40,7 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), SQL Server (adapter), ClickHouse (adapter), Cassandra (adapter), Neo4j (adapter), MongoDB (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), SQL Server (adapter), ClickHouse (adapter), Cassandra (adapter), Neo4j (adapter), MongoDB (adapter), Elasticsearch (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
 
 Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
 
@@ -56,7 +56,7 @@ Each has a local image/file, so it gets a real live-container integration test l
 | ✅ ClickHouse | `clickhouse/clickhouse-server` | **shipped** — `src/adapters/clickhouse/`, HTTP driver, `system.*` schema tree, optional password auth |
 | ✅ Neo4j | `neo4j` | **shipped** — `src/adapters/neo4j/`, Cypher over Bolt, labels→properties tree, own Cypher completion, SKIP/LIMIT paging |
 | ✅ Cassandra / ScyllaDB | `cassandra` / `scylladb/scylla` | **shipped** — `src/adapters/cassandra/`, CQL, native `pageState` paging, `system_schema.*` tree (ScyllaDB is CQL-compatible) |
-| Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | heavy; single-node + memory limits |
+| ✅ Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | **shipped** — `src/adapters/elasticsearch/`, `METHOD /path {json}` console, `_search`→rows with from/size paging, indices→mapping tree |
 | Kafka | `apache/kafka` | KRaft single-node; topic browse / consume, not a DB |
 
 #### 1b. 🔒 Cloud-only — no solid local server
@@ -76,6 +76,8 @@ Swap the clean **placeholder** SVGs (and the emoji form-card fallback) for each 
 ### 3. Rename the product to *Tuple* — decision TBD
 
 Full rename of the product from **Rowboat** to **Tuple** (name not final — decision pending). If it lands, do it **before** publishing so the marketplace identity ships correct from day one: display name, extension `name`/`publisher`/id, command namespace (`rowboat.*` → `tuple.*`), the `.rowboat.json` config filename + activation event, `BRAND` string, icons/media, docs and repo. Provide a migration path for existing `.rowboat.json` files (accept both names for a release, or a one-time rename prompt).
+
+**Domain (checked 2026-07-11, RDAP = availability only, price approx):** `.com/.dev/.app/.io/.xyz/.ai` all **taken** — .com/.dev/.app held by the existing *Tuple* pair-programming app (brand-collision risk). **Available:** `tuple.tools` (~$12–15/yr flat, on-theme — cheap pick), `tuple.me` (~$18), `tuple.co` (~$25–30), `tuple.io`/`.sh` (~$32–40). Cheapest no-markup registrar: Cloudflare / Porkbun. Exact-name collision may push toward a stem (`tupledb`, `usetuple`).
 
 ### 🔒 4. Publishing — the final goal *(needs the owner's Azure DevOps / Entra account)*
 

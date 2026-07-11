@@ -80,6 +80,19 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  elasticsearch:
+    image: elasticsearch:8.15.0
+    profiles: ["elasticsearch", "all"]
+    ports: ["9200:9200"]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      # dev single-node: don't let the docker VM's disk usage block shard allocation
+      cluster.routing.allocation.disk.threshold_enabled: "false"
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+    # no healthcheck: the seed script retries until the HTTP port answers
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]
