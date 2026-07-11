@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyTabUpdate, capTab, initialTabs, tabLabel, type Envelope, type Tab } from './tabsModel'
+import { appendRows, applyTabUpdate, capTab, initialTabs, tabLabel, type Envelope, type Tab } from './tabsModel'
 
 const env = (rowCount: number, rows: unknown[][] = []): Envelope => ({
   columns: [{ name: 'c' }],
@@ -69,5 +69,24 @@ describe('capTab', () => {
     if (capped.status !== 'done') throw new Error('expected done')
     expect(capped.envelope.rows).toHaveLength(100)
     expect(capped.envelope.warnings.at(-1)).toMatch(/first 100 rows/)
+  })
+})
+
+describe('appendRows', () => {
+  it('appends a next window and carries the new token', () => {
+    const tabs: Tab[] = [{ status: 'done', envelope: { ...env(2, [[1], [2]]), nextPageToken: '2' }, statement: 's' }]
+    const next = appendRows(tabs, 0, { ...env(2, [[3], [4]]), nextPageToken: '4' })
+    const tab = next[0]
+    if (tab.status !== 'done') throw new Error('expected done')
+    expect(tab.envelope.rows).toEqual([[1], [2], [3], [4]])
+    expect(tab.envelope.rowCount).toBe(4)
+    expect(tab.envelope.nextPageToken).toBe('4')
+  })
+
+  it('clears the token when the last page arrives, and ignores non-done tabs', () => {
+    const tabs: Tab[] = [{ status: 'done', envelope: { ...env(1, [[1]]), nextPageToken: '1' }, statement: 's' }]
+    const done = appendRows(tabs, 0, env(1, [[2]]))
+    expect((done[0] as { envelope: Envelope }).envelope.nextPageToken).toBeUndefined()
+    expect(appendRows([{ status: 'pending' }], 0, env(1, [[1]]))).toEqual([{ status: 'pending' }])
   })
 })

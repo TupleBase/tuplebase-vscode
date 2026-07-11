@@ -89,6 +89,7 @@ function setup(readonly = false) {
     show: async () => {},
     post: () => {},
     onCancel: () => ({ dispose() {} }),
+    onLoadMore: () => ({ dispose() {} }),
   } as unknown as ResultsPanel
   const memento = { get: () => 'local-pg', update: async () => {} } as unknown as Memento
   registerRunQuery(manager, store, panel, memento)

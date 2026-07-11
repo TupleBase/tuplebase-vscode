@@ -6,6 +6,7 @@ import type {
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
 } from '../types'
 import type { Pool } from 'pg'
+import { offsetFromToken, windowedSql } from '../../core/pagination'
 
 const SSL_MODES = ['disable', 'require', 'verify-ca', 'verify-full']
 
@@ -99,20 +100,27 @@ class PostgresAdapter implements Adapter {
     }
     opts.signal.addEventListener('abort', onAbort, { once: true })
     try {
-      const res = await client.query({ text: stmt, rowMode: 'array' })
-      const warnings: string[] = []
+      const offset = offsetFromToken(opts.pageToken)
+      const page = windowedSql(stmt, opts.pageSize, offset)
+      const res = await client.query({ text: page.sql, rowMode: 'array' })
+      const columns = (res.fields ?? []).map(f => ({ name: f.name, type: String(f.dataTypeID) }))
       let rows = (res.rows ?? []) as unknown[][]
+      if (page.paginated) {
+        // bounded fetch: the +1 sentinel row means there's a next page
+        const hasMore = rows.length > opts.pageSize
+        if (hasMore) rows = rows.slice(0, opts.pageSize)
+        return {
+          columns, rows, rowCount: rows.length, elapsedMs: Date.now() - started, warnings: [],
+          ...(hasMore ? { nextPageToken: String(offset + opts.pageSize) } : {}),
+        }
+      }
+      // self-limited / write / DDL: keep the old fetch-then-slice with a warning
+      const warnings: string[] = []
       if (rows.length > opts.pageSize) {
         warnings.push(`showing first ${opts.pageSize} of ${rows.length} rows`)
         rows = rows.slice(0, opts.pageSize)
       }
-      return {
-        columns: (res.fields ?? []).map(f => ({ name: f.name, type: String(f.dataTypeID) })),
-        rows,
-        rowCount: res.rowCount ?? rows.length,
-        elapsedMs: Date.now() - started,
-        warnings,
-      }
+      return { columns, rows, rowCount: res.rowCount ?? rows.length, elapsedMs: Date.now() - started, warnings }
     } finally {
       opts.signal.removeEventListener('abort', onAbort)
       client.release()

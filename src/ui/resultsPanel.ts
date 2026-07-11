@@ -5,15 +5,21 @@ export type ResultsMessage =
   | { type: 'batch'; total: number }
   | { type: 'running'; statement: string; index?: number }
   | { type: 'result'; envelope: ResultEnvelope; statement: string; index?: number }
+  | { type: 'append'; envelope: ResultEnvelope; index: number }
   | { type: 'error'; message: string; index?: number }
 
-export type ResultsRequest = { type: 'cancel' } | { type: 'copy'; text: string }
+export type ResultsRequest =
+  | { type: 'cancel' }
+  | { type: 'copy'; text: string }
+  | { type: 'loadMore'; index: number }
 
 export class ResultsPanel implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined
   private pending: ResultsMessage[] = []
   private cancelEmitter = new vscode.EventEmitter<void>()
+  private loadMoreEmitter = new vscode.EventEmitter<number>()
   readonly onCancel = this.cancelEmitter.event
+  readonly onLoadMore = this.loadMoreEmitter.event
 
   constructor(private extensionUri: vscode.Uri) {}
 
@@ -22,6 +28,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider('rowboat.results', panel),
       panel.cancelEmitter,
+      panel.loadMoreEmitter,
     )
     return panel
   }
@@ -35,6 +42,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     view.webview.onDidReceiveMessage((msg: ResultsRequest) => {
       if (msg.type === 'cancel') this.cancelEmitter.fire()
       else if (msg.type === 'copy') void vscode.env.clipboard.writeText(msg.text)
+      else if (msg.type === 'loadMore') this.loadMoreEmitter.fire(msg.index)
     })
     view.webview.html = this.html(view.webview)
     for (const msg of this.pending) void view.webview.postMessage(msg)
@@ -81,6 +89,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
       <div id="detail-json" class="jx-root"></div>
     </div>
   </div>
+  <div id="pager" hidden><span id="pager-info"></span><button id="loadmore-btn">Load more</button></div>
   <script src="${js}"></script>
 </body>
 </html>`

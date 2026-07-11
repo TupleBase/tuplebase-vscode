@@ -25,6 +25,13 @@ export function registerRunQuery(
   onRan?: (entry: HistoryEntry) => void,
 ): vscode.Disposable {
   let inFlight: AbortController | undefined
+  // continuation context per result tab, for "Load more" (index → conn/stmt/token)
+  const pageCtx = new Map<number, { connName: string; statement: string; pageToken: string }>()
+
+  const rememberPage = (index: number, connName: string, statement: string, nextPageToken?: string) => {
+    if (nextPageToken) pageCtx.set(index, { connName, statement, pageToken: nextPageToken })
+    else pageCtx.delete(index)
+  }
 
   const syntaxOf = (doc: vscode.TextDocument) =>
     fileStatementSyntax(store, workspaceState, doc.uri.fsPath, doc.languageId)
@@ -131,6 +138,7 @@ export function registerRunQuery(
 
     await panel.show()
     panel.post({ type: 'batch', total: 1 })
+    pageCtx.clear()
     panel.post({ type: 'running', index: 0, statement: stmt })
     const started = Date.now()
     try {
@@ -140,6 +148,7 @@ export function registerRunQuery(
       if (cancelledOrSuperseded()) return
       record(group, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
       panel.post({ type: 'result', index: 0, envelope, statement: stmt })
+      rememberPage(0, connName, stmt, envelope.nextPageToken)
     } catch (e) {
       if (cancelledOrSuperseded()) return
       record(group, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
@@ -189,6 +198,7 @@ export function registerRunQuery(
 
     await panel.show()
     panel.post({ type: 'batch', total: statements.length })
+    pageCtx.clear()
 
     const adapter = await manager.getAdapter(connName).catch((e: unknown) => {
       if (inFlight === mine) panel.post({ type: 'error', index: 0, message: `Error: ${errorMessage(e)}` })
@@ -218,6 +228,7 @@ export function registerRunQuery(
         }
         record(group, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
         panel.post({ type: 'result', index, statement: stmt, envelope })
+        rememberPage(index, connName, stmt, envelope.nextPageToken)
       } catch (e) {
         if (signal.aborted) {
           if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
@@ -232,9 +243,31 @@ export function registerRunQuery(
     if (inFlight === mine) inFlight = undefined
   }
 
+  // Fetch the next window for a result tab and append it, keeping the continuation.
+  const loadMore = async (index: number) => {
+    const ctx = pageCtx.get(index)
+    if (!ctx) return
+    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
+    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      const adapter = await manager.getAdapter(ctx.connName)
+      const envelope = await adapter.execute(ctx.statement, { pageSize, pageToken: ctx.pageToken, signal: controller.signal })
+      panel.post({ type: 'append', index, envelope })
+      rememberPage(index, ctx.connName, ctx.statement, envelope.nextPageToken)
+    } catch (e) {
+      panel.post({ type: 'error', index, message: `Error: ${errorMessage(e)}` })
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
   return vscode.Disposable.from(
     vscode.commands.registerCommand('rowboat.runQuery', run),
     vscode.commands.registerCommand('rowboat.runFile', runFile),
     panel.onCancel(() => inFlight?.abort()),
+    panel.onLoadMore(index => void loadMore(index)),
   )
 }

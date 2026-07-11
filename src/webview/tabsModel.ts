@@ -6,6 +6,7 @@ export interface Envelope {
   rowCount: number
   elapsedMs: number
   warnings: string[]
+  nextPageToken?: string   // present when a next window can be fetched
 }
 
 export type Tab =
@@ -33,6 +34,20 @@ export function applyTabUpdate(tabs: Tab[], msg: TabUpdate): Tab[] {
   if (msg.type === 'running') next[i] = { status: 'running', statement: msg.statement }
   else if (msg.type === 'result') next[i] = { status: 'done', envelope: msg.envelope, statement: msg.statement }
   else next[i] = { status: 'error', message: msg.message }
+  return next
+}
+
+// Fold a "load more" window into a done tab: append its rows and carry the new
+// continuation token (undefined once the last page arrives).
+export function appendRows(tabs: Tab[], index: number, envelope: Envelope): Tab[] {
+  const tab = tabs[index]
+  if (!tab || tab.status !== 'done') return tabs
+  const next = tabs.slice()
+  const rows = [...tab.envelope.rows, ...envelope.rows]
+  next[index] = {
+    ...tab,
+    envelope: { ...tab.envelope, rows, rowCount: rows.length, nextPageToken: envelope.nextPageToken },
+  }
   return next
 }
 

@@ -1,11 +1,12 @@
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
 import { formatRow, rowToHtml } from './detailJson'
-import { applyTabUpdate, capTab, initialTabs, tabLabel, type Envelope, type Tab } from './tabsModel'
+import { appendRows, applyTabUpdate, capTab, initialTabs, tabLabel, type Envelope, type Tab } from './tabsModel'
 
 type Incoming =
   | { type: 'batch'; total: number }
   | { type: 'running'; statement: string; index?: number }
   | { type: 'result'; envelope: Envelope; statement: string; index?: number }
+  | { type: 'append'; envelope: Envelope; index: number }
   | { type: 'error'; message: string; index?: number }
 
 const vscode = acquireVsCodeApi<{ tabs?: Tab[]; active?: number }>()
@@ -16,7 +17,12 @@ const detail = document.getElementById('detail') as HTMLDivElement
 const detailJson = document.getElementById('detail-json')!
 const detailClose = document.getElementById('detail-close') as HTMLButtonElement
 const detailCopy = document.getElementById('detail-copy') as HTMLButtonElement
+const pager = document.getElementById('pager') as HTMLDivElement
+const pagerInfo = document.getElementById('pager-info')!
+const loadMoreBtn = document.getElementById('loadmore-btn') as HTMLButtonElement
 let detailText = ''
+
+const toGridData = (rows: unknown[][]) => rows.map(r => Object.fromEntries(r.map((v, i) => [`c${i}`, v])))
 
 let tabs: Tab[] = []
 let active = 0
@@ -29,6 +35,22 @@ detailCopy.addEventListener('click', () => {
   detailCopy.textContent = 'Copied'
   setTimeout(() => { detailCopy.textContent = 'Copy' }, 1200)
 })
+loadMoreBtn.addEventListener('click', () => {
+  loadMoreBtn.disabled = true
+  loadMoreBtn.textContent = 'Loading…'
+  vscode.postMessage({ type: 'loadMore', index: active })
+})
+
+// Show a "load more" affordance when the active result has a continuation token.
+function renderPager() {
+  const tab = tabs[active]
+  const env = tab && tab.status === 'done' ? tab.envelope : undefined
+  if (!env || !env.nextPageToken) { pager.hidden = true; return }
+  pager.hidden = false
+  pagerInfo.textContent = `showing ${env.rows.length} rows — more available`
+  loadMoreBtn.disabled = false
+  loadMoreBtn.textContent = 'Load more'
+}
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
@@ -87,6 +109,7 @@ function renderStrip() {
 }
 
 function renderActive() {
+  pager.hidden = true
   const tab = tabs[active]
   if (!tab || tab.status === 'pending') {
     status.textContent = 'Running…'
@@ -107,6 +130,7 @@ function renderActive() {
   const warn = envelope.warnings.length ? ` — ${envelope.warnings.join('; ')}` : ''
   status.textContent = `${envelope.rowCount} rows in ${envelope.elapsedMs}ms${warn}`
   buildTable(envelope)
+  renderPager()
 }
 
 function persist() {
@@ -120,6 +144,20 @@ function onMessage(msg: Incoming) {
     hideDetail()
     renderStrip()
     renderActive()
+    persist()
+    return
+  }
+  if (msg.type === 'append') {
+    tabs = appendRows(tabs, msg.index, msg.envelope)
+    if (msg.index === active) {
+      // append rows in place (keeps scroll position) rather than rebuilding
+      if (table) void table.addData(toGridData(msg.envelope.rows))
+      else renderActive()
+      const tab = tabs[active]
+      if (tab.status === 'done') status.textContent = `${tab.envelope.rowCount} rows`
+      renderPager()
+    }
+    renderStrip()
     persist()
     return
   }

@@ -31,14 +31,31 @@ describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgre
     await a.dispose()
   })
 
-  it('caps rows at pageSize with a warning', async () => {
+  it('bounds an unlimited SELECT and returns a continuation token', async () => {
     const a = postgresFactory.create(cfg)
     await a.connect(cfg)
-    const r = await a.execute('select generate_series(1, 1000)', {
+    const first = await a.execute('select generate_series(1, 1000) as n', {
       pageSize: 100, signal: new AbortController().signal,
     })
-    expect(r.rows).toHaveLength(100)
-    expect(r.warnings[0]).toMatch(/first 100/)
+    expect(first.rows).toHaveLength(100)
+    expect(first.rows[0]).toEqual([1])
+    expect(first.nextPageToken).toBe('100')   // more available, no over-fetch warning
+    // resume from the token → the next window
+    const next = await a.execute('select generate_series(1, 1000) as n', {
+      pageSize: 100, pageToken: first.nextPageToken, signal: new AbortController().signal,
+    })
+    expect(next.rows[0]).toEqual([101])
+    await a.dispose()
+  })
+
+  it('leaves a user LIMIT alone (no continuation token)', async () => {
+    const a = postgresFactory.create(cfg)
+    await a.connect(cfg)
+    const r = await a.execute('select generate_series(1, 1000) limit 5', {
+      pageSize: 100, signal: new AbortController().signal,
+    })
+    expect(r.rows).toHaveLength(5)
+    expect(r.nextPageToken).toBeUndefined()
     await a.dispose()
   })
 

@@ -3,6 +3,7 @@ import type {
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
 } from '../types'
 import type { Pool, RowDataPacket, FieldPacket } from 'mysql2/promise'
+import { offsetFromToken, windowedSql } from '../../core/pagination'
 
 // system schemas are hidden from the tree (mirrors postgres hiding pg_catalog)
 const SYSTEM_SCHEMAS = new Set(['information_schema', 'mysql', 'performance_schema', 'sys'])
@@ -63,25 +64,30 @@ class MySQLAdapter implements Adapter {
     const onAbort = () => { if (threadId) void pool.query('KILL QUERY ?', [threadId]).catch(() => {}) }
     opts.signal.addEventListener('abort', onAbort, { once: true })
     try {
-      const [result, fields] = await conn.query({ sql: stmt, rowsAsArray: true }) as [unknown, FieldPacket[]]
+      const offset = offsetFromToken(opts.pageToken)
+      const page = windowedSql(stmt, opts.pageSize, offset)
+      const [result, fields] = await conn.query({ sql: page.sql, rowsAsArray: true }) as [unknown, FieldPacket[]]
       if (!Array.isArray(result)) {
         // write (INSERT/UPDATE/DELETE/DDL) — ResultSetHeader, no rows
         const affected = (result as { affectedRows?: number }).affectedRows ?? 0
         return { columns: [], rows: [], rowCount: affected, elapsedMs: Date.now() - started, warnings: [`ok — ${affected} row(s) affected`] }
       }
-      const warnings: string[] = []
+      const columns = (fields ?? []).map(f => ({ name: f.name, type: String((f as { columnType?: number }).columnType ?? '') }))
       let rows = (result as unknown[][]).map(r => r.map(cell))
+      if (page.paginated) {
+        const hasMore = rows.length > opts.pageSize
+        if (hasMore) rows = rows.slice(0, opts.pageSize)
+        return {
+          columns, rows, rowCount: rows.length, elapsedMs: Date.now() - started, warnings: [],
+          ...(hasMore ? { nextPageToken: String(offset + opts.pageSize) } : {}),
+        }
+      }
+      const warnings: string[] = []
       if (rows.length > opts.pageSize) {
         warnings.push(`showing first ${opts.pageSize} of ${rows.length} rows`)
         rows = rows.slice(0, opts.pageSize)
       }
-      return {
-        columns: (fields ?? []).map(f => ({ name: f.name, type: String((f as { columnType?: number }).columnType ?? '') })),
-        rows,
-        rowCount: (result as unknown[][]).length,
-        elapsedMs: Date.now() - started,
-        warnings,
-      }
+      return { columns, rows, rowCount: rows.length, elapsedMs: Date.now() - started, warnings }
     } finally {
       opts.signal.removeEventListener('abort', onAbort)
       conn.release()
