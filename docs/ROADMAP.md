@@ -58,6 +58,8 @@ Opt-in high-volume seeds for exercising results paging and grid volume, kept sep
 
 ## Remaining
 
+> **Shipped since this list was drawn up:** **1** (lazy adapter chunks — core bundle 3.1MB→844KB), **2** (server-side windows + Load more), **4** (New Connection toolbar button), **6** (edit the password), **7** (password handling at create — store vs prompt-every-connect), **8** (themed, collapsible JSON detail), **9** ([`MCP.md`](MCP.md)). **3** partly done — the MySQL adapter shipped and CockroachDB is verified through the `postgres` adapter (see [`DATABASES.md`](DATABASES.md)); the other candidates remain. **5** is owner-gated (needs official brand SVGs — the drop-in mechanism exists). **10** (publishing) intentionally untouched. Architecture is documented in [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
 ### 1. Scale the adapter registry to 100s (in-tree, no plugins)
 
 The registry pattern already lands "add a DB = drop a folder + one line". The plugin model was only ever for third-party *distribution*, never performance — in-tree scales to 100s fine with lazy loading + a split bundle. **Drop the plugin idea.**
