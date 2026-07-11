@@ -67,8 +67,9 @@ export interface Adapter {
 
 // How a file of statements is split into runnable units. 'sql' is postgres-tuned
 // (dollar-quoting); 'partiql' is DynamoDB's SQL dialect (no dollar-quoting);
-// 'redis' is one command per line. Defaults to 'sql' when a presentation omits it.
-export type StatementSyntax = 'sql' | 'partiql' | 'redis'
+// 'redis' and 'kafka' are one command per line. Defaults to 'sql' when a
+// presentation omits it.
+export type StatementSyntax = 'sql' | 'partiql' | 'redis' | 'kafka'
 
 // The connect-time half of an adapter: what the driver needs. Loaded lazily
 // (loadFactory) so its driver import doesn't run until a connection is opened.

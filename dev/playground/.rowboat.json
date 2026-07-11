@@ -77,6 +77,11 @@
         "adapter": "elasticsearch",
         "host": "localhost",
         "port": 9200
+      },
+      "local-kafka": {
+        "adapter": "kafka",
+        "host": "localhost",
+        "port": 9092
       }
     },
     "Test": {

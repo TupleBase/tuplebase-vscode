@@ -40,12 +40,12 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), SQL Server (adapter), ClickHouse (adapter), Cassandra (adapter), Neo4j (adapter), MongoDB (adapter), Elasticsearch (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** all of §1a — MySQL, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka (adapters) + CockroachDB (via `postgres`) + MariaDB (via `mysql`). Only §1b (cloud-only) remains.
 
 Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
 
-#### 1a. 🟢 Local-testable — do these first
-Each has a local image/file, so it gets a real live-container integration test like today.
+#### 1a. 🟢 Local-testable — ✅ COMPLETE
+Each has a local image/file with a real live-container integration test. All shipped.
 
 | DB | Local image / driver | Notes |
 |---|---|---|
@@ -57,7 +57,7 @@ Each has a local image/file, so it gets a real live-container integration test l
 | ✅ Neo4j | `neo4j` | **shipped** — `src/adapters/neo4j/`, Cypher over Bolt, labels→properties tree, own Cypher completion, SKIP/LIMIT paging |
 | ✅ Cassandra / ScyllaDB | `cassandra` / `scylladb/scylla` | **shipped** — `src/adapters/cassandra/`, CQL, native `pageState` paging, `system_schema.*` tree (ScyllaDB is CQL-compatible) |
 | ✅ Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | **shipped** — `src/adapters/elasticsearch/`, `METHOD /path {json}` console, `_search`→rows with from/size paging, indices→mapping tree |
-| Kafka | `apache/kafka` | KRaft single-node; topic browse / consume, not a DB |
+| ✅ Kafka | `apache/kafka` | **shipped** — `src/adapters/kafka/`, KRaft single-node; `topics`/`describe`/`consume` commands, topics→partitions tree |
 
 #### 1b. 🔒 Cloud-only — no solid local server
 Build the adapter + unit tests against a **mocked** client; gate live IT behind real credentials, off by default (skipped in CI).

@@ -15,6 +15,7 @@ Which databases Rowboat speaks, and which are candidates. Each database is a sel
 | Neo4j | `neo4j` | Cypher | graph; `neo4j-driver` (Bolt), labels→properties tree, own Cypher completion, `SKIP`/`LIMIT` paging |
 | MongoDB | `mongodb` | MQL (`db.coll.method(json)`) | document store; `find`/`aggregate`/`count`/`distinct` + inserts/updates/deletes, collections→sampled-fields tree, `skip`/`limit` paging |
 | Elasticsearch | `elasticsearch` | query DSL (`METHOD /path {json}`) | Kibana-console style; `_search` hits flatten to rows (`from`/`size` paging), indices→mapping-fields tree; OpenSearch works too |
+| Kafka | `kafka` | commands (`topics` / `describe` / `consume`) | not a DB — list topics/partitions and tail messages (partition/offset/key/value/timestamp); topics→partitions tree |
 | Redis | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
 | CockroachDB | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
@@ -29,7 +30,6 @@ Add a row when a database is requested; graduate it to **Shipped** when an adapt
 | ScyllaDB | CQL | wide-column — Cassandra-compatible, use the `cassandra` adapter |
 | OpenSearch | query DSL | search — Elasticsearch-compatible, use the `elasticsearch` adapter |
 | Snowflake / BigQuery | SQL | cloud warehouses |
-| Apache Kafka | topic browse / consume | event streaming, not a DB — list topics/partitions, tail messages (key/value + headers/offset) |
 
 ## Adding an adapter — checklist
 

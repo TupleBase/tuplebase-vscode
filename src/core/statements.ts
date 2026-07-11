@@ -85,14 +85,17 @@ export function splitRedisCommands(text: string): StatementRange[] {
   return out
 }
 
+// redis and kafka are line-based (one command per line); the SQL family splits on `;`
+const isLineBased = (syntax: StatementSyntax): boolean => syntax === 'redis' || syntax === 'kafka'
+
 // Every runnable statement in the text, in order — SQL/PartiQL split on `;`,
-// redis split per line. Used by "Run All Statements" to fan a file into tabs.
+// redis/kafka split per line. Used by "Run All Statements" to fan a file into tabs.
 export function splitAll(text: string, syntax: StatementSyntax = 'sql'): StatementRange[] {
-  return syntax === 'redis' ? splitRedisCommands(text) : splitStatements(text, syntax !== 'partiql')
+  return isLineBased(syntax) ? splitRedisCommands(text) : splitStatements(text, syntax !== 'partiql')
 }
 
 export function statementAt(text: string, offset: number, syntax: StatementSyntax = 'sql'): StatementRange | undefined {
-  if (syntax === 'redis') {
+  if (isLineBased(syntax)) {
     // line-based: cursor on a comment/blank line means there is nothing to run
     return splitRedisCommands(text).find(s => offset >= s.start && offset <= s.end)
   }

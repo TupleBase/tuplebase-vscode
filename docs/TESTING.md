@@ -16,6 +16,7 @@ npm run db:cassandra  # dockerized Cassandra on :9042, seeded (slow JVM boot)
 npm run db:neo4j      # dockerized Neo4j on :7687 (Bolt) / :7474, seeded
 npm run db:mongodb    # dockerized MongoDB on :27017, seeded
 npm run db:elasticsearch # dockerized Elasticsearch on :9200, seeded (heavy image)
+npm run db:kafka      # dockerized Kafka (KRaft) on :9092, seeded
 npm run db:seed:big   # opt-in high-volume seeds for paging (pg 10k rows, redis 5k keys, dynamo 2k items)
 ```
 
@@ -49,7 +50,7 @@ Three layers:
 
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
-RB_IT=1 npx vitest run   # unit + integration — needs each db:<engine> up (postgres, mysql, mariadb, mssql, clickhouse, cassandra, neo4j, mongodb, redis, dynamo)
+RB_IT=1 npx vitest run   # unit + integration — needs each db:<engine> up (postgres, mysql, mariadb, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamo). `npm run db:all` starts them all.
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```
