@@ -108,12 +108,13 @@ body {
   border-bottom: 1px solid var(--vscode-panel-border);
   font-weight: 600;
 }
-.tabulator .tabulator-header .tabulator-col {
+.tabulator .tabulator-header .tabulator-col,
+.tabulator .tabulator-header .tabulator-col-title {
   background: transparent;
-  border-right: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-foreground);
 }
-.tabulator .tabulator-header .tabulator-col:hover {
-  background: var(--vscode-list-hoverBackground);
+.tabulator .tabulator-header .tabulator-col {
+  border-right: 1px solid var(--vscode-panel-border);
 }
 .tabulator .tabulator-tableholder .tabulator-table { background: transparent; }
 .tabulator .tabulator-row {
@@ -124,9 +125,13 @@ body {
 .tabulator .tabulator-row.tabulator-row-even {
   background: var(--vscode-tree-tableOddRowsBackground, transparent);
 }
-.tabulator .tabulator-row.tabulator-selectable:hover {
-  background: var(--vscode-list-hoverBackground);
-  color: var(--vscode-foreground);
+/* Tabulator 6 omits .tabulator-selectable unless row selection is enabled, so
+   key hover on the row itself and pin a contrasting foreground on the row and
+   its cells — otherwise light text washed out on a light hover background. */
+.tabulator .tabulator-row:hover,
+.tabulator .tabulator-row:hover .tabulator-cell {
+  background-color: var(--vscode-list-hoverBackground);
+  color: var(--vscode-list-hoverForeground, var(--vscode-foreground));
 }
 .tabulator .tabulator-row.tabulator-selected {
   background: var(--vscode-list-activeSelectionBackground);
