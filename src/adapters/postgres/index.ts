@@ -1,11 +1,7 @@
-import type { AdapterModule } from '../types'
-import { presentation } from './presentation'
-
-// Presentation is eager; the factory (which pulls in the pg driver) and the
-// completion provider load only when a postgres connection is opened / a postgres
-// file is edited. Register by adding this to src/adapters/registry.ts.
-export const postgres: AdapterModule = {
-  presentation,
-  loadFactory: () => import('./adapter').then(m => m.postgresFactory),
-  loadCompletion: () => import('./completion').then(m => m.postgresCompletion),
-}
+// Lazily-loaded chunk (Rung 2): esbuild builds this entry — with the factory,
+// completion and the pg driver — into dist/adapters/postgres/index.js. The core
+// bundle loads it by path only when a postgres connection is opened, so the
+// driver never sits in the activation path. The eager presentation lives in
+// ./presentation and is imported by the registry directly.
+export { postgresFactory as factory } from './adapter'
+export { postgresCompletion as completion } from './completion'

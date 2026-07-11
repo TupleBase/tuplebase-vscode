@@ -1,7 +1,12 @@
 import * as esbuild from 'esbuild'
-import { cpSync, mkdirSync, readdirSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 
 const watch = process.argv.includes('--watch')
+
+// Per-adapter chunk entries: src/adapters/<id>/index.ts → <outdir>/<id>/index.js
+const adapterEntries = readdirSync('src/adapters', { withFileTypes: true })
+  .filter(e => e.isDirectory() && existsSync(`src/adapters/${e.name}/index.ts`))
+  .map(e => `src/adapters/${e.name}/index.ts`)
 
 const host = {
   entryPoints: ['src/extension.ts'],
@@ -46,6 +51,18 @@ const mcp = {
   external: ['pg-native', 'cpu-features', '*.node'],
 }
 
+// Rung 2: each adapter (factory + completion + driver) builds into its own chunk,
+// loaded by the core/MCP bundle at runtime from <bundle-dir>/adapters/<id>/. Built
+// next to both entry points so __dirname resolves it either way.
+const adapterChunks = outdir => ({
+  ...host,
+  entryPoints: adapterEntries,
+  outbase: 'src/adapters',
+  outfile: undefined,
+  outdir,
+  external: ['pg-native', 'cpu-features', '*.node'],
+})
+
 const copyAssets = () => {
   mkdirSync('dist/webview', { recursive: true })
   cpSync('node_modules/tabulator-tables/dist/css/tabulator.min.css', 'dist/webview/tabulator.min.css')
@@ -65,9 +82,15 @@ const copyAssets = () => {
 const assetPlugin = { name: 'copy-assets', setup(b) { b.onEnd(copyAssets) } }
 webview.plugins = [assetPlugin]
 
+const configs = [
+  host, webview, smokeTest, mcp,
+  adapterChunks('dist/adapters'),      // loaded by dist/extension.js
+  adapterChunks('dist/mcp/adapters'),  // loaded by dist/mcp/server.js
+]
+
 if (watch) {
-  const ctxs = await Promise.all([host, webview, smokeTest, mcp].map(c => esbuild.context(c)))
+  const ctxs = await Promise.all(configs.map(c => esbuild.context(c)))
   await Promise.all(ctxs.map(c => c.watch()))
 } else {
-  await Promise.all([host, webview, smokeTest, mcp].map(c => esbuild.build(c)))
+  await Promise.all(configs.map(c => esbuild.build(c)))
 }

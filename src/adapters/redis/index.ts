@@ -1,8 +1,3 @@
-import type { AdapterModule } from '../types'
-import { presentation } from './presentation'
-
-export const redis: AdapterModule = {
-  presentation,
-  loadFactory: () => import('./adapter').then(m => m.redisFactory),
-  loadCompletion: () => import('./completion').then(m => m.redisCompletion),
-}
+// Lazily-loaded chunk (Rung 2) → dist/adapters/redis/index.js. See postgres/index.ts.
+export { redisFactory as factory } from './adapter'
+export { redisCompletion as completion } from './completion'
