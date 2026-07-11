@@ -7,8 +7,10 @@ Which databases Rowboat speaks, and which are candidates. Each database is a sel
 | Database | `adapter` | Query surface | Notes |
 |---|---|---|---|
 | PostgreSQL | `postgres` | SQL | TLS (`sslmode` + CA cert), password in OS keychain |
+| MySQL | `mysql` | SQL | schemas → tables → columns tree, JSON columns, password in OS keychain |
 | Redis | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
+| CockroachDB | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
 
 ## Candidates — not scheduled
 
@@ -16,11 +18,10 @@ Add a row when a database is requested; graduate it to **Shipped** when an adapt
 
 | Database | Query surface | Notes / wire compatibility |
 |---|---|---|
-| MySQL / MariaDB | SQL | frequent ask; own client protocol |
+| MariaDB | SQL | likely works through the `mysql` adapter — verify |
 | SQLite | SQL | file-based, zero-server — great for dev/demo |
 | Microsoft SQL Server | T-SQL | TDS protocol |
 | MongoDB | MQL / aggregation | document store |
-| CockroachDB | SQL | Postgres wire — may work through the `postgres` adapter (verify) |
 | ClickHouse | SQL | HTTP / native protocol; analytics |
 | Cassandra / ScyllaDB | CQL | wide-column |
 | Elasticsearch / OpenSearch | query DSL | search |

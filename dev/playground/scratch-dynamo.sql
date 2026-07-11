@@ -8,3 +8,8 @@ SELECT * FROM maintenance_jobs WHERE boat_id='boat-3';
 INSERT INTO voyages VALUE {'voyage_id':'v-900','crew_name':'ada','status':'planned'};
 UPDATE voyages SET status='underway' WHERE voyage_id='v-900';
 DELETE FROM voyages WHERE voyage_id='v-900';
+
+-- Paging demo — needs the large dataset: npm run db:seed:big (2,000 items)
+SELECT * FROM pagination_demo;                      -- full scan; the grid pages it
+SELECT * FROM pagination_demo WHERE bucket = 7;     -- filtered subset
+SELECT * FROM pagination_demo WHERE id = 'item-1000';

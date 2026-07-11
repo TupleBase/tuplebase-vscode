@@ -20,3 +20,11 @@ VALUES ('SDR', 'Santander', 'Spain', 43.46230, -3.80990);
 UPDATE crew SET role = 'first mate' WHERE name = 'linus';
 
 DELETE FROM maintenance_logs WHERE resolved_at IS NOT NULL;
+
+-- Paging demo — needs the large dataset: npm run db:seed:big (10,000 rows)
+SELECT count(*) FROM pagination_demo;                          -- 10000
+SELECT * FROM pagination_demo ORDER BY id;                     -- full set; the grid pages it
+SELECT * FROM pagination_demo ORDER BY id LIMIT 100 OFFSET 0;  -- page 1
+SELECT * FROM pagination_demo ORDER BY id LIMIT 100 OFFSET 100; -- page 2
+SELECT bucket, count(*), round(avg(amount), 2) AS avg_amount
+FROM pagination_demo GROUP BY bucket ORDER BY bucket;          -- 50 buckets
