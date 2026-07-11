@@ -1,5 +1,5 @@
 import { TabulatorFull as Tabulator } from 'tabulator-tables'
-import { formatRow } from './detailJson'
+import { formatRow, rowToHtml } from './detailJson'
 import { applyTabUpdate, capTab, initialTabs, tabLabel, type Envelope, type Tab } from './tabsModel'
 
 type Incoming =
@@ -15,6 +15,8 @@ const tabStrip = document.getElementById('tabs') as HTMLDivElement
 const detail = document.getElementById('detail') as HTMLDivElement
 const detailJson = document.getElementById('detail-json')!
 const detailClose = document.getElementById('detail-close') as HTMLButtonElement
+const detailCopy = document.getElementById('detail-copy') as HTMLButtonElement
+let detailText = ''
 
 let tabs: Tab[] = []
 let active = 0
@@ -22,6 +24,11 @@ let table: Tabulator | undefined
 
 cancelBtn.addEventListener('click', () => vscode.postMessage({ type: 'cancel' }))
 detailClose.addEventListener('click', hideDetail)
+detailCopy.addEventListener('click', () => {
+  vscode.postMessage({ type: 'copy', text: detailText })
+  detailCopy.textContent = 'Copied'
+  setTimeout(() => { detailCopy.textContent = 'Copy' }, 1200)
+})
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
@@ -52,7 +59,8 @@ function buildTable(envelope: Envelope) {
   table.on('rowClick', (_e, row) => {
     const rowData = row.getData() as Record<string, unknown>
     const values = envelope.columns.map((_c, i) => rowData[`c${i}`])
-    detailJson.textContent = formatRow(envelope.columns, values)
+    detailText = formatRow(envelope.columns, values)
+    detailJson.innerHTML = rowToHtml(envelope.columns, values)
     detail.hidden = false
     table?.redraw()
   })

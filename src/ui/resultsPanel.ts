@@ -7,7 +7,7 @@ export type ResultsMessage =
   | { type: 'result'; envelope: ResultEnvelope; statement: string; index?: number }
   | { type: 'error'; message: string; index?: number }
 
-export type ResultsRequest = { type: 'cancel' }
+export type ResultsRequest = { type: 'cancel' } | { type: 'copy'; text: string }
 
 export class ResultsPanel implements vscode.WebviewViewProvider {
   private view: vscode.WebviewView | undefined
@@ -34,6 +34,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     }
     view.webview.onDidReceiveMessage((msg: ResultsRequest) => {
       if (msg.type === 'cancel') this.cancelEmitter.fire()
+      else if (msg.type === 'copy') void vscode.env.clipboard.writeText(msg.text)
     })
     view.webview.html = this.html(view.webview)
     for (const msg of this.pending) void view.webview.postMessage(msg)
@@ -76,8 +77,8 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   <div id="main">
     <div id="grid"></div>
     <div id="detail" hidden>
-      <div id="detail-head"><span>Row detail</span><button id="detail-close" title="Close">✕</button></div>
-      <pre id="detail-json"></pre>
+      <div id="detail-head"><span>Row detail</span><span id="detail-actions"><button id="detail-copy" title="Copy JSON">Copy</button><button id="detail-close" title="Close">✕</button></span></div>
+      <div id="detail-json" class="jx-root"></div>
     </div>
   </div>
   <script src="${js}"></script>

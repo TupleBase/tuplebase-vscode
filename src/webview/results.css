@@ -84,17 +84,49 @@ body {
   font-size: 13px;
 }
 #detail-close:hover { color: var(--vscode-errorForeground); }
+#detail-actions { display: flex; align-items: center; gap: 6px; }
+#detail-copy {
+  background: transparent;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 3px;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 1px 8px;
+  font: inherit;
+  font-size: 11px;
+}
+#detail-copy:hover { background: var(--vscode-toolbar-hoverBackground); }
 #detail-json {
   flex: 1;
   margin: 0;
   padding: 8px;
   overflow: auto;
-  white-space: pre;
   font-family: var(--vscode-editor-font-family, monospace);
   font-size: var(--vscode-editor-font-size, var(--vscode-font-size));
   color: var(--vscode-foreground);
+  line-height: 1.5;
 }
 .null { opacity: 0.6; font-style: italic; }
+
+/* Themed, collapsible JSON detail (row → JSON). Token colours come from the
+   editor theme's debug-token variables; native <details> handles collapsing. */
+.jx-node > summary { cursor: pointer; list-style: none; }
+.jx-node > summary::-webkit-details-marker { display: none; }
+.jx-node > summary::before { content: '▾ '; opacity: 0.55; }
+.jx-node:not([open]) > summary::before { content: '▸ '; }
+.jx-node:not([open]) > summary::after { content: ' … '; opacity: 0.55; }
+.jx-body {
+  padding-left: 1.25em;
+  border-left: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.25));
+}
+.jx-row { white-space: pre-wrap; word-break: break-word; }
+.jx-key { color: var(--vscode-symbolIcon-keyForeground, var(--vscode-debugTokenExpression-name, #9cdcfe)); }
+.jx-str { color: var(--vscode-debugTokenExpression-string, #ce9178); }
+.jx-num { color: var(--vscode-debugTokenExpression-number, #b5cea8); }
+.jx-bool { color: var(--vscode-debugTokenExpression-boolean, #569cd6); }
+.jx-null { color: var(--vscode-debugTokenExpression-value, var(--vscode-descriptionForeground)); opacity: 0.85; }
+.jx-punc { opacity: 0.6; }
+.jx-meta { opacity: 0.45; font-size: 0.85em; margin-left: 4px; }
 
 /* Map Tabulator onto the active VS Code color theme (dark/light/high-contrast). */
 .tabulator {
