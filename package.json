@@ -121,6 +121,12 @@
         "icon": "$(new-folder)"
       },
       {
+        "command": "rowboat.addConnection",
+        "title": "New Connection",
+        "category": "Rowboat",
+        "icon": "$(add)"
+      },
+      {
         "command": "rowboat.newQuery",
         "title": "New Query Scratch (pick engine)",
         "category": "Rowboat",
@@ -214,6 +220,11 @@
       ],
       "view/item/context": [
         {
+          "command": "rowboat.addConnection",
+          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "group": "inline@1"
+        },
+        {
           "command": "rowboat.connect",
           "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
           "group": "inline@1"
@@ -256,6 +267,10 @@
         },
         {
           "command": "rowboat.newQueryOnConnection",
+          "when": "false"
+        },
+        {
+          "command": "rowboat.addConnection",
           "when": "false"
         }
       ]

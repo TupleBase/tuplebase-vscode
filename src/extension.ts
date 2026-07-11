@@ -14,6 +14,7 @@ import { registerHistoryTree } from './ui/historyTree'
 import { registerUntitledBindingCleanup } from './core/fileConn'
 import { registerQueryCodeLens } from './ui/queryCodeLens'
 import { addGroup } from './core/configWriter'
+import { registerNewConnectionForm } from './ui/connFormPanel'
 
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
@@ -30,6 +31,7 @@ export async function activate(context: vscode.ExtensionContext) {
     store,
     manager,
     registerSchemaTree(manager, store),
+    registerNewConnectionForm(context.extensionUri, store),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {
       history?.append(entry)
       historyTree?.refresh()
