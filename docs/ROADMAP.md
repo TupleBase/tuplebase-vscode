@@ -40,6 +40,11 @@ Read-only write guardrail; default query timeout (`rowboat.queryTimeoutMs`); VS 
 
 ## Remaining
 
+### 🔜 Next — Adapter modularization (do this first)
+Refactor so each connection type is a self-contained plugin: **one folder** (e.g. `src/adapters/<db>/`) holds everything for it — the adapter, its form fields, catalog entry (icon/label/blurb), completion provider, language bits and dev seed — exposed as a single descriptor. Registering a new database then means "drop a folder + one line," instead of editing `config.ts`, the JSON schema, `connFormSpec.ts`, `adapterCatalog.ts`, `connections.ts` and the completion providers separately. This is the prerequisite that makes every candidate in [`DATABASES.md`](DATABASES.md) painless to add.
+
+- **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines).
+
 ### Plan 06 — Publishing · owner-gated, deliberately last
 Needs the owner's Azure DevOps / Entra account — not startable here.
 - Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
