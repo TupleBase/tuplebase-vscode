@@ -11,6 +11,8 @@ export const presentation: AdapterPresentation = {
   statementSyntax: 'sql',
   completionTriggers: ['.', ' '],
   passwordSecret: true,
+  // write ⇔ the db.coll.<method> is not a read method
+  writeRule: { mode: 'methodNotIn', keywords: ['find', 'findone', 'aggregate', 'count', 'countdocuments', 'distinct'] },
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 27017 },

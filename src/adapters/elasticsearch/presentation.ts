@@ -11,6 +11,8 @@ export const presentation: AdapterPresentation = {
   statementSyntax: 'sql',
   completionTriggers: [' ', '/'],
   passwordSecret: true,
+  // write ⇔ the HTTP method is not a read verb
+  writeRule: { mode: 'firstKeywordNotIn', keywords: ['GET', 'HEAD'] },
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 9200 },

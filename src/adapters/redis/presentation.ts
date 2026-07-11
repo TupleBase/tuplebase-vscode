@@ -11,6 +11,16 @@ export const presentation: AdapterPresentation = {
   statementSyntax: 'redis',
   completionTriggers: [' '],
   passwordSecret: true,
+  // write ⇔ the command is not one of these read-only commands
+  writeRule: {
+    mode: 'firstKeywordNotIn',
+    keywords: [
+      'GET', 'MGET', 'HGET', 'HGETALL', 'HEXISTS', 'HLEN', 'HKEYS', 'HVALS', 'LRANGE', 'LLEN',
+      'SCARD', 'SISMEMBER', 'SMEMBERS', 'SRANDMEMBER', 'ZRANGE', 'ZRANGEBYSCORE', 'ZSCORE', 'ZCARD',
+      'XRANGE', 'XREVRANGE', 'XLEN', 'SCAN', 'SSCAN', 'HSCAN', 'ZSCAN', 'TYPE', 'EXISTS', 'TTL',
+      'PTTL', 'STRLEN', 'DBSIZE', 'INFO', 'PING', 'TIME',
+    ],
+  },
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 6379 },

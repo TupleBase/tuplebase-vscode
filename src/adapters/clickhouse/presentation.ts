@@ -1,4 +1,5 @@
 import type { AdapterPresentation } from '../types'
+import { SQL_WRITE_KEYWORDS } from '../sqlWriteKeywords'
 
 export const presentation: AdapterPresentation = {
   id: 'clickhouse',
@@ -11,6 +12,7 @@ export const presentation: AdapterPresentation = {
   statementSyntax: 'sql',
   completionTriggers: ['.', ' ', '"'],
   passwordSecret: true,
+  writeRule: { mode: 'firstKeywordIn', keywords: SQL_WRITE_KEYWORDS },
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port (HTTP)', kind: 'number', default: 8123 },

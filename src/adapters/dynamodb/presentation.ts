@@ -10,6 +10,7 @@ export const presentation: AdapterPresentation = {
   languageId: 'sql',
   statementSyntax: 'partiql',
   completionTriggers: ['.', ' ', '"'],
+  writeRule: { mode: 'firstKeywordIn', keywords: ['INSERT', 'UPDATE', 'DELETE'] },
   fields: [
     { key: 'region', label: 'Region', kind: 'text', required: true },
     { key: 'profile', label: 'AWS profile', kind: 'text' },

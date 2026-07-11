@@ -71,6 +71,17 @@ export interface Adapter {
 // presentation omits it.
 export type StatementSyntax = 'sql' | 'partiql' | 'redis' | 'kafka'
 
+// How the read-only guard decides whether a statement writes — declared per
+// adapter (in its presentation) so the rule lives with the engine, not in core.
+// `firstKeyword` = the leading token (SQL/redis/es/kafka); `method` = the
+// `.method(` name (mongo); `anyKeyword` scans the whole statement (Cypher puts
+// its write clause after a leading MATCH).
+export type WriteRule =
+  | { mode: 'firstKeywordIn'; keywords: readonly string[] }      // write ⇔ leading token ∈ set (SQL/PartiQL DML+DDL)
+  | { mode: 'firstKeywordNotIn'; keywords: readonly string[] }   // write ⇔ leading token ∉ read set (redis/ES/Kafka)
+  | { mode: 'anyKeyword'; keywords: readonly string[] }          // write ⇔ any of these appear (Cypher)
+  | { mode: 'methodNotIn'; keywords: readonly string[] }         // write ⇔ `.method(` ∉ read set (Mongo)
+
 // The connect-time half of an adapter: what the driver needs. Loaded lazily
 // (loadFactory) so its driver import doesn't run until a connection is opened.
 export interface AdapterFactory {
@@ -108,6 +119,7 @@ export interface AdapterPresentation {
   statementSyntax?: StatementSyntax
   completionTriggers?: string[]   // trigger chars for completion (eager — the provider loads lazily)
   passwordSecret?: boolean        // uses a password secret — the form offers a credentials section
+  writeRule?: WriteRule           // read-only guard classification (omit → treated conservatively as write)
   fields: Field[]
 }
 
