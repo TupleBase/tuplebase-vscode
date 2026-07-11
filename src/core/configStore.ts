@@ -40,16 +40,24 @@ export class ConfigStore implements vscode.Disposable {
     this.emitter.fire()
   }
 
-  environmentNames(): string[] {
-    return Object.keys(this._config?.environments ?? {})
+  groupNames(): string[] {
+    return this._config?.groups ?? []
   }
 
-  connections(env: string): ConnectionConfig[] {
-    return Object.values(this._config?.environments[env] ?? {})
+  connections(): ConnectionConfig[] {
+    return Object.values(this._config?.connections ?? {})
   }
 
-  isReadonly(env: string): boolean {
-    return this._config?.readonlyEnvironments[env] === true
+  connectionsByGroup(group: string): ConnectionConfig[] {
+    return this.connections().filter(c => c.group === group)
+  }
+
+  connection(name: string): ConnectionConfig | undefined {
+    return this._config?.connections[name]
+  }
+
+  isReadonly(name: string): boolean {
+    return this._config?.connections[name]?.readonly === true
   }
 
   private publishDiagnostics(uri: vscode.Uri, errors: ConfigError[]) {
