@@ -43,7 +43,8 @@ Read-only write guardrail; default query timeout (`rowboat.queryTimeoutMs`); VS 
 ### 🔜 Next — Adapter modularization (do this first)
 Refactor so each connection type is a self-contained plugin: **one folder** (e.g. `src/adapters/<db>/`) holds everything for it — the adapter, its form fields, catalog entry (icon/label/blurb), completion provider, language bits and dev seed — exposed as a single descriptor. Registering a new database then means "drop a folder + one line," instead of editing `config.ts`, the JSON schema, `connFormSpec.ts`, `adapterCatalog.ts`, `connections.ts` and the completion providers separately. This is the prerequisite that makes every candidate in [`DATABASES.md`](DATABASES.md) painless to add.
 
-- **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines).
+### Official database icons
+Replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder — mind brand/trademark usage guidelines.
 
 ### Plan 06 — MCP server: let agents query sources
 Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
