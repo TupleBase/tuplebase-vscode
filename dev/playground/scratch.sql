@@ -11,3 +11,12 @@ JOIN boats AS b ON b.id = v.boat_id
 JOIN ports AS origin ON origin.id = v.origin_port_id
 JOIN ports AS destination ON destination.id = v.destination_port_id
 ORDER BY v.departed_at DESC;
+
+-- Mutations — run these against a writable connection; a read-only connection
+-- blocks them (Plan 04 guardrail).
+INSERT INTO ports (code, name, country, latitude, longitude)
+VALUES ('SDR', 'Santander', 'Spain', 43.46230, -3.80990);
+
+UPDATE crew SET role = 'first mate' WHERE name = 'linus';
+
+DELETE FROM maintenance_logs WHERE resolved_at IS NOT NULL;

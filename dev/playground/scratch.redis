@@ -8,3 +8,9 @@ XRANGE events:voyages - +
 SET greeting "hello from rowboat"
 GET greeting
 SCAN 0 COUNT 100
+
+# Mutations — blocked on a read-only connection
+SET config:harbor:motto "steady oars"
+HSET boat:1 status maintenance
+EXPIRE crew:1:status 3600
+DEL greeting
