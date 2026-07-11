@@ -113,7 +113,14 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-    # no healthcheck: the seed script retries until the broker answers
+    healthcheck:
+      # broker is ready once the admin API answers — lets `--wait` gate the seed
+      # so it connects to a live broker instead of burning retry-backoff on boot
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]

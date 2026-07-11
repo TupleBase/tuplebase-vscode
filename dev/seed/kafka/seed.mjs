@@ -4,7 +4,9 @@ import { Kafka, logLevel } from 'kafkajs'
 
 const kafka = new Kafka({
   clientId: 'seed', brokers: ['localhost:9092'], logLevel: logLevel.NOTHING,
-  retry: { retries: 10, initialRetryTime: 1000 },
+  // fail fast — `db:kafka` uses --wait, so the broker is already up; short retry
+  // avoids long connect-backoff if there's a brief gap between healthy and ready
+  retry: { retries: 4, initialRetryTime: 300, maxRetryTime: 2000 },
 })
 
 const TOPICS = [

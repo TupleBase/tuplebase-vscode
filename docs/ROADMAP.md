@@ -5,6 +5,8 @@ Rowboat is a VS Code multi-database workbench — Postgres · MySQL · Redis · 
 **Legend:** ✅ shipped · 🚧 partial · 🔒 owner-gated
 **Guides:** [Architecture](ARCHITECTURE.md) · [Database support](DATABASES.md) · [MCP server](MCP.md) · [Testing](TESTING.md)
 
+> **Session state (2026-07-11):** §1a **complete** — SQLite, MariaDB, MS SQL, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka all shipped. CI reworked into a container-free `unit` job + a **per-engine integration matrix** (one container/job) — **green** (fixed a MySQL init race via a TCP healthcheck; bumped actions to `@v5`/node24; sped up the kafka job with a broker healthcheck + `--wait`). Also this session: write-detection moved out of core into each adapter's `writeRule`; SQLite relative `path` now resolves against the `.rowboat.json` dir (generic `baseDir`); a dev workbench file per engine (`dev/playground/scratch-<engine>.sql`). Nothing in-flight — safe to resume. **Next candidates:** §1b cloud-only adapters (Snowflake/BigQuery), and item 9 below (richer MCP tools — TBD).
+
 ---
 
 ## What Rowboat does today
@@ -115,6 +117,10 @@ Surface more database objects than tables/columns/keys — **views**, materializ
 ### 8. Local search in the result tab
 
 Client-side find within the current result tab — a search box that filters/highlights matching cells in the loaded grid, with highlight + scroll-to-match (next/prev navigation). Local only: searches the rows already loaded in the webview, no re-query to the database. Reuse the existing results/webview pattern; `cmd+f` in the result tab opens it.
+
+### 9. Richer MCP tools — per-connection-type *(TBD if worth it)*
+
+Today the MCP server exposes three **generic** tools (`list_connections` / `inspect_schema` / `run_query`) that work for every adapter via the shared `execute`. Agents drive the non-SQL engines by hand-writing the raw query string (Cypher, `db.coll.method(json)`, `METHOD /path {json}`, `consume <topic>`). Consider adding tools **specialized per connection type** so agents get typed, discoverable operations instead of composing raw strings — e.g. `search_documents` (Elasticsearch: index + query DSL), `aggregate` (Mongo: collection + pipeline), `cypher` (Neo4j), `tail_topic` (Kafka: topic + n), `sample_rows` (SQL: table + limit). Each adapter would **declare** the extra tools it offers (registry-driven, like presentations/writeRule), keeping the server generic. **TBD** — first confirm the generic `run_query` isn't already good enough for agents; the win is ergonomics + tighter guardrails (typed params, per-op read-only), the cost is added surface area and a per-adapter tool spec.
 
 ---
 
