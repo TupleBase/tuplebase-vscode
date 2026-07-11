@@ -88,6 +88,22 @@ Full rename of the product from **Rowboat** to **Tuple** (name not final — dec
 
 ---
 
+## After launch
+
+### 5. Schema explorer / ER diagram *(easy)*
+
+Pick tables and plot them on a canvas with the relationships drawn between them — an ER-style view. Mostly for the SQL engines (Postgres/MySQL/MS SQL): read foreign keys from the catalog (`information_schema.key_column_usage` + `table_constraints`, or `pg_constraint`) so each edge is a real FK reference; nodes show the table's columns with PK/FK badges. A webview canvas reusing the existing results/webview pattern; start from a selection of tables in the explorer.
+
+### 6. Table filter in the explorer
+
+For a connection with many tables, a filter/search box to narrow the schema tree to matching tables (and optionally columns) instead of scrolling the whole list. Client-side filter over the loaded tree, backed by the adapter's existing `searchItems` for very large schemas.
+
+### 7. Per-engine entity refinement *(investigate first)*
+
+Surface more database objects than tables/columns/keys — **views**, materialized views, **stored procedures / functions**, triggers, sequences, indexes, enums, etc. — as their own tree node kinds per connection, with sensible actions (open definition, run). Which objects are worth showing (and how to browse/execute them) differs by engine, so this needs a short investigation per adapter before building.
+
+---
+
 ## Not scheduled
 
 **Later / pro** — skipped by design: grid cell editing with write-back · EXPLAIN visualizer · telemetry.
