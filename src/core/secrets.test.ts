@@ -20,55 +20,57 @@ function fakes() {
 }
 
 describe('SecretVault', () => {
-  it('builds namespaced keys', () => {
-    expect(SecretVault.key('dev', 'orders-db', 'password')).toBe('rowboat.dev.orders-db.password')
+  it('builds namespaced keys from connection name and field', () => {
+    expect(SecretVault.key('orders-db', 'password')).toBe('rowboat.orders-db.password')
   })
 
-  it('stores, retrieves and indexes', async () => {
+  it('stores and retrieves by connection name', async () => {
     const { backend, index } = fakes()
     const v = new SecretVault(backend, index)
-    await v.store('dev', 'db', 'password', 'hunter2')
-    expect(await v.get('dev', 'db', 'password')).toBe('hunter2')
+    await v.store('db', 'password', 'hunter2')
+    expect(await v.get('db', 'password')).toBe('hunter2')
   })
 
   it('deleteConnection removes all fields of that connection only', async () => {
     const { backend, index, secrets } = fakes()
     const v = new SecretVault(backend, index)
-    await v.store('dev', 'db', 'password', 'a')
-    await v.store('prod', 'db', 'password', 'b')
-    await v.deleteConnection('dev', 'db')
-    expect(secrets.has('rowboat.dev.db.password')).toBe(false)
-    expect(secrets.has('rowboat.prod.db.password')).toBe(true)
+    await v.store('db', 'password', 'a')
+    await v.store('db', 'user', 'admin')
+    await v.store('other', 'password', 'b')
+    await v.deleteConnection('db')
+    expect(secrets.has('rowboat.db.password')).toBe(false)
+    expect(secrets.has('rowboat.db.user')).toBe(false)
+    expect(secrets.has('rowboat.other.password')).toBe(true)
   })
 
   it('clearAll deletes every indexed key and returns them', async () => {
     const { backend, index, secrets } = fakes()
     const v = new SecretVault(backend, index)
-    await v.store('dev', 'db', 'password', 'a')
-    await v.store('prod', 'db', 'password', 'b')
+    await v.store('db', 'password', 'a')
+    await v.store('other', 'password', 'b')
     const deleted = await v.clearAll()
-    expect(deleted.sort()).toEqual(['rowboat.dev.db.password', 'rowboat.prod.db.password'])
+    expect(deleted.sort()).toEqual(['rowboat.db.password', 'rowboat.other.password'])
     expect(secrets.size).toBe(0)
   })
 
-  it('does not collide when names contain dots', async () => {
+  it('does not collide when names or fields contain dots', async () => {
     const { backend, index, secrets } = fakes()
     const v = new SecretVault(backend, index)
-    await v.store('dev.eu', 'db', 'password', 'a')
-    await v.store('dev', 'eu.db', 'password', 'b')
+    await v.store('a.b', 'x', 'first')
+    await v.store('a', 'b.x', 'second')
     expect(secrets.size).toBe(2)
-    await v.deleteConnection('dev.eu', 'db')
-    expect(await v.get('dev', 'eu.db', 'password')).toBe('b')
-    expect(await v.get('dev.eu', 'db', 'password')).toBeUndefined()
+    await v.deleteConnection('a.b')
+    expect(await v.get('a', 'b.x')).toBe('second')
+    expect(await v.get('a.b', 'x')).toBeUndefined()
   })
 
   it('concurrent stores all land in the index', async () => {
     const { backend, index } = fakes()
     const v = new SecretVault(backend, index)
     await Promise.all([
-      v.store('dev', 'a', 'password', '1'),
-      v.store('dev', 'b', 'password', '2'),
-      v.store('dev', 'c', 'password', '3'),
+      v.store('a', 'password', '1'),
+      v.store('b', 'password', '2'),
+      v.store('c', 'password', '3'),
     ])
     const deleted = await v.clearAll()
     expect(deleted).toHaveLength(3)

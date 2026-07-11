@@ -30,20 +30,20 @@ export class SecretVault {
     return run
   }
 
-  static key(env: string, conn: string, field: string): string {
-    return `rowboat.${esc(env)}.${esc(conn)}.${esc(field)}`
+  static key(conn: string, field: string): string {
+    return `rowboat.${esc(conn)}.${esc(field)}`
   }
 
   private index(): string[] {
     return this.state.get<string[]>(INDEX_KEY, [])
   }
 
-  async get(env: string, conn: string, field: string) {
-    return this.backend.get(SecretVault.key(env, conn, field))
+  async get(conn: string, field: string) {
+    return this.backend.get(SecretVault.key(conn, field))
   }
 
-  async store(env: string, conn: string, field: string, value: string) {
-    const key = SecretVault.key(env, conn, field)
+  async store(conn: string, field: string, value: string) {
+    const key = SecretVault.key(conn, field)
     await this.backend.store(key, value)
     return this.withLock(async () => {
       const idx = this.index()
@@ -51,8 +51,8 @@ export class SecretVault {
     })
   }
 
-  async deleteConnection(env: string, conn: string) {
-    const prefix = `rowboat.${esc(env)}.${esc(conn)}.`
+  async deleteConnection(conn: string) {
+    const prefix = `rowboat.${esc(conn)}.`
     return this.withLock(async () => {
       const idx = this.index()
       const doomed = idx.filter(k => k.startsWith(prefix))
