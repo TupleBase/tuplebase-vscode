@@ -1,9 +1,10 @@
 export type AdapterId = string
 
 export interface ConnectionConfig {
-  env: string
+  group: string
   name: string
   adapter: AdapterId
+  readonly: boolean
   [key: string]: unknown
 }
 

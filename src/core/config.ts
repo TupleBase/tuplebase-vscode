@@ -8,9 +8,9 @@ const SECRET_FIELDS = ['password', 'passwd', 'secret', 'token', 'accesskeyid', '
 export interface ConfigError { path: string; message: string }
 
 export interface RowboatConfig {
-  defaultEnvironment?: string
-  environments: Record<string, Record<string, ConnectionConfig>>
-  readonlyEnvironments: Record<string, boolean>
+  version: number
+  groups: string[]
+  connections: Record<string, ConnectionConfig>
 }
 
 const VAR_RE = /\$\{env:([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}/g
@@ -26,37 +26,45 @@ export function interpolate(value: string, env: Record<string, string | undefine
 
 export function parseConfig(
   text: string,
-  env: Record<string, string | undefined> = process.env
+  env: Record<string, string | undefined> = process.env,
 ): { config?: RowboatConfig; errors: ConfigError[] } {
   const parseErrors: ParseError[] = []
   const raw = parse(text, parseErrors, { allowTrailingComma: true })
   if (parseErrors.length > 0) {
-    return {
-      errors: parseErrors.map(e => ({ path: '', message: printParseErrorCode(e.error) })),
-    }
+    return { errors: parseErrors.map(e => ({ path: '', message: printParseErrorCode(e.error) })) }
   }
-  const errors: ConfigError[] = []
-  if (typeof raw !== 'object' || raw === null || typeof raw.environments !== 'object' || raw.environments === null) {
-    return { errors: [{ path: 'environments', message: 'missing "environments" object' }] }
+  if (typeof raw !== 'object' || raw === null) {
+    return { errors: [{ path: '', message: 'config must be an object' }] }
+  }
+  if (raw.version !== 1) {
+    return { errors: [{ path: 'version', message: 'requires "version": 1' }] }
+  }
+  if (typeof raw.groups !== 'object' || raw.groups === null) {
+    return { errors: [{ path: 'groups', message: 'missing "groups" object' }] }
   }
 
-  const environments: RowboatConfig['environments'] = {}
-  const readonlyEnvironments: RowboatConfig['readonlyEnvironments'] = {}
-  for (const [envName, conns] of Object.entries(raw.environments as Record<string, unknown>)) {
-    environments[envName] = {}
-    if (typeof conns !== 'object' || conns === null) {
-      errors.push({ path: `environments.${envName}`, message: 'must be an object of connections' })
+  const errors: ConfigError[] = []
+  const groups: string[] = []
+  const connections: RowboatConfig['connections'] = {}
+
+  for (const [groupName, groupRaw] of Object.entries(raw.groups as Record<string, unknown>)) {
+    groups.push(groupName)
+    if (typeof groupRaw !== 'object' || groupRaw === null) {
+      errors.push({ path: `groups.${groupName}`, message: 'must be an object of connections' })
       continue
     }
-    const entries = Object.entries(conns as Record<string, unknown>)
-    const readonly = entries.find(([name]) => name === 'readonly')?.[1]
-    if (readonly !== undefined && typeof readonly !== 'boolean') {
-      errors.push({ path: `environments.${envName}.readonly`, message: 'must be a boolean' })
+    const entries = Object.entries(groupRaw as Record<string, unknown>)
+    const groupReadonly = entries.find(([k]) => k === 'readonly')?.[1]
+    if (groupReadonly !== undefined && typeof groupReadonly !== 'boolean') {
+      errors.push({ path: `groups.${groupName}.readonly`, message: 'must be a boolean' })
     }
-    readonlyEnvironments[envName] = readonly === true
     for (const [connName, connRaw] of entries) {
       if (connName === 'readonly') continue
-      const path = `environments.${envName}.${connName}`
+      const path = `groups.${groupName}.${connName}`
+      if (connections[connName]) {
+        errors.push({ path, message: `duplicate connection name "${connName}" (names must be unique across groups)` })
+        continue
+      }
       if (typeof connRaw !== 'object' || connRaw === null) {
         errors.push({ path, message: 'connection must be an object' })
         continue
@@ -72,6 +80,8 @@ export function parseConfig(
         errors.push({ path: `${path}.adapter`, message: `unknown adapter "${String(conn.adapter)}" (known: ${KNOWN_ADAPTERS.join(', ')})` })
         continue
       }
+      const connReadonly = typeof conn.readonly === 'boolean' ? conn.readonly : undefined
+      delete conn.readonly
       for (const [k, v] of Object.entries(conn)) {
         if (typeof v === 'string') {
           try {
@@ -81,11 +91,15 @@ export function parseConfig(
           }
         }
       }
-      environments[envName][connName] = { ...conn, env: envName, name: connName, adapter: conn.adapter as string } as ConnectionConfig
+      connections[connName] = {
+        ...conn,
+        group: groupName,
+        name: connName,
+        adapter: conn.adapter as string,
+        readonly: connReadonly ?? groupReadonly === true,
+      } as ConnectionConfig
     }
   }
-  return {
-    config: { defaultEnvironment: raw.defaultEnvironment, environments, readonlyEnvironments },
-    errors,
-  }
+
+  return { config: { version: 1, groups, connections }, errors }
 }
