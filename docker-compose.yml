@@ -26,10 +26,14 @@ services:
     volumes:
       - ./dev/seed/mysql:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "rowboat", "-prowboat"]
-      interval: 2s
-      timeout: 3s
-      retries: 30
+      # query over TCP (127.0.0.1, not the socket) as the real user — this only
+      # passes once the final networked server is up, not the temporary init
+      # server the socket-based `mysqladmin ping` would report healthy too early.
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u rowboat -prowboat rowboat -e 'SELECT 1' >/dev/null 2>&1 || exit 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 10s
   mariadb:
     image: mariadb:11
     profiles: ["mariadb", "all"]
