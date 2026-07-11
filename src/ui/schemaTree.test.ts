@@ -44,6 +44,8 @@ function makeProvider(live: boolean) {
     },
   } as unknown as ConnectionManager
   const store = {
+    groupNames: () => ['local'],
+    connectionsByGroup: (g: string) => (g === 'local' ? [CONN] : []),
     connections: () => [CONN],
     connection: (name: string) => (name === 'db1' ? CONN : undefined),
   } as unknown as ConfigStore
@@ -104,5 +106,25 @@ describe('SchemaTreeProvider with a live adapter', () => {
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
     expect(item.contextValue).toBe('rowboat.connection.disconnected')
     expect(item.iconPath?.id).toBe('plug')
+  })
+})
+
+describe('SchemaTreeProvider group hierarchy', () => {
+  it('roots at groups, not connections', async () => {
+    const provider = makeProvider(false)
+    expect(await provider.getChildren()).toEqual([{ type: 'group', name: 'local' }])
+  })
+
+  it('expands a group into its connections', async () => {
+    const provider = makeProvider(false)
+    expect(await provider.getChildren({ type: 'group', name: 'local' })).toEqual([{ type: 'connection', conn: CONN }])
+  })
+
+  it('renders a group as a collapsible folder', () => {
+    const provider = makeProvider(false)
+    const item = provider.getTreeItem({ type: 'group', name: 'local' }) as { label: string; contextValue?: string; iconPath?: { id: string } }
+    expect(item.label).toBe('local')
+    expect(item.contextValue).toBe('rowboat.group')
+    expect(item.iconPath?.id).toBe('folder')
   })
 })

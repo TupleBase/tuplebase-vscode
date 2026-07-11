@@ -6,6 +6,7 @@ import { BRAND } from '../core/brand'
 import { errorMessage } from '../core/errors'
 
 export type ExplorerNode =
+  | { type: 'group'; name: string }
   | { type: 'connection'; conn: ConnectionConfig }
   | { type: 'dbnode'; connName: string; node: TreeNode }
 
@@ -31,6 +32,14 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   }
 
   getTreeItem(el: ExplorerNode): vscode.TreeItem {
+    if (el.type === 'group') {
+      const item = new vscode.TreeItem(el.name, vscode.TreeItemCollapsibleState.Collapsed)
+      item.iconPath = new vscode.ThemeIcon('folder')
+      item.contextValue = 'rowboat.group'
+      const conns = this.store.connectionsByGroup(el.name)
+      if (conns.length > 0 && conns.every(c => c.readonly)) item.description = '(read-only)'
+      return item
+    }
     if (el.type === 'connection') {
       const connected = this.manager.isConnected(el.conn.name)
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
@@ -67,7 +76,10 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   async getChildren(el?: ExplorerNode): Promise<ExplorerNode[]> {
     try {
       if (!el) {
-        return this.store.connections().map(conn => ({ type: 'connection' as const, conn }))
+        return this.store.groupNames().map(name => ({ type: 'group' as const, name }))
+      }
+      if (el.type === 'group') {
+        return this.store.connectionsByGroup(el.name).map(conn => ({ type: 'connection' as const, conn }))
       }
       // read-only view of live adapters — expanding never connects, otherwise a
       // refresh after disconnect would silently reconnect expanded nodes
