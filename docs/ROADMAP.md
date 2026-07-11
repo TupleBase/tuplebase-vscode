@@ -32,9 +32,9 @@ Goal: type queries with IntelliSense and run them in place. Running from any `.s
 
 - [x] Prod guardrails: `"readonly": true` flag on an environment blocks adapter-specific writes before connecting or executing.
 - [x] Default query timeout: `rowboat.queryTimeoutMs` cancels forgotten runaway queries after 30 seconds by default.
-- [ ] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
-- [ ] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
-- [ ] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
+- [x] Results table UX: honor VS Code dark/light themes and polish the grid's visual hierarchy
+- [x] Run whole file / selection: multiple statements → multiple result sets (tabs in the results panel)
+- [x] Detail view for non-tabular values: row click → JSON side view (redis blobs, dynamo nested items)
 
 ## Plan 05: Environment/connection CRUD from the UI
 
