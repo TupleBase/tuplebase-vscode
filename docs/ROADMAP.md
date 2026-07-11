@@ -55,6 +55,20 @@ A standalone Model Context Protocol server (`dist/mcp/server.js`) exposes `list_
 
 ## Remaining
 
+### Scale the adapter registry to 100s (in-tree, no plugins)
+
+The registry pattern already lands "add a DB = drop a folder + one line". The plugin model was only ever for third-party *distribution*, never performance — in-tree scales to 100s fine with lazy loading + a split bundle. **Drop the plugin idea.**
+
+Why in-tree holds: activation cost stays flat regardless of adapter count. The catalog is a manifest of presentations (500 adapters × ~500B ≈ 250KB, parsed once), each adapter's code is its own chunk that only loads when a connection to it is opened, and drivers are bundled inside their adapter chunk — so the core bundle stays O(1).
+
+- **Rung 1 — descriptor → lazy loaders.** `presentation` stays eager data; `factory`/`completion` become `loadFactory: () => import('./adapter')` / `loadCompletion: () => import('./completion')`. Registry maps id → module; connect does `const f = await mod.loadFactory()`. Presentations render the form/tree/picker without touching any adapter code.
+- **Rung 2 — split the bundle (keep CJS).** Not `splitting:true` (that forces ESM; the VS Code host entry is CJS). Instead a second esbuild pass, one entry per `src/adapters/*/index.ts` → `dist/adapters/<id>/index.js`, each pulling its driver in. The core `extension.js` no longer carries any driver.
+- **Manifest** — a build step scans `src/adapters/*/presentation.ts` into a single `manifest.json`; activation reads that one file for the catalog, zero adapter code loaded.
+- **The one real tax (name it):** all drivers sit in one `package.json` / `node_modules` — install size, `npm install`/CI time, driver version-conflict surface, supply-chain audit surface all grow with count. It's an install/maintenance cost, not a runtime one (drivers ship but never load at startup). Mitigate: `optionalDependencies` for fat/rare drivers, pnpm/hoist discipline, periodic `npm audit`.
+- **Support pieces at 100s:** `npm run new-adapter <id>` scaffold (folder + presentation + factory stub + conformance test); a shared conformance/contract test every adapter must pass (generalise the current `adapter.it.test.ts`); `category`/`tags` on `AdapterPresentation` for a searchable, grouped picker (100s of flat cards is unusable).
+
+Ship Rung 1 first (lazy loaders + manifest against the current 3 adapters as the pattern), then Rung 2 (multi-entry CJS split).
+
 **Publishing — the final goal** *(Plan 07, owner-gated: needs the owner's Azure DevOps / Entra account).*
    - Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
    - Open VSX too (Cursor / Windsurf / VSCodium)
