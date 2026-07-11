@@ -112,10 +112,16 @@ For a connection with many tables, a filter/search box to narrow the schema tree
 
 Surface more database objects than tables/columns/keys — **views**, materialized views, **stored procedures / functions**, triggers, sequences, indexes, enums, etc. — as their own tree node kinds per connection, with sensible actions (open definition, run). Which objects are worth showing (and how to browse/execute them) differs by engine, so this needs a short investigation per adapter before building.
 
+### 8. Local search in the result tab
+
+Client-side find within the current result tab — a search box that filters/highlights matching cells in the loaded grid, with highlight + scroll-to-match (next/prev navigation). Local only: searches the rows already loaded in the webview, no re-query to the database. Reuse the existing results/webview pattern; `cmd+f` in the result tab opens it.
+
 ---
 
 ## Not scheduled
 
 **Later / pro** — skipped by design: grid cell editing with write-back · EXPLAIN visualizer · telemetry.
 
-**Open polish:** SQL completion for table-qualified columns without an alias (`FROM crew … crew.id`).
+**Open polish:**
+- SQL completion for table-qualified columns without an alias (`FROM crew … crew.id`).
+- 🐛 Result grid header, dark mode: hover state renders white text on white background (unreadable). Fix hover fg/bg to use theme header tokens.
