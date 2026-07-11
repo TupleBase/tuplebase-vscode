@@ -30,6 +30,22 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  mariadb:
+    image: mariadb:11
+    profiles: ["mariadb", "all"]
+    ports: ["3307:3306"]
+    environment:
+      MARIADB_ROOT_PASSWORD: rowboat
+      MARIADB_DATABASE: rowboat
+      MARIADB_USER: rowboat
+      MARIADB_PASSWORD: rowboat
+    volumes:
+      - ./dev/seed/mariadb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
   redis:
     image: redis:7-alpine
     profiles: ["redis", "all"]

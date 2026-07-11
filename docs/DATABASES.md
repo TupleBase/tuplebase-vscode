@@ -12,6 +12,7 @@ Which databases Rowboat speaks, and which are candidates. Each database is a sel
 | Redis | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
 | CockroachDB | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
+| MariaDB | `mysql` | SQL | speaks the MySQL wire protocol — use the `mysql` adapter (verified: schema tree + queries work) |
 
 ## Candidates — not scheduled
 
@@ -19,7 +20,6 @@ Add a row when a database is requested; graduate it to **Shipped** when an adapt
 
 | Database | Query surface | Notes / wire compatibility |
 |---|---|---|
-| MariaDB | SQL | likely works through the `mysql` adapter — verify |
 | Microsoft SQL Server | T-SQL | TDS protocol |
 | MongoDB | MQL / aggregation | document store |
 | ClickHouse | SQL | HTTP / native protocol; analytics |

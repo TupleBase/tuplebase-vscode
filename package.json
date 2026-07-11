@@ -414,6 +414,7 @@
     "test": "vitest run",
     "db:postgres": "docker compose --profile postgres up -d",
     "db:mysql": "docker compose --profile mysql up -d --wait",
+    "db:mariadb": "docker compose --profile mariadb up -d --wait",
     "db:redis": "docker compose --profile redis up -d --wait && npm run db:seed:redis",
     "db:dynamo": "docker compose --profile dynamo up -d && npm run db:seed:dynamo",
     "db:sqlite": "node dev/seed/sqlite/seed.mjs",

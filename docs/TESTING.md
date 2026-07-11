@@ -42,7 +42,7 @@ Three layers:
 
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
-RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` + `npm run db:mysql` + `npm run db:redis` + `npm run db:dynamo`
+RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` + `npm run db:mysql` + `npm run db:mariadb` + `npm run db:redis` + `npm run db:dynamo`
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```
