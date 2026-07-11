@@ -2,9 +2,10 @@ import * as vscode from 'vscode'
 import type { ResultEnvelope } from '../adapters/types'
 
 export type ResultsMessage =
-  | { type: 'running'; statement: string }
-  | { type: 'result'; envelope: ResultEnvelope; statement: string }
-  | { type: 'error'; message: string }
+  | { type: 'batch'; total: number }
+  | { type: 'running'; statement: string; index?: number }
+  | { type: 'result'; envelope: ResultEnvelope; statement: string; index?: number }
+  | { type: 'error'; message: string; index?: number }
 
 export type ResultsRequest = { type: 'cancel' }
 
@@ -71,6 +72,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
     <span id="status">Run a query to see results.</span>
     <button id="cancel" hidden>Cancel</button>
   </div>
+  <div id="tabs" hidden></div>
   <div id="main">
     <div id="grid"></div>
     <div id="detail" hidden>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { splitRedisCommands, splitStatements, statementAt } from './statements'
+import { splitAll, splitRedisCommands, splitStatements, statementAt } from './statements'
 
 describe('splitStatements', () => {
   it('splits on semicolons', () => {
@@ -85,6 +85,24 @@ describe('splitRedisCommands', () => {
 
   it('does not treat mid-line # as a comment (valid in key names)', () => {
     expect(splitRedisCommands('GET key#1').map(s => s.text)).toEqual(['GET key#1'])
+  })
+})
+
+describe('splitAll', () => {
+  it('returns every SQL statement in order', () => {
+    expect(splitAll('select 1;\nselect 2;\nselect 3').map(s => s.text)).toEqual([
+      'select 1',
+      'select 2',
+      'select 3',
+    ])
+  })
+
+  it('splits redis text per non-comment line', () => {
+    expect(splitAll('# comment\nGET a\nSET b 1', 'redis').map(s => s.text)).toEqual(['GET a', 'SET b 1'])
+  })
+
+  it('drops trailing empty/comment-only fragments', () => {
+    expect(splitAll('select 1;\n-- trailing comment\n').map(s => s.text)).toEqual(['select 1'])
   })
 })
 

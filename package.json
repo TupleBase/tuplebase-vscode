@@ -109,6 +109,12 @@
         "icon": "$(play)"
       },
       {
+        "command": "rowboat.runFile",
+        "title": "Run All Statements (whole file or selection)",
+        "category": "Rowboat",
+        "icon": "$(run-all)"
+      },
+      {
         "command": "rowboat.newQuery",
         "title": "New Query Scratch (pick engine)",
         "category": "Rowboat",
@@ -175,7 +181,12 @@
         {
           "command": "rowboat.runQuery",
           "when": "resourceLangId == sql || resourceLangId == redis",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "rowboat.runFile",
+          "when": "resourceLangId == sql || resourceLangId == redis",
+          "group": "navigation@2"
         }
       ],
       "view/title": [
@@ -248,6 +259,12 @@
         "command": "rowboat.runQuery",
         "key": "ctrl+enter",
         "mac": "cmd+enter",
+        "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
+      },
+      {
+        "command": "rowboat.runFile",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
         "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
       }
     ],

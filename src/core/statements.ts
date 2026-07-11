@@ -74,6 +74,12 @@ export function splitRedisCommands(text: string): StatementRange[] {
   return out
 }
 
+// Every runnable statement in the text, in order — SQL/PartiQL split on `;`,
+// redis split per line. Used by "Run All Statements" to fan a file into tabs.
+export function splitAll(text: string, languageId = 'sql'): StatementRange[] {
+  return languageId === 'redis' ? splitRedisCommands(text) : splitStatements(text)
+}
+
 export function statementAt(text: string, offset: number, languageId = 'sql'): StatementRange | undefined {
   if (languageId === 'redis') {
     // line-based: cursor on a comment/blank line means there is nothing to run

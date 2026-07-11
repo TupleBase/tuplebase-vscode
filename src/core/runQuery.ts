@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
 import { BRAND } from './brand'
-import { statementAt } from './statements'
+import { splitAll, statementAt } from './statements'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { errorMessage } from './errors'
@@ -62,6 +62,17 @@ export function registerRunQuery(
       ?? vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uriString)
   }
 
+  const record = (
+    env: string, conn: string, adapter: string, languageId: string,
+    statement: string, ok: boolean, elapsedMs: number, rowCount?: number,
+  ) => {
+    try {
+      onRan?.({ ts: Date.now(), env, conn, adapter, languageId, statement, ok, elapsedMs, rowCount })
+    } catch {
+      // history is best-effort — never fail the run over it
+    }
+  }
+
   const run = async (arg?: vscode.Uri | { uri?: vscode.Uri; offset?: number }) => {
     let doc: vscode.TextDocument
     let stmt: string | undefined
@@ -95,17 +106,6 @@ export function registerRunQuery(
       void vscode.window.showWarningMessage(`${BRAND}: writes are blocked in readonly environment "${env}"`)
       return
     }
-    const record = (ok: boolean, elapsedMs: number, rowCount?: number) => {
-      try {
-        onRan?.({
-          ts: Date.now(), env, conn: connName, adapter: adapterId,
-          languageId: doc.languageId, statement: stmt, ok, elapsedMs, rowCount,
-        })
-      } catch {
-        // history is best-effort — never fail the run over it
-      }
-    }
-
     inFlight?.abort()
     const mine = new AbortController()
     inFlight = mine
@@ -119,26 +119,27 @@ export function registerRunQuery(
     const cancelledOrSuperseded = () => {
       if (!signal.aborted) return false
       if (inFlight === mine) panel.post({
-        type: 'error', message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled',
+        type: 'error', index: 0, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled',
       })
       return true
     }
 
     await panel.show()
-    panel.post({ type: 'running', statement: stmt })
+    panel.post({ type: 'batch', total: 1 })
+    panel.post({ type: 'running', index: 0, statement: stmt })
     const started = Date.now()
     try {
       const adapter = await manager.getAdapter(connName)
       if (cancelledOrSuperseded()) return
       const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
       if (cancelledOrSuperseded()) return
-      record(true, envelope.elapsedMs, envelope.rowCount)
-      panel.post({ type: 'result', envelope, statement: stmt })
+      record(env, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
+      panel.post({ type: 'result', index: 0, envelope, statement: stmt })
     } catch (e) {
       if (cancelledOrSuperseded()) return
-      record(false, Date.now() - started)
+      record(env, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
       const message = errorMessage(e)
-      panel.post({ type: 'error', message: `Error: ${message}` })
+      panel.post({ type: 'error', index: 0, message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
         const retry = await vscode.window.showErrorMessage(
           `${BRAND}: authentication failed for ${connName}`, 'Re-enter password'
@@ -154,8 +155,78 @@ export function registerRunQuery(
     }
   }
 
+  // Run every statement in the file (or selection) as a batch, one result tab
+  // each. Shares inFlight with `run`, so a new run or Cancel aborts the batch.
+  const runFile = async () => {
+    const editor = vscode.window.activeTextEditor
+    if (!editor) return
+    const doc = editor.document
+    const source = editor.selection.isEmpty ? doc.getText() : doc.getText(editor.selection)
+    const statements = splitAll(source, doc.languageId).map(s => s.text)
+    if (statements.length === 0) {
+      void vscode.window.showWarningMessage(`${BRAND}: no statements to run`)
+      return
+    }
+    const connName = await pickConnection(doc.uri.fsPath, doc.languageId)
+    if (!connName) return
+    const env = manager.activeEnvironment ?? ''
+    const adapterId = store.connections(env).find(c => c.name === connName)?.adapter ?? ''
+    const readonly = store.isReadonly(env)
+
+    inFlight?.abort()
+    const mine = new AbortController()
+    inFlight = mine
+    const signal = mine.signal
+    const timeoutMs = queryTimeoutMs(vscode.workspace.getConfiguration('rowboat').get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+
+    await panel.show()
+    panel.post({ type: 'batch', total: statements.length })
+
+    const adapter = await manager.getAdapter(connName).catch((e: unknown) => {
+      if (inFlight === mine) panel.post({ type: 'error', index: 0, message: `Error: ${errorMessage(e)}` })
+      return undefined
+    })
+    if (!adapter) {
+      if (inFlight === mine) inFlight = undefined
+      return
+    }
+
+    for (let index = 0; index < statements.length; index++) {
+      if (signal.aborted) break
+      const stmt = statements[index]
+      if (readonly && isWriteStatement(adapterId, stmt)) {
+        panel.post({ type: 'error', index, message: `Writes are blocked in readonly environment "${env}"` })
+        continue
+      }
+      panel.post({ type: 'running', index, statement: stmt })
+      let timedOut = false
+      const timer = setTimeout(() => { timedOut = true; mine.abort() }, timeoutMs)
+      const started = Date.now()
+      try {
+        const envelope = await adapter.execute(stmt, { pageSize: 500, signal })
+        if (signal.aborted) {
+          if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
+          break
+        }
+        record(env, connName, adapterId, doc.languageId, stmt, true, envelope.elapsedMs, envelope.rowCount)
+        panel.post({ type: 'result', index, statement: stmt, envelope })
+      } catch (e) {
+        if (signal.aborted) {
+          if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
+          break
+        }
+        record(env, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
+        panel.post({ type: 'error', index, message: `Error: ${errorMessage(e)}` })
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+    if (inFlight === mine) inFlight = undefined
+  }
+
   return vscode.Disposable.from(
     vscode.commands.registerCommand('rowboat.runQuery', run),
+    vscode.commands.registerCommand('rowboat.runFile', runFile),
     panel.onCancel(() => inFlight?.abort()),
   )
 }
