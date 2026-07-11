@@ -157,6 +157,10 @@ export function parseConfig(
       const sshRaw = conn.ssh
       delete conn.ssh
       const ssh = parseSsh(sshRaw, conn.adapter as string, path, env, errors)
+      if (conn.promptPassword !== undefined && typeof conn.promptPassword !== 'boolean') {
+        errors.push({ path: `${path}.promptPassword`, message: 'promptPassword must be a boolean' })
+        delete conn.promptPassword
+      }
       for (const [k, v] of Object.entries(conn)) {
         if (typeof v === 'string') {
           try {

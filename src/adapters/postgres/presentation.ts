@@ -12,6 +12,7 @@ export const presentation: AdapterPresentation = {
   languageId: 'sql',
   statementSyntax: 'sql',
   completionTriggers: ['.', ' ', '"'],
+  passwordSecret: true,
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 5432 },

@@ -61,6 +61,14 @@ export class SecretVault {
     })
   }
 
+  async delete(conn: string, field: string): Promise<void> {
+    const key = SecretVault.key(conn, field)
+    await this.backend.delete(key)
+    return this.withLock(async () => {
+      await this.state.update(INDEX_KEY, this.index().filter(k => k !== key))
+    })
+  }
+
   async clearAll(): Promise<string[]> {
     return this.withLock(async () => {
       const idx = this.index()

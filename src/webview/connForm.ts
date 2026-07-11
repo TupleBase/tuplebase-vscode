@@ -95,6 +95,35 @@ function fieldRow(f: Field, initial: unknown): HTMLElement {
   return row
 }
 
+// Password handling: the secret goes to the OS keychain (never the config file).
+// The prompt-every-connect toggle stores nothing and re-asks on each connect.
+function credentials(editing: boolean, promptEveryTime: boolean): HTMLElement {
+  const box = el('div', 'creds')
+  box.appendChild(el('div', 'creds-title', 'Password'))
+
+  const pwRow = el('label', 'row')
+  pwRow.appendChild(el('span', 'row-label', editing ? 'New password' : 'Password'))
+  const pw = el('input')
+  pw.type = 'password'
+  pw.dataset.secret = 'password'
+  pw.placeholder = editing ? 'leave blank to keep the current password' : 'optional — prompted on first connect if blank'
+  pwRow.appendChild(pw)
+  box.appendChild(pwRow)
+
+  const promptRow = el('label', 'row row-check')
+  promptRow.appendChild(el('span', 'row-label', 'Prompt every connect (don\'t store)'))
+  const cb = el('input')
+  cb.type = 'checkbox'
+  cb.dataset.secret = 'promptEveryTime'
+  cb.checked = promptEveryTime
+  const sync = () => { pw.disabled = cb.checked }
+  cb.addEventListener('change', sync)
+  sync()
+  promptRow.appendChild(cb)
+  box.appendChild(promptRow)
+  return box
+}
+
 function renderForm(adapter: string) {
   const editing = init.mode === 'edit' && init.adapter === adapter
   const prefill = editing ? (init as Extract<Init, { mode: 'edit' }>) : undefined
@@ -114,6 +143,7 @@ function renderForm(adapter: string) {
   const form = el('form', 'form')
   form.appendChild(fieldRow({ key: 'name', label: 'Connection name', kind: 'text', required: true }, prefill?.name))
   for (const f of fieldsFor(adapter)) form.appendChild(fieldRow(f, prefill?.values[f.key]))
+  if (META.get(adapter)?.passwordSecret) form.appendChild(credentials(editing, prefill?.values.promptPassword === true))
 
   const errBox = el('div', 'errors')
   errBox.hidden = true
@@ -132,18 +162,20 @@ function renderForm(adapter: string) {
 
   form.addEventListener('submit', e => {
     e.preventDefault()
-    const { name, values } = collect(form)
+    const { name, values, secret } = collect(form)
     const errs = validate(fieldsFor(adapter), name, values)
     if (errs.length) {
       showErrors(errBox, errs)
       return
     }
-    vscode.postMessage({ type: 'create', adapter, connName: name.trim(), values })
+    vscode.postMessage({ type: 'create', adapter, connName: name.trim(), values, secret })
   })
   app.appendChild(form)
 }
 
-function collect(form: HTMLElement): { name: string; values: Record<string, unknown> } {
+interface SecretInput { password?: string; promptEveryTime?: boolean }
+
+function collect(form: HTMLElement): { name: string; values: Record<string, unknown>; secret: SecretInput } {
   let name = ''
   const values: Record<string, unknown> = {}
   form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('[data-key]').forEach(node => {
@@ -152,7 +184,12 @@ function collect(form: HTMLElement): { name: string; values: Record<string, unkn
     if (key === 'name') name = String(value)
     else values[key] = value
   })
-  return { name, values }
+  const secret: SecretInput = {}
+  form.querySelectorAll<HTMLInputElement>('[data-secret]').forEach(node => {
+    if (node.dataset.secret === 'password') secret.password = node.value
+    if (node.dataset.secret === 'promptEveryTime') secret.promptEveryTime = node.checked
+  })
+  return { name, values, secret }
 }
 
 function showErrors(box: HTMLElement, errs: string[]) {

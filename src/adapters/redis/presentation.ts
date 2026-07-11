@@ -10,6 +10,7 @@ export const presentation: AdapterPresentation = {
   languageId: 'redis',
   statementSyntax: 'redis',
   completionTriggers: [' '],
+  passwordSecret: true,
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 6379 },

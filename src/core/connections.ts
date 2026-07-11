@@ -41,23 +41,26 @@ export class ConnectionManager implements vscode.Disposable {
     return factory
   }
 
-  // Fetch a secret from the keychain, prompting (and storing) on first use.
-  private async getSecret(connName: string, field: string, prompt: string): Promise<string> {
-    let value = await this.vault.get(connName, field)
-    if (value === undefined) {
-      value = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt })
-      if (value === undefined) throw new Error('Connection cancelled')
-      await this.vault.store(connName, field, value)
+  // Fetch a secret. Normally cached in (and read from) the keychain; when persist
+  // is false (promptPassword connections) it is prompted every time and never stored.
+  private async getSecret(connName: string, field: string, prompt: string, persist = true): Promise<string> {
+    if (persist) {
+      const cached = await this.vault.get(connName, field)
+      if (cached !== undefined) return cached
     }
+    const value = await vscode.window.showInputBox({ password: true, ignoreFocusOut: true, prompt })
+    if (value === undefined) throw new Error('Connection cancelled')
+    if (persist) await this.vault.store(connName, field, value)
     return value
   }
 
   private async resolve(cfg: ConnectionConfig, factory: AdapterFactory): Promise<ResolvedConnection> {
     const errs = factory.validate(cfg)
     if (errs.length) throw new Error(`Invalid config for ${cfg.group}/${cfg.name}: ${errs.join(', ')}`)
+    const persist = cfg.promptPassword !== true
     const secrets: Record<string, string> = {}
     for (const field of factory.requiredSecrets(cfg)) {
-      secrets[field] = await this.getSecret(cfg.name, field, `${field} for ${cfg.group}/${cfg.name}`)
+      secrets[field] = await this.getSecret(cfg.name, field, `${field} for ${cfg.group}/${cfg.name}`, persist)
     }
     return { ...cfg, secrets }
   }

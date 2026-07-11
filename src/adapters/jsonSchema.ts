@@ -44,6 +44,12 @@ function branchFor(p: AdapterPresentation): JsonSchema {
     },
   }
   for (const f of p.fields) properties[f.key] = propertyFor(f)
+  if (p.passwordSecret) {
+    properties.promptPassword = {
+      type: 'boolean',
+      description: 'Prompt for the password every connect instead of storing it in the keychain',
+    }
+  }
   // tunnelling rewrites host/port, so it applies only to host/port adapters
   if (p.fields.some(f => f.key === 'host')) properties.ssh = SSH_SCHEMA
   return {

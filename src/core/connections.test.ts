@@ -12,7 +12,7 @@ vi.mock('vscode', () => ({
     }
     dispose() {}
   },
-  window: {},
+  window: { showInputBox: async () => 'prompted-secret' },
 }))
 
 import type { Adapter, AdapterFactory, AdapterModule } from '../adapters/types'
@@ -20,7 +20,7 @@ import { ConnectionManager } from './connections'
 import type { ConfigStore } from './configStore'
 import type { SecretVault } from './secrets'
 
-function makeManager(opts: { connect?: () => Promise<void> } = {}) {
+function makeManager(opts: { connect?: () => Promise<void>; requiredSecrets?: string[] } = {}) {
   const connects: string[] = []
   const disposed: string[] = []
   const makeAdapter = (name: string): Adapter => ({
@@ -37,7 +37,7 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
   const factory: AdapterFactory = {
     id: 'fake',
     validate: () => [],
-    requiredSecrets: () => [],
+    requiredSecrets: () => opts.requiredSecrets ?? [],
     create: cfg => {
       connects.push(cfg.name)
       return makeAdapter(cfg.name)
@@ -51,16 +51,19 @@ function makeManager(opts: { connect?: () => Promise<void> } = {}) {
   ])
   const store = {
     connection: (name: string) =>
-      name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false } : undefined,
+      name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false }
+        : name === 'promptdb' ? { name: 'promptdb', group: 'local', adapter: 'fake', readonly: false, promptPassword: true }
+          : undefined,
   } as unknown as ConfigStore
   const deleted: string[] = []
+  const stored: string[] = []
   const vault = {
     get: async () => undefined,
-    store: async () => {},
+    store: async (name: string) => { stored.push(name) },
     deleteConnection: async (name: string) => { deleted.push(name) },
   } as unknown as SecretVault
   const manager = new ConnectionManager(store, vault, modules)
-  return { manager, connects, disposed, deleted }
+  return { manager, connects, disposed, deleted, stored }
 }
 
 describe('ConnectionManager connection state', () => {
@@ -85,6 +88,18 @@ describe('ConnectionManager connection state', () => {
     expect(manager.isConnected('db1')).toBe(false)
     expect(disposed).toContain('db1')
     expect(deleted).toEqual(['db1'])
+  })
+
+  it('stores a prompted secret by default', async () => {
+    const { manager, stored } = makeManager({ requiredSecrets: ['password'] })
+    await manager.getAdapter('db1')
+    expect(stored).toEqual(['db1'])
+  })
+
+  it('promptPassword connections prompt every connect and never store', async () => {
+    const { manager, stored } = makeManager({ requiredSecrets: ['password'] })
+    await manager.getAdapter('promptdb')
+    expect(stored).toEqual([])
   })
 
   it('does not re-fire for an already-live adapter', async () => {

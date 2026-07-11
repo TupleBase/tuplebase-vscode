@@ -4,20 +4,28 @@ import { addConnection, removeConnection } from '../core/configWriter'
 import { buildConnection, validate, withReadonly } from '../webview/connFormSpec'
 import { adapterById, presentations } from '../adapters/registry'
 import { ConfigStore } from '../core/configStore'
+import { SecretVault } from '../core/secrets'
 import type { ConnectionConfig } from '../adapters/types'
 
 const formFields = (adapter: string) => withReadonly(adapterById.get(adapter)?.presentation.fields ?? [])
 
+interface SecretInput { password?: string; promptEveryTime?: boolean }
+
 type Incoming =
-  | { type: 'create'; adapter: string; connName: string; values: Record<string, unknown> }
+  | { type: 'create'; adapter: string; connName: string; values: Record<string, unknown>; secret?: SecretInput }
   | { type: 'cancel' }
 
 type EditContext = { group: string; conn: ConnectionConfig }
 
 // The per-group "+" (and a connection's Edit) open this webview panel. The webview
 // picks a type / edits fields; the host stays authoritative: re-validates, checks
-// name uniqueness, then writes into the group via jsonc writeback.
-export function registerNewConnectionForm(extensionUri: vscode.Uri, store: ConfigStore): vscode.Disposable {
+// name uniqueness, then writes into the group via jsonc writeback. Password stays
+// out of the config — it goes to the keychain (or is skipped for prompt-every-time).
+export function registerNewConnectionForm(
+  extensionUri: vscode.Uri,
+  store: ConfigStore,
+  vault: SecretVault,
+): vscode.Disposable {
   const open = async (group: string, edit?: EditContext) => {
     const uri = store.configUri
     if (!uri) {
@@ -55,10 +63,17 @@ export function registerNewConnectionForm(extensionUri: vscode.Uri, store: Confi
         return
       }
       try {
+        const conn = buildConnection(msg.adapter, fields, msg.values)
+        const promptEveryTime = msg.secret?.promptEveryTime === true
+        if (promptEveryTime) conn.promptPassword = true
         let text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8')
         if (originalName !== undefined && renamed) text = removeConnection(text, group, originalName)
-        text = addConnection(text, group, connName, buildConnection(msg.adapter, fields, msg.values))
+        text = addConnection(text, group, connName, conn)
         await vscode.workspace.fs.writeFile(uri, Buffer.from(text, 'utf8'))
+        // keychain: rename clears the old name's secret; store/clear per the choice
+        if (renamed && originalName) await vault.delete(originalName, 'password')
+        if (promptEveryTime) await vault.delete(connName, 'password')
+        else if (msg.secret?.password) await vault.store(connName, 'password', msg.secret.password)
         panel.dispose()
       } catch (e) {
         void panel.webview.postMessage({ type: 'error', errors: [`Failed to write config: ${(e as Error).message}`] })

@@ -18,6 +18,7 @@ export interface ConnectionConfig {
   adapter: AdapterId
   readonly: boolean
   ssh?: SshConfig
+  promptPassword?: boolean   // prompt for the password every connect instead of storing it
   [key: string]: unknown
 }
 
@@ -105,6 +106,7 @@ export interface AdapterPresentation {
   languageId: string       // editor language whose files run against this adapter ('sql', 'redis', …)
   statementSyntax?: StatementSyntax
   completionTriggers?: string[]   // trigger chars for completion (eager — the provider loads lazily)
+  passwordSecret?: boolean        // uses a password secret — the form offers a credentials section
   fields: Field[]
 }
 

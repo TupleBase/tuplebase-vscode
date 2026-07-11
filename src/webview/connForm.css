@@ -137,3 +137,15 @@ h1 {
   background: var(--vscode-button-secondaryBackground);
 }
 .secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
+
+.creds {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.35));
+}
+.creds-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+.creds input[disabled] { opacity: 0.5; }

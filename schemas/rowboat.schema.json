@@ -89,6 +89,10 @@
                 "type": "string",
                 "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)"
               },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
               "ssh": {
                 "type": "object",
                 "description": "Tunnel this connection through an SSH bastion / jump host",
@@ -170,6 +174,10 @@
                 "type": "boolean",
                 "default": false,
                 "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
               },
               "ssh": {
                 "type": "object",

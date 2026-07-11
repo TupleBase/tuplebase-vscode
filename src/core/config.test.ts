@@ -143,3 +143,16 @@ describe('parseConfig ssh tunnels', () => {
     expect(errors.some(e => /unknown ssh field "proxyJump"/.test(e.message))).toBe(true)
   })
 })
+
+describe('parseConfig promptPassword', () => {
+  it('carries a boolean promptPassword flag onto the connection', () => {
+    const { config, errors } = parseConfig(base({ g: { c: { adapter: 'postgres', host: 'h', user: 'u', promptPassword: true } } }))
+    expect(errors).toEqual([])
+    expect(config!.connections['c'].promptPassword).toBe(true)
+  })
+
+  it('rejects a non-boolean promptPassword', () => {
+    const { errors } = parseConfig(base({ g: { c: { adapter: 'postgres', host: 'h', user: 'u', promptPassword: 'yes' } } }))
+    expect(errors.some(e => /promptPassword must be a boolean/.test(e.message))).toBe(true)
+  })
+})
