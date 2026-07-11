@@ -1,7 +1,4 @@
-import * as vscode from 'vscode'
-import { ConnectionManager } from '../core/connections'
-import { ConfigStore } from '../core/configStore'
-import { getFileConnection } from '../core/fileConn'
+import type { CompletionContext, CompletionContribution, CompletionResult } from '../types'
 
 export interface RedisCommand { name: string; hint: string; doc: string }
 
@@ -74,50 +71,22 @@ export function wordPrefix(linePrefix: string): string {
   return linePrefix.split(/\s+/).pop() ?? ''
 }
 
-export function registerRedisCompletion(
-  manager: ConnectionManager,
-  store: ConfigStore,
-  workspaceState: vscode.Memento,
-): vscode.Disposable {
-  const provider: vscode.CompletionItemProvider = {
-    async provideCompletionItems(doc, position) {
-      const linePrefix = doc.lineAt(position.line).text.slice(0, position.character)
-      const ctx = lineContext(linePrefix)
-      if (ctx === 'none') return []
-
-      if (ctx === 'command') {
-        return REDIS_COMMANDS.map(c => {
-          const item = new vscode.CompletionItem(c.name, vscode.CompletionItemKind.Function)
-          item.detail = c.hint
-          item.documentation = c.doc
-          item.insertText = c.name
-          return item
-        })
-      }
-
-      // key completion: live adapters only — never connect, never prompt
-      const connName = getFileConnection(workspaceState, doc.uri.fsPath)
-      if (!connName) return []
-      const cfg = store.connection(connName)
-      if (!cfg || manager.factories.get(cfg.adapter)?.languageId !== 'redis') return []
-      const adapter = manager.liveAdapter(connName)
-      if (!adapter) return []
-
-      const prefix = wordPrefix(linePrefix)
-      // replace the whole token: redis keys contain ':' which the default word pattern splits on
-      const range = new vscode.Range(position.line, position.character - prefix.length, position.line, position.character)
-      try {
-        // ponytail: hits the live server per keystroke (SCAN capped at 100); add a short-TTL cache if it ever lags
-        const items = await adapter.searchItems('key', prefix)
-        return items.map(i => {
-          const item = new vscode.CompletionItem(i.name, vscode.CompletionItemKind.Value)
-          item.range = range
-          return item
-        })
-      } catch {
-        return []
-      }
-    },
-  }
-  return vscode.languages.registerCompletionItemProvider('redis', provider, ' ')
+export const redisCompletion: CompletionContribution = {
+  triggerCharacters: [' '],
+  async provide(ctx: CompletionContext): Promise<CompletionResult[]> {
+    const kind = lineContext(ctx.linePrefix)
+    if (kind === 'none') return []
+    if (kind === 'command') {
+      return REDIS_COMMANDS.map((c): CompletionResult => ({
+        label: c.name, insertText: c.name, kind: 'function', detail: c.hint, documentation: c.doc,
+      }))
+    }
+    // key completion: live adapters only — never connect, never prompt
+    if (!ctx.connected) return []
+    const prefix = wordPrefix(ctx.linePrefix)
+    // replace the whole token: redis keys contain ':' which the default word pattern splits on
+    const replaceFromChar = ctx.character - prefix.length
+    const items = await ctx.search('key', prefix)
+    return items.map((i): CompletionResult => ({ label: i.name, insertText: i.name, kind: 'value', replaceFromChar }))
+  },
 }

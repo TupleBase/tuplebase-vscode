@@ -1,57 +1,27 @@
-// Pure spec for the new-connection form: which fields each adapter shows, how to
-// validate them, and how to turn form values into a connection object for the
-// config. The webview renders from this; unit tests exercise it directly.
-export interface Field {
-  key: string
-  label: string
-  kind: 'text' | 'number' | 'checkbox' | 'select'
-  required?: boolean
-  default?: string | number | boolean
-  options?: readonly string[]
-}
-
-export const ADAPTERS = ['postgres', 'redis', 'dynamodb'] as const
+// Pure operations over a connection form's field list: append the shared
+// read-only toggle, validate submitted values, and turn them into a config
+// object. Field lists come from each adapter's descriptor (host) or the webview
+// init payload (browser) — this module never imports the adapter registry, so
+// it is safe in both the node host and the browser bundle.
+import type { Field } from '../adapters/types'
 
 // Common to every adapter: block writes on this connection (Plan 04 guardrail).
-const READONLY: Field = { key: 'readonly', label: 'Read-only', kind: 'checkbox', default: false }
-
-const SPECS: Record<string, Field[]> = {
-  postgres: [
-    { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
-    { key: 'port', label: 'Port', kind: 'number', default: 5432 },
-    { key: 'database', label: 'Database', kind: 'text', required: true },
-    { key: 'user', label: 'User', kind: 'text', required: true },
-    { key: 'sslmode', label: 'SSL mode', kind: 'select', options: ['', 'disable', 'require', 'verify-ca', 'verify-full'] },
-    { key: 'sslrootcert', label: 'SSL root cert', kind: 'text' },
-    READONLY,
-  ],
-  redis: [
-    { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
-    { key: 'port', label: 'Port', kind: 'number', default: 6379 },
-    { key: 'db', label: 'DB', kind: 'number', default: 0 },
-    { key: 'tls', label: 'TLS', kind: 'checkbox', default: false },
-    { key: 'username', label: 'Username', kind: 'text' },
-    { key: 'auth', label: 'Password auth', kind: 'checkbox', default: false },
-    READONLY,
-  ],
-  dynamodb: [
-    { key: 'region', label: 'Region', kind: 'text', required: true },
-    { key: 'profile', label: 'AWS profile', kind: 'text' },
-    { key: 'endpoint', label: 'Endpoint', kind: 'text' },
-    READONLY,
-  ],
+export const READONLY: Field = {
+  key: 'readonly', label: 'Read-only', kind: 'checkbox', default: false,
+  description: 'Block write statements on this connection (overrides the group default)',
 }
 
-export function fieldsFor(adapter: string): Field[] {
-  return SPECS[adapter] ?? []
+// adapter-specific fields plus the shared read-only toggle, in form order
+export function withReadonly(fields: Field[]): Field[] {
+  return [...fields, READONLY]
 }
 
-export function validate(adapter: string, name: string, values: Record<string, unknown>): string[] {
+export function validate(fields: Field[], name: string, values: Record<string, unknown>): string[] {
   const errors: string[] = []
   const n = name.trim()
   if (!n) errors.push('Connection name is required')
   else if (n === 'readonly') errors.push('Connection name "readonly" is reserved')
-  for (const f of fieldsFor(adapter)) {
+  for (const f of fields) {
     if (!f.required) continue
     const v = values[f.key]
     if (v === undefined || v === null || String(v).trim() === '') errors.push(`${f.label} is required`)
@@ -59,9 +29,13 @@ export function validate(adapter: string, name: string, values: Record<string, u
   return errors
 }
 
-export function buildConnection(adapter: string, values: Record<string, unknown>): Record<string, unknown> {
+export function buildConnection(
+  adapter: string,
+  fields: Field[],
+  values: Record<string, unknown>,
+): Record<string, unknown> {
   const conn: Record<string, unknown> = { adapter }
-  for (const f of fieldsFor(adapter)) {
+  for (const f of fields) {
     const v = values[f.key]
     if (f.kind === 'number') {
       if (v === undefined || v === null || v === '') continue

@@ -386,8 +386,9 @@
     }
   },
   "scripts": {
-    "build": "node esbuild.mjs",
+    "build": "npm run gen:schema && node esbuild.mjs",
     "watch": "node esbuild.mjs --watch",
+    "gen:schema": "node scripts/gen-schema.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run",
     "db:postgres": "docker compose --profile postgres up -d",

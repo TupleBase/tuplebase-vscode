@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { buildConnection, fieldsFor, validate } from './connFormSpec'
+import { buildConnection, validate, withReadonly } from './connFormSpec'
+import { adapterById } from '../adapters/registry'
 
-describe('fieldsFor', () => {
+// form fields as the host assembles them: adapter descriptor fields + read-only
+const fieldsFor = (id: string) => withReadonly(adapterById.get(id)?.presentation.fields ?? [])
+
+describe('adapter form fields', () => {
   it('returns postgres fields with required + defaults', () => {
-    const f = fieldsFor('postgres')
-    const byKey = Object.fromEntries(f.map(x => [x.key, x]))
+    const byKey = Object.fromEntries(fieldsFor('postgres').map(x => [x.key, x]))
     expect(byKey.host.required).toBe(true)
     expect(byKey.database.required).toBe(true)
     expect(byKey.user.required).toBe(true)
@@ -17,45 +20,48 @@ describe('fieldsFor', () => {
     expect(fieldsFor('dynamodb').map(f => f.key)).toEqual(['region', 'profile', 'endpoint', 'readonly'])
   })
 
-  it('returns [] for an unknown adapter', () => {
-    expect(fieldsFor('oracle')).toEqual([])
+  it('returns just the read-only toggle for an unknown adapter', () => {
+    expect(fieldsFor('oracle').map(f => f.key)).toEqual(['readonly'])
   })
 })
 
 describe('validate', () => {
   it('requires a connection name', () => {
-    expect(validate('postgres', '', { host: 'h', database: 'd', user: 'u' })).toContain('Connection name is required')
+    expect(validate(fieldsFor('postgres'), '', { host: 'h', database: 'd', user: 'u' }))
+      .toContain('Connection name is required')
   })
 
   it('reserves the name "readonly"', () => {
-    expect(validate('postgres', 'readonly', { host: 'h', database: 'd', user: 'u' })[0]).toMatch(/reserved/)
+    expect(validate(fieldsFor('postgres'), 'readonly', { host: 'h', database: 'd', user: 'u' })[0]).toMatch(/reserved/)
   })
 
   it('flags missing required fields by label', () => {
-    const errs = validate('postgres', 'pg', { host: 'h' })
+    const errs = validate(fieldsFor('postgres'), 'pg', { host: 'h' })
     expect(errs).toContain('Database is required')
     expect(errs).toContain('User is required')
   })
 
   it('passes a complete connection', () => {
-    expect(validate('postgres', 'pg', { host: 'h', database: 'd', user: 'u' })).toEqual([])
-    expect(validate('dynamodb', 'ddb', { region: 'eu-west-1' })).toEqual([])
+    expect(validate(fieldsFor('postgres'), 'pg', { host: 'h', database: 'd', user: 'u' })).toEqual([])
+    expect(validate(fieldsFor('dynamodb'), 'ddb', { region: 'eu-west-1' })).toEqual([])
   })
 })
 
 describe('buildConnection', () => {
   it('builds a minimal postgres connection, omitting blanks and coercing numbers', () => {
-    expect(buildConnection('postgres', { host: 'localhost', port: '5432', database: 'app', user: 'me', sslrootcert: '' }))
+    expect(buildConnection('postgres', fieldsFor('postgres'),
+      { host: 'localhost', port: '5432', database: 'app', user: 'me', sslrootcert: '' }))
       .toEqual({ adapter: 'postgres', host: 'localhost', port: 5432, database: 'app', user: 'me' })
   })
 
   it('keeps true checkboxes and drops false ones', () => {
-    expect(buildConnection('redis', { host: 'h', port: 6379, db: 0, tls: true, auth: false }))
+    expect(buildConnection('redis', fieldsFor('redis'), { host: 'h', port: 6379, db: 0, tls: true, auth: false }))
       .toEqual({ adapter: 'redis', host: 'h', port: 6379, db: 0, tls: true })
   })
 
   it('includes only provided dynamodb fields', () => {
-    expect(buildConnection('dynamodb', { region: 'local', endpoint: 'http://localhost:8000', profile: '' }))
+    expect(buildConnection('dynamodb', fieldsFor('dynamodb'),
+      { region: 'local', endpoint: 'http://localhost:8000', profile: '' }))
       .toEqual({ adapter: 'dynamodb', region: 'local', endpoint: 'http://localhost:8000' })
   })
 })

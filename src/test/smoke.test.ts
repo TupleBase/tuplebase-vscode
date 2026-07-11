@@ -7,7 +7,7 @@ suite('rowboat smoke', () => {
     assert.ok(ext, 'extension found')
     await ext.activate()
     const commands = await vscode.commands.getCommands(true)
-    for (const c of ['rowboat.runQuery', 'rowboat.selectEnvironment', 'rowboat.clearCredentials']) {
+    for (const c of ['rowboat.runQuery', 'rowboat.addGroup', 'rowboat.addConnection', 'rowboat.clearCredentials']) {
       assert.ok(commands.includes(c), `command ${c} registered`)
     }
   })

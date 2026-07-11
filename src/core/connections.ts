@@ -1,18 +1,12 @@
 import * as vscode from 'vscode'
 import type { Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection } from '../adapters/types'
-import { dynamodbFactory } from '../adapters/dynamodb'
-import { postgresFactory } from '../adapters/postgres'
-import { redisFactory } from '../adapters/redis'
+import { adapterFactories } from '../adapters/registry'
 import { BRAND } from './brand'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 
 export class ConnectionManager implements vscode.Disposable {
-  readonly factories = new Map<string, AdapterFactory>([
-    [postgresFactory.id, postgresFactory],
-    [redisFactory.id, redisFactory],
-    [dynamodbFactory.id, dynamodbFactory],
-  ])
+  readonly factories: Map<string, AdapterFactory> = adapterFactories()
   private live = new Map<string, Adapter>()   // key: connection name (globally unique)
   private pending = new Map<string, Promise<Adapter>>()
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land

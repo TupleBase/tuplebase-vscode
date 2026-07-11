@@ -1,7 +1,7 @@
 import type {
   Adapter, AdapterFactory, ColumnMeta, ExecuteOptions,
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
-} from './types'
+} from '../types'
 import type {
   AttributeDefinition, DynamoDBClientConfig, KeySchemaElement, TableDescription,
 } from '@aws-sdk/client-dynamodb'

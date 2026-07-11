@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('vscode', () => ({}))
 
-import { sqlContext, resolveAlias, wordPrefix, SQL_KEYWORDS, SQL_FUNCTIONS } from './sql'
+import { sqlContext, resolveAlias, wordPrefix, SQL_KEYWORDS, SQL_FUNCTIONS } from './completion'
 
 describe('sqlContext', () => {
   it('a table-introducing keyword means table completion', () => {

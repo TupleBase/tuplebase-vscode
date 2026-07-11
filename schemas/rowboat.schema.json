@@ -2,19 +2,30 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Rowboat configuration",
   "type": "object",
-  "required": ["version", "groups"],
+  "required": [
+    "version",
+    "groups"
+  ],
   "properties": {
-    "version": { "const": 1, "description": "Config schema version (must be 1)" },
+    "version": {
+      "const": 1,
+      "description": "Config schema version (must be 1)"
+    },
     "groups": {
       "type": "object",
       "description": "Named groups, each a folder of named connections",
       "additionalProperties": {
         "type": "object",
         "properties": {
-          "readonly": { "type": "boolean", "description": "Default: block write statements on connections in this group" }
+          "readonly": {
+            "type": "boolean",
+            "description": "Default: block write statements on connections in this group"
+          }
         },
         "patternProperties": {
-          "^(?!readonly$).*": { "$ref": "#/definitions/connection" }
+          "^(?!readonly$).*": {
+            "$ref": "#/definitions/connection"
+          }
         },
         "additionalProperties": false
       }
@@ -24,56 +35,143 @@
   "definitions": {
     "connection": {
       "type": "object",
-      "required": ["adapter"],
+      "required": [
+        "adapter"
+      ],
       "properties": {
-        "adapter": { "enum": ["postgres", "redis", "dynamodb"] }
+        "adapter": {
+          "enum": [
+            "postgres",
+            "redis",
+            "dynamodb"
+          ]
+        }
       },
       "allOf": [
         {
-          "if": { "properties": { "adapter": { "const": "postgres" } } },
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "postgres"
+              }
+            }
+          },
           "then": {
             "properties": {
               "adapter": true,
-              "readonly": { "type": "boolean", "description": "Block write statements on this connection (overrides the group default)" },
-              "host": { "type": "string" },
-              "port": { "type": "number", "default": 5432 },
-              "database": { "type": "string" },
-              "user": { "type": "string" },
-              "sslmode": { "enum": ["disable", "require", "verify-ca", "verify-full"], "description": "TLS mode (libpq semantics): require encrypts without certificate checks, verify-ca checks the CA but not the hostname, verify-full checks both" },
-              "sslrootcert": { "type": "string", "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)" }
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 5432
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "sslmode": {
+                "enum": [
+                  "disable",
+                  "require",
+                  "verify-ca",
+                  "verify-full"
+                ],
+                "description": "TLS mode (libpq semantics): require encrypts without certificate checks, verify-ca checks the CA but not the hostname, verify-full checks both"
+              },
+              "sslrootcert": {
+                "type": "string",
+                "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)"
+              }
             },
-            "required": ["host", "database", "user"],
+            "required": [
+              "host",
+              "database",
+              "user"
+            ],
             "additionalProperties": false
           }
         },
         {
-          "if": { "properties": { "adapter": { "const": "redis" } } },
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "redis"
+              }
+            }
+          },
           "then": {
             "properties": {
               "adapter": true,
-              "readonly": { "type": "boolean", "description": "Block write statements on this connection (overrides the group default)" },
-              "host": { "type": "string" },
-              "port": { "type": "number", "default": 6379 },
-              "db": { "type": "number", "default": 0 },
-              "tls": { "type": "boolean", "default": false },
-              "username": { "type": "string" },
-              "auth": { "type": "boolean", "default": false, "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)" }
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 6379
+              },
+              "db": {
+                "type": "number",
+                "default": 0
+              },
+              "tls": {
+                "type": "boolean",
+                "default": false
+              },
+              "username": {
+                "type": "string"
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              }
             },
-            "required": ["host"],
+            "required": [
+              "host"
+            ],
             "additionalProperties": false
           }
         },
         {
-          "if": { "properties": { "adapter": { "const": "dynamodb" } } },
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "dynamodb"
+              }
+            }
+          },
           "then": {
             "properties": {
               "adapter": true,
-              "readonly": { "type": "boolean", "description": "Block write statements on this connection (overrides the group default)" },
-              "region": { "type": "string" },
-              "profile": { "type": "string" },
-              "endpoint": { "type": "string", "description": "Custom endpoint, e.g. http://localhost:8000 for dynamodb-local" }
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "region": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Custom endpoint, e.g. http://localhost:8000 for dynamodb-local"
+              }
             },
-            "required": ["region"],
+            "required": [
+              "region"
+            ],
             "additionalProperties": false
           }
         }

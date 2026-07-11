@@ -58,3 +58,70 @@ export interface AdapterFactory {
   requiredSecrets(cfg: ConnectionConfig): string[]
   create(cfg: ResolvedConnection): Adapter
 }
+
+// ── Presentation ─────────────────────────────────────────────────────────────
+// Pure per-adapter form/UI metadata. No node or vscode imports so the connection
+// webview (browser bundle) can receive it as data. `fields` drives both the form
+// and the generated JSON schema; add a field here and it shows up in both.
+export interface Field {
+  key: string
+  label: string
+  kind: 'text' | 'number' | 'checkbox' | 'select'
+  required?: boolean
+  default?: string | number | boolean
+  options?: readonly string[]
+  description?: string   // surfaced in the generated JSON schema
+}
+
+export interface AdapterPresentation {
+  id: AdapterId
+  label: string
+  codicon: string   // fallback tree icon when no bundled SVG
+  emoji: string     // connection-form type card
+  blurb: string     // one-line card subtitle
+  iconFile?: string // basename of the adapter's bundled SVG (Task 2), resolved under dist/adapters/<id>/
+  fields: Field[]
+}
+
+// ── Completion ───────────────────────────────────────────────────────────────
+// Each adapter contributes its own editor completion. The host registers one
+// vscode provider per languageId and dispatches to the descriptor bound to the
+// file's connection, so postgres SQL and DynamoDB PartiQL can share 'sql'.
+export type CompletionKind = 'keyword' | 'function' | 'table' | 'column' | 'key' | 'value'
+
+export interface CompletionResult {
+  label: string
+  insertText: string
+  kind: CompletionKind
+  detail?: string
+  documentation?: string
+  // replace [replaceFromChar, cursor) on the cursor line instead of the default
+  // word range — redis keys contain ':' which the default word pattern splits on
+  replaceFromChar?: number
+}
+
+export interface CompletionContext {
+  languageId: string
+  fullText: string
+  offset: number
+  line: number
+  character: number
+  linePrefix: string
+  connected: boolean   // is the file's connection live? (schema lookups need it)
+  // live schema lookup bound to the file's connected adapter; [] when offline
+  search(kind: ItemKind, prefix: string): Promise<SchemaItem[]>
+}
+
+export interface CompletionContribution {
+  triggerCharacters: string[]
+  provide(ctx: CompletionContext): Promise<CompletionResult[]>
+}
+
+// ── Descriptor ───────────────────────────────────────────────────────────────
+// One self-contained plugin per database type: everything the host needs to
+// register it, collected in src/adapters/<id>/index.ts.
+export interface AdapterDescriptor {
+  presentation: AdapterPresentation
+  factory: AdapterFactory
+  completion?: CompletionContribution
+}

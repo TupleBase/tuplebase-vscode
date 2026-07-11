@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('vscode', () => ({}))
 
-import { lineContext, wordPrefix, REDIS_COMMANDS } from './redis'
+import { lineContext, wordPrefix, REDIS_COMMANDS } from './completion'
 
 describe('lineContext', () => {
   it('cursor in the first word means command completion', () => {

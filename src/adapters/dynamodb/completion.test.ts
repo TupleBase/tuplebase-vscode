@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildPartiqlItems, PARTIQL_KEYWORDS, PARTIQL_FUNCTIONS } from './partiql'
-import type { SchemaItem } from '../adapters/types'
+import { buildPartiqlItems, PARTIQL_KEYWORDS, PARTIQL_FUNCTIONS } from './completion'
+import type { SchemaItem } from '../types'
 
 const table = (name: string): SchemaItem => ({ kind: 'table', name })
 const attr = (name: string, parent?: string, detail?: string): SchemaItem => ({ kind: 'column', name, parent, detail })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { redisFactory } from './redis'
-import type { ResolvedConnection } from './types'
+import { redisFactory } from './adapter'
+import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'redis', readonly: false,

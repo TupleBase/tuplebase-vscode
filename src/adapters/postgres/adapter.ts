@@ -4,7 +4,7 @@ import type { ConnectionOptions } from 'node:tls'
 import type {
   Adapter, AdapterFactory, ConnectionConfig, ExecuteOptions,
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
-} from './types'
+} from '../types'
 import type { Pool } from 'pg'
 
 const SSL_MODES = ['disable', 'require', 'verify-ca', 'verify-full']

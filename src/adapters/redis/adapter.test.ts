@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupKeys, replyToEnvelope, tokenizeRedisCommand } from './redis'
+import { groupKeys, replyToEnvelope, tokenizeRedisCommand } from './adapter'
 
 describe('tokenizeRedisCommand', () => {
   it('splits on whitespace', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSslOptions, parsePgNodeId, pgNodeId, postgresFactory } from './postgres'
+import { buildSslOptions, parsePgNodeId, pgNodeId, postgresFactory } from './adapter'
 
 const readPem = () => 'PEM'
 

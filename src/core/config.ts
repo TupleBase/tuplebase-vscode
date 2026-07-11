@@ -1,8 +1,9 @@
 import { BRAND } from './brand'
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
 import type { ConnectionConfig } from '../adapters/types'
+import { adapterIds } from '../adapters/registry'
 
-export const KNOWN_ADAPTERS = ['postgres', 'redis', 'dynamodb']
+export const KNOWN_ADAPTERS = adapterIds
 const SECRET_FIELDS = ['password', 'passwd', 'secret', 'token', 'accesskeyid', 'secretaccesskey']
 
 export interface ConfigError { path: string; message: string }

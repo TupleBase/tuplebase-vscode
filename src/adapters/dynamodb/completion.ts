@@ -1,6 +1,7 @@
-import type { SchemaItem } from '../adapters/types'
+import type { CompletionContext, CompletionContribution, CompletionResult, SchemaItem } from '../types'
+import { statementAt } from '../../core/statements'
 
-// PartiQL (DynamoDB) completion data — pure, no vscode. sql.ts maps these to
+// PartiQL (DynamoDB) completion data — pure, no vscode. The host maps these to
 // vscode.CompletionItems and supplies tables/attributes from the live adapter.
 export interface PartiqlItem {
   label: string
@@ -42,4 +43,26 @@ export function buildPartiqlItems(
     items.push({ label: a.name, insertText: a.name, kind: 'attribute', ...(detail ? { detail } : {}) })
   }
   return items
+}
+
+// the identifier fragment being typed at the cursor (after any qualifying dot)
+const wordPrefix = (textBeforeCursor: string) => /(\w*)$/.exec(textBeforeCursor)?.[1] ?? ''
+
+const KINDS: Record<PartiqlItem['kind'], CompletionResult['kind']> =
+  { keyword: 'keyword', function: 'function', table: 'table', attribute: 'column' }
+
+export const dynamodbCompletion: CompletionContribution = {
+  triggerCharacters: ['.', ' ', '"'],
+  async provide(ctx: CompletionContext): Promise<CompletionResult[]> {
+    // DynamoDB speaks PartiQL over the same 'sql' language files as postgres;
+    // the host routes here by the file's connection adapter, not the language.
+    if (!ctx.connected) return []
+    const stmt = statementAt(ctx.fullText, ctx.offset, 'sql')
+    if (!stmt) return []
+    const prefix = wordPrefix(ctx.fullText.slice(stmt.start, ctx.offset))
+    const [tables, attrs] = await Promise.all([ctx.search('table', prefix), ctx.search('column', prefix)])
+    return buildPartiqlItems(prefix, tables, attrs).map((pi): CompletionResult => ({
+      label: pi.label, insertText: pi.insertText, kind: KINDS[pi.kind], ...(pi.detail ? { detail: pi.detail } : {}),
+    }))
+  },
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { postgresFactory } from './postgres'
-import type { ResolvedConnection } from './types'
+import { postgresFactory } from './adapter'
+import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'postgres', readonly: false,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dynamodbFactory, flattenItems } from './dynamodb'
+import { dynamodbFactory, flattenItems } from './adapter'
 
 describe('flattenItems', () => {
   it('unions columns across items in first-seen order', () => {

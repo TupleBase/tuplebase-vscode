@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { dynamodbFactory } from './dynamodb'
-import type { ExecuteOptions, ResolvedConnection, ResultEnvelope } from './types'
+import { dynamodbFactory } from './adapter'
+import type { ExecuteOptions, ResolvedConnection, ResultEnvelope } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'dynamodb', readonly: false,

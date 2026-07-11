@@ -1,9 +1,9 @@
 import type {
   Adapter, AdapterFactory, ExecuteOptions,
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
-} from './types'
+} from '../types'
 import type { RedisClientType } from '@redis/client'
-import { splitRedisCommands } from '../core/statements'
+import { splitRedisCommands } from '../../core/statements'
 
 const NS_PREFIX = 'redis:ns:'
 const KEY_PREFIX = 'redis:key:'

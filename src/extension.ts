@@ -6,8 +6,7 @@ import { ConnectionManager } from './core/connections'
 import { registerSchemaTree } from './ui/schemaTree'
 import { ResultsPanel } from './ui/resultsPanel'
 import { registerRunQuery } from './core/runQuery'
-import { registerSqlCompletion } from './completion/sql'
-import { registerRedisCompletion } from './completion/redis'
+import { registerCompletions } from './completion/register'
 import { registerNewQuery, registerNewQueryOnConnection } from './core/newQuery'
 import { HistoryStore } from './core/history'
 import { registerHistoryTree } from './ui/historyTree'
@@ -39,8 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
       historyTree?.refresh()
     }),
     ...(historyTree ? [historyTree] : []),
-    registerSqlCompletion(manager, store, context.workspaceState),
-    registerRedisCompletion(manager, store, context.workspaceState),
+    registerCompletions(manager, store, context.workspaceState),
     registerNewQuery(),
     registerNewQueryOnConnection(manager, context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),

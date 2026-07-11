@@ -1,25 +1,29 @@
-import { ADAPTERS, fieldsFor, validate, type Field } from './connFormSpec'
-import { ADAPTER_CATALOG } from '../core/adapterCatalog'
+import { validate, withReadonly } from './connFormSpec'
+import type { AdapterPresentation, Field } from '../adapters/types'
 
 const vscode = acquireVsCodeApi()
 const app = document.getElementById('app')!
 
-type Init =
+// The host injects the adapter catalog (labels, cards, form fields) so this
+// browser bundle never imports adapter runtime code.
+type Init = { adapters: AdapterPresentation[] } & (
   | { mode: 'new' }
   | { mode: 'edit'; group: string; adapter: string; name: string; values: Record<string, unknown> }
+)
 
-let init: Init = { mode: 'new' }
+let init: Init = { mode: 'new', adapters: [] }
 try {
-  init = JSON.parse(document.body.dataset.init || '{"mode":"new"}') as Init
+  init = JSON.parse(document.body.dataset.init || '{"mode":"new","adapters":[]}') as Init
 } catch {
   // fall back to the new-connection flow
 }
 
+const META = new Map(init.adapters.map(a => [a.id, a]))
+const fieldsFor = (adapter: string): Field[] => withReadonly(META.get(adapter)?.fields ?? [])
+
 type State = { stage: 'pick' } | { stage: 'form'; adapter: string }
 let state: State = init.mode === 'edit' ? { stage: 'form', adapter: init.adapter } : { stage: 'pick' }
 let currentErrBox: HTMLElement | undefined
-
-const META = ADAPTER_CATALOG
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] {
   const n = document.createElement(tag)
@@ -39,15 +43,14 @@ function renderPick() {
   app.appendChild(el('h1', undefined, 'New connection'))
   app.appendChild(el('p', 'subtitle', 'Choose a database type'))
   const grid = el('div', 'cards')
-  for (const adapter of ADAPTERS) {
-    const m = META[adapter]
+  for (const a of init.adapters) {
     const card = el('button', 'card')
     card.type = 'button'
-    card.appendChild(el('span', 'card-icon', m.emoji))
-    card.appendChild(el('span', 'card-label', m.label))
-    card.appendChild(el('span', 'card-blurb', m.blurb))
+    card.appendChild(el('span', 'card-icon', a.emoji))
+    card.appendChild(el('span', 'card-label', a.label))
+    card.appendChild(el('span', 'card-blurb', a.blurb))
     card.addEventListener('click', () => {
-      state = { stage: 'form', adapter }
+      state = { stage: 'form', adapter: a.id }
       render()
     })
     grid.appendChild(card)
@@ -95,7 +98,7 @@ function fieldRow(f: Field, initial: unknown): HTMLElement {
 function renderForm(adapter: string) {
   const editing = init.mode === 'edit' && init.adapter === adapter
   const prefill = editing ? (init as Extract<Init, { mode: 'edit' }>) : undefined
-  const m = META[adapter]
+  const label = META.get(adapter)?.label ?? adapter
 
   if (!editing) {
     const back = el('button', 'link', '← Back')
@@ -106,7 +109,7 @@ function renderForm(adapter: string) {
     })
     app.appendChild(back)
   }
-  app.appendChild(el('h1', undefined, editing ? `Edit ${m.label} connection` : `New ${m.label} connection`))
+  app.appendChild(el('h1', undefined, editing ? `Edit ${label} connection` : `New ${label} connection`))
 
   const form = el('form', 'form')
   form.appendChild(fieldRow({ key: 'name', label: 'Connection name', kind: 'text', required: true }, prefill?.name))
@@ -130,7 +133,7 @@ function renderForm(adapter: string) {
   form.addEventListener('submit', e => {
     e.preventDefault()
     const { name, values } = collect(form)
-    const errs = validate(adapter, name, values)
+    const errs = validate(fieldsFor(adapter), name, values)
     if (errs.length) {
       showErrors(errBox, errs)
       return
