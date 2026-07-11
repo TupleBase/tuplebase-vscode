@@ -9,6 +9,8 @@ npm run db:postgres   # dockerized postgres on :5432, seeded (password: rowboat)
 npm run db:redis      # dockerized redis on :6379, seeded
 npm run db:dynamo     # dockerized dynamodb-local on :8000, seeded
 npm run db:sqlite     # builds the dev SQLite demo file (dev/seed/sqlite/demo.sqlite) — no container
+npm run db:mariadb    # dockerized MariaDB on :3307, seeded (reached via the mysql adapter)
+npm run db:clickhouse # dockerized ClickHouse on :8123, seeded
 npm run db:seed:big   # opt-in high-volume seeds for paging (pg 10k rows, redis 5k keys, dynamo 2k items)
 ```
 
@@ -42,7 +44,7 @@ Three layers:
 
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
-RB_IT=1 npx vitest run   # unit + integration — needs `npm run db:postgres` + `npm run db:mysql` + `npm run db:mariadb` + `npm run db:redis` + `npm run db:dynamo`
+RB_IT=1 npx vitest run   # unit + integration — needs db:postgres + db:mysql + db:mariadb + db:clickhouse + db:redis + db:dynamo
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```

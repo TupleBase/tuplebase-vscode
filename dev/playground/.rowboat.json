@@ -21,9 +21,30 @@
         "database": "rowboat",
         "user": "rowboat"
       },
+      "local-mysql": {
+        "adapter": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "database": "rowboat",
+        "user": "rowboat"
+      },
+      "local-mariadb": {
+        "adapter": "mysql",
+        "host": "localhost",
+        "port": 3307,
+        "database": "rowboat",
+        "user": "rowboat"
+      },
       "local-sqlite": {
         "adapter": "sqlite",
         "path": "dev/seed/sqlite/demo.sqlite"
+      },
+      "local-clickhouse": {
+        "adapter": "clickhouse",
+        "host": "localhost",
+        "port": 8123,
+        "database": "rowboat",
+        "user": "default"
       }
     },
     "Test": {

@@ -40,7 +40,7 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), ClickHouse (adapter), CockroachDB (via `postgres`), MariaDB (via `mysql`).
 
 Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
 
@@ -53,7 +53,7 @@ Each has a local image/file, so it gets a real live-container integration test l
 | ✅ MariaDB | `mariadb` | **shipped** — no new adapter; use the `mysql` adapter (MySQL wire protocol, verified against a real MariaDB container) |
 | MongoDB | `mongo` | first non-SQL surface (MQL) |
 | MS SQL Server | `mcr.microsoft.com/mssql/server` | Linux; `ACCEPT_EULA=Y` + SA password (heavy image) |
-| ClickHouse | `clickhouse/clickhouse-server` | analytics; HTTP/native |
+| ✅ ClickHouse | `clickhouse/clickhouse-server` | **shipped** — `src/adapters/clickhouse/`, HTTP driver, `system.*` schema tree, optional password auth |
 | Neo4j | `neo4j` | Cypher, graph |
 | Cassandra / ScyllaDB | `cassandra` / `scylladb/scylla` | CQL; slow to boot |
 | Elasticsearch / OpenSearch | `elasticsearch` / `opensearchproject/opensearch` | heavy; single-node + memory limits |
@@ -85,6 +85,14 @@ Full rename of the product from **Rowboat** to **Tuple** (name not final — dec
 - Monetization seam only: `license.ts` with `isProEnabled() => true`
 - CHANGELOG.md + README screenshots/gif (page quality drives installs)
 - Public website / landing page — install links, docs, screenshots, gifs
+
+### Dev environment parity *(chore)*
+
+Every DB type shipped in `docker-compose.yml` should be seeded **and** pre-wired in the dev config, so launching the Extension Development Host (F5 / ▶) shows a live connection for each engine with no manual setup.
+
+- **Seeds** — all present: Postgres/MySQL/MariaDB seed on container init (`dev/seed/<db>` → `/docker-entrypoint-initdb.d`); Redis + DynamoDB via `db:seed`; SQLite via `db:sqlite`.
+- **Connections — gap:** `dev/playground/.rowboat.json` has `local-pg`, `local-redis`, `local-dynamo`, `local-sqlite` but is **missing MySQL and MariaDB** (both have compose services + seeds). Add `local-mysql` + `local-mariadb` entries.
+- Keep in parity as new local-testable adapters land (§1a): each new compose service gets a seed **and** a dev-config connection in the same change.
 
 ---
 

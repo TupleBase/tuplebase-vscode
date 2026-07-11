@@ -6,6 +6,7 @@ import type {
 import { presentation as postgres } from './postgres/presentation'
 import { presentation as mysql } from './mysql/presentation'
 import { presentation as sqlite } from './sqlite/presentation'
+import { presentation as clickhouse } from './clickhouse/presentation'
 import { presentation as redis } from './redis/presentation'
 import { presentation as dynamodb } from './dynamodb/presentation'
 
@@ -17,7 +18,7 @@ import { presentation as dynamodb } from './dynamodb/presentation'
 // first time one of its connections is opened. Config validation, the JSON
 // schema, the connection form, tree icons, completion and the connection manager
 // all read from here.
-const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, redis, dynamodb]
+const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, clickhouse, redis, dynamodb]
 
 interface AdapterChunk { factory: AdapterFactory; completion?: CompletionContribution }
 

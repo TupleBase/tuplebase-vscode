@@ -60,3 +60,18 @@ services:
     profiles: ["dynamo", "all"]
     ports: ["8000:8000"]
     # no healthcheck: image ships no curl/wget — the seed script retries until the port answers
+  clickhouse:
+    image: clickhouse/clickhouse-server:24
+    profiles: ["clickhouse", "all"]
+    ports: ["8123:8123"]
+    environment:
+      CLICKHOUSE_DB: rowboat
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - ./dev/seed/clickhouse:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
