@@ -9,6 +9,9 @@ import type { ConnectionConfig } from '../adapters/types'
 
 const formFields = (adapter: string) => withReadonly(adapterById.get(adapter)?.presentation.fields ?? [])
 
+// Default bucket for a connection created from the toolbar (no group chosen).
+export const UNGROUPED_GROUP = 'Ungrouped'
+
 interface SecretInput { password?: string; promptEveryTime?: boolean }
 
 type Incoming =
@@ -84,11 +87,9 @@ export function registerNewConnectionForm(
 
   return vscode.Disposable.from(
     vscode.commands.registerCommand('rowboat.addConnection', (node?: { type?: string; name?: string }) => {
-      if (node?.type !== 'group' || !node.name) {
-        void vscode.window.showWarningMessage(`${BRAND}: use a group's + button to add a connection`)
-        return
-      }
-      void open(node.name)
+      // from a group's "+" → that group; from the explorer toolbar (no node) →
+      // a default bucket, created on save. Drag it into a real group afterwards.
+      void open(node?.type === 'group' && node.name ? node.name : UNGROUPED_GROUP)
     }),
     vscode.commands.registerCommand('rowboat.editConnection', (node?: { type?: string; conn?: ConnectionConfig }) => {
       if (node?.type !== 'connection' || !node.conn) return

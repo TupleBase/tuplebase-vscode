@@ -232,14 +232,19 @@
       ],
       "view/title": [
         {
-          "command": "rowboat.addGroup",
+          "command": "rowboat.addConnection",
           "when": "view == rowboat.explorer",
           "group": "navigation@1"
         },
         {
-          "command": "rowboat.refreshExplorer",
+          "command": "rowboat.addGroup",
           "when": "view == rowboat.explorer",
           "group": "navigation@2"
+        },
+        {
+          "command": "rowboat.refreshExplorer",
+          "when": "view == rowboat.explorer",
+          "group": "navigation@3"
         },
         {
           "command": "rowboat.history.clear",
@@ -340,10 +345,6 @@
         },
         {
           "command": "rowboat.newQueryOnConnection",
-          "when": "false"
-        },
-        {
-          "command": "rowboat.addConnection",
           "when": "false"
         },
         {
