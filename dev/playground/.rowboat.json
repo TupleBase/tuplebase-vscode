@@ -45,6 +45,13 @@
         "port": 8123,
         "database": "rowboat",
         "user": "default"
+      },
+      "local-mssql": {
+        "adapter": "mssql",
+        "host": "localhost",
+        "port": 1433,
+        "database": "rowboat",
+        "user": "sa"
       }
     },
     "Test": {

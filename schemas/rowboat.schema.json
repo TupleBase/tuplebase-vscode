@@ -44,6 +44,7 @@
             "postgres",
             "mysql",
             "sqlite",
+            "mssql",
             "clickhouse",
             "redis",
             "dynamodb"
@@ -238,6 +239,87 @@
             },
             "required": [
               "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "mssql"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 1433
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "encrypt": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use TLS for the connection (the server certificate is trusted without CA validation)."
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database",
+              "user"
             ],
             "additionalProperties": false
           }

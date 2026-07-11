@@ -9,6 +9,7 @@ Which databases Rowboat speaks, and which are candidates. Each database is a sel
 | PostgreSQL | `postgres` | SQL | TLS (`sslmode` + CA cert), password in OS keychain |
 | MySQL | `mysql` | SQL | schemas → tables → columns tree, JSON columns, password in OS keychain |
 | SQLite | `sqlite` | SQL | file-based (`path`), no server/password; pure-JS driver (sql.js), writes persist to the file |
+| SQL Server | `mssql` | T-SQL | `mssql` (tedious) driver; `information_schema` schema tree, optional `encrypt` (server cert trusted) |
 | ClickHouse | `clickhouse` | SQL | analytics; HTTP driver (`@clickhouse/client`), `database`/`user` + optional `auth`, `system.*` schema tree |
 | Redis | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
@@ -21,7 +22,6 @@ Add a row when a database is requested; graduate it to **Shipped** when an adapt
 
 | Database | Query surface | Notes / wire compatibility |
 |---|---|---|
-| Microsoft SQL Server | T-SQL | TDS protocol |
 | MongoDB | MQL / aggregation | document store |
 | Cassandra / ScyllaDB | CQL | wide-column |
 | Elasticsearch / OpenSearch | query DSL | search |
