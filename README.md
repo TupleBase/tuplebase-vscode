@@ -15,6 +15,7 @@ npm run watch            # esbuild watch
 # press F5 → Extension Development Host opens dev/playground (its .rowboat.json points at the docker postgres)
 ```
 
+**How it works** (adapters, connections, the registry, build): see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Testing (manual dev-host flow, test layers, resetting state): see [docs/TESTING.md](docs/TESTING.md).
 
 ## Config
@@ -43,3 +44,5 @@ The `host`/`user`/`privateKey` path stay in the file; a key passphrase or SSH pa
 Rowboat ships a standalone [Model Context Protocol](https://modelcontextprotocol.io) server so AI agents can query your configured databases. It exposes three tools — `list_connections`, `inspect_schema`, `run_query` — over the same adapters, config and read-only guardrail as the extension, and is **read-only for agents by default** (writes are blocked unless started with `ROWBOAT_MCP_ALLOW_WRITES=1` and the connection isn't `readonly`).
 
 Run **Rowboat: Show MCP Server Config** from the command palette to get a ready-to-paste client config — it points at the bundled server, your `.rowboat.json`, and injects each connection's secret from the OS keychain as an env var. Point it at Postgres, Redis or DynamoDB and any MCP client (Claude Desktop, editors, …) can discover connections, browse schema and run queries.
+
+Full guide — running it, verifying, clients, allowing writes, troubleshooting: [docs/MCP.md](docs/MCP.md).
