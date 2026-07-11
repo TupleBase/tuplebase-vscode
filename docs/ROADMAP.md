@@ -42,10 +42,10 @@ Redesigned 2026-07-11: **environments are removed** — connections are the unit
 
 - [x] **Phase 1 — Foundation (groups model)**: `.rowboat.json` → `version: 1` + `groups`; `readonly` per-connection (+ optional group default); `ConnectionManager` and the secret vault keyed by connection name; explorer lists all connections flat; environment status bar removed. Pushed 1bd749e.
 - [x] **Phase 2 — Explorer accordion**: groups as collapsible folder nodes (group › connection › schema); jsonc writeback module. Pushed 78cf19a.
-- [ ] **Phase 3 — Group CRUD**: [x] New Group toolbar command; still to do — rename/delete/duplicate (context menu) + drag a connection between groups (TreeDragAndDropController), all synced to `.rowboat.json`
-- [ ] **Phase 4 — Connection CRUD webview**: [x] per-group "+" → 2-stage add form (grid of DB-type cards → dedicated per-adapter form) → jsonc writeback (pushed dcecf4a); still to do — edit/remove existing connections; reuse the cards for the "+" new-query panel
-- [ ] **Phase 5 — Settings**: `contributes.configuration` results page size + max rows (`rowboat.queryTimeoutMs` already exists)
-- [ ] Multi-root workspaces: config still resolves from the first folder — document the limitation (folder picker only if someone asks)
+- [x] **Phase 3 — Group CRUD**: New Group toolbar command; group **rename**/**delete** context menu; **drag** a connection between groups (TreeDragAndDropController) — all synced to `.rowboat.json`. (Group duplicate deferred — YAGNI.)
+- [x] **Phase 4 — Connection CRUD webview**: per-group "+" → 2-stage add form (DB-type cards → per-adapter form); connection **Edit** (pre-filled form, incl. rename) + **Remove** context menu; per-type icons from a shared catalog; New Query is now per-connection.
+- [x] **Phase 5 — Settings**: `rowboat.resultsPageSize` + `rowboat.maxRows` (`rowboat.queryTimeoutMs` already existed).
+- [x] Multi-root workspaces: config resolves from the first folder — documented in README.
 
 Legacy `environments` configs are not supported (new shape only); `version` is the future migration seam.
 

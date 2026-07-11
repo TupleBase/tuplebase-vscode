@@ -20,3 +20,7 @@ Testing (manual dev-host flow, test layers, resetting state): see [docs/TESTING.
 ## Config
 
 `.rowboat.json` at your workspace root — committable, secret-free. Passwords are prompted once and stored in your OS keychain (VS Code SecretStorage). See the JSON schema for fields (IntelliSense works in the file).
+
+Shape: `{ "version": 1, "groups": { "<group>": { "<connection>": { "adapter": "postgres" | "redis" | "dynamodb", ... } } } }`. Groups are folders that organise connections; a query runs against the connection bound to its file (there is no active environment). Set `"readonly": true` on a connection — or as a group default — to block writes.
+
+Multi-root workspaces: config resolves from the **first** workspace folder only.
