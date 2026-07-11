@@ -44,11 +44,15 @@ In the order we'll tackle them.
 
 1. **Adapter modularization** — *do this first.* Make each connection type a self-contained plugin: **one folder** (`src/adapters/<db>/`) holds everything for it — adapter, form fields, catalog entry (icon/label/blurb), completion provider, language bits, dev seed — exposed as a single descriptor. Registering a new database becomes "drop a folder + one line" instead of editing `config.ts`, the JSON schema, `connFormSpec.ts`, `adapterCatalog.ts`, `connections.ts` and the completion providers separately. Prerequisite for every candidate in [`DATABASES.md`](DATABASES.md).
 
-2. **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines).
+2. **Official database icons** — replace the generic codicon placeholders (`database` / `zap` / `cloud`) with each database's real logo, bundled as an SVG in its adapter folder (mind brand/trademark usage guidelines). If official assets can't be sourced cleanly, the owner supplies them — target format: one SVG per adapter, ~16×16 viewBox, ideally a light + dark pair (VS Code `TreeItem.iconPath` takes `{ light, dark }`), or a single `currentColor` mark that themes both.
 
 3. **MCP server — let agents query sources** *(Plan 06).* Expose the configured connections through a Model Context Protocol server so any AI agent can discover connections, inspect schema, and run queries against Postgres / Redis / DynamoDB (and future adapters). Reuse the existing adapters, config and read-only guardrail — default read-only for agents; secrets stay in the OS keychain. Design TBD.
 
-4. **Publishing — the final goal** *(Plan 07, owner-gated: needs the owner's Azure DevOps / Entra account).*
+4. **Statement-splitter PartiQL edge cases** — the `;` splitter is tuned for Postgres SQL (quotes, dollar-quoting, `--` and `/* */` comments); DynamoDB PartiQL files ride the same splitter and can mis-split on PartiQL-specific syntax (quoted attribute paths, `?` parameters). Harden when a real PartiQL file breaks.
+
+5. **SSH tunnels** — reach a database behind a bastion / jump host: forward a local port over SSH and connect the adapter through it, per connection. Common for hosted/production DBs.
+
+6. **Publishing — the final goal** *(Plan 07, owner-gated: needs the owner's Azure DevOps / Entra account).*
    - Publisher setup + first pre-release (Entra ID auth; icon/keywords/manifest; odd/even minor = pre-release/release)
    - Open VSX too (Cursor / Windsurf / VSCodium)
    - CI publish-on-tag + THIRD-PARTY-NOTICES generation
@@ -57,9 +61,5 @@ In the order we'll tackle them.
    - Public website / landing page — install links, docs, screenshots, gifs
 
 ### Not scheduled
-
-**Deferred** — until asked for:
-- **Statement-splitter PartiQL edge cases** — the `;` splitter is tuned for Postgres SQL (quotes, dollar-quoting, `--` and `/* */` comments); DynamoDB PartiQL files ride the same splitter and can mis-split on PartiQL-specific syntax (quoted attribute paths, `?` parameters). Harden when a real PartiQL file breaks.
-- **SSH tunnels** — reach a database behind a bastion / jump host: forward a local port over SSH and connect the adapter through it, per connection. Common for hosted/production DBs.
 
 **Later / pro** — skipped by design: grid cell editing with write-back · EXPLAIN visualizer · telemetry.
