@@ -59,6 +59,10 @@ const manager = {
 
 const store = {
   connections: () => [{ env: 'dev', name: 'local-pg', adapter: 'postgres' }],
+  connection: (name: string) =>
+    name === 'cache' ? { name, adapter: 'redis' }
+      : name === 'local-pg' ? { name, adapter: 'postgres' }
+        : undefined,
 } as unknown as ConfigStore
 
 type Lens = { range: { start: { line: number } }; command?: { title: string; command: string; arguments?: any[] } }

@@ -1,6 +1,11 @@
+import type { StatementSyntax } from '../adapters/types'
+
 export interface StatementRange { text: string; start: number; end: number }
 
-export function splitStatements(text: string): StatementRange[] {
+// dollarQuoting: postgres $tag$…$tag$ blocks. PartiQL (and other SQL dialects)
+// have no dollar-quoting, so a bare `$` there is an ordinary character — leaving
+// it on would let a `$…$` inside a value swallow a following `;` and mis-split.
+export function splitStatements(text: string, dollarQuoting = true): StatementRange[] {
   const out: StatementRange[] = []
   let start = 0
   let i = 0
@@ -21,7 +26,7 @@ export function splitStatements(text: string): StatementRange[] {
         if (text[i] === ch) break
         i++
       }
-    } else if (ch === '$') {
+    } else if (ch === '$' && dollarQuoting) {
       const tag = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(text.slice(i))?.[0]
       if (tag) {
         const close = text.indexOf(tag, i + tag.length)
@@ -76,15 +81,15 @@ export function splitRedisCommands(text: string): StatementRange[] {
 
 // Every runnable statement in the text, in order — SQL/PartiQL split on `;`,
 // redis split per line. Used by "Run All Statements" to fan a file into tabs.
-export function splitAll(text: string, languageId = 'sql'): StatementRange[] {
-  return languageId === 'redis' ? splitRedisCommands(text) : splitStatements(text)
+export function splitAll(text: string, syntax: StatementSyntax = 'sql'): StatementRange[] {
+  return syntax === 'redis' ? splitRedisCommands(text) : splitStatements(text, syntax !== 'partiql')
 }
 
-export function statementAt(text: string, offset: number, languageId = 'sql'): StatementRange | undefined {
-  if (languageId === 'redis') {
+export function statementAt(text: string, offset: number, syntax: StatementSyntax = 'sql'): StatementRange | undefined {
+  if (syntax === 'redis') {
     // line-based: cursor on a comment/blank line means there is nothing to run
     return splitRedisCommands(text).find(s => offset >= s.start && offset <= s.end)
   }
-  const all = splitStatements(text)
+  const all = splitStatements(text, syntax !== 'partiql')
   return all.find(s => offset >= s.start && offset <= s.end + 1) ?? all[all.length - 1]
 }

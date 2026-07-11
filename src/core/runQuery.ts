@@ -1,6 +1,7 @@
 import * as vscode from 'vscode'
 import { BRAND } from './brand'
 import { splitAll, statementAt } from './statements'
+import { fileStatementSyntax } from './dialect'
 import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { errorMessage } from './errors'
@@ -23,6 +24,9 @@ export function registerRunQuery(
   onRan?: (entry: HistoryEntry) => void,
 ): vscode.Disposable {
   let inFlight: AbortController | undefined
+
+  const syntaxOf = (doc: vscode.TextDocument) =>
+    fileStatementSyntax(manager, store, workspaceState, doc.uri.fsPath, doc.languageId)
 
   const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
     const remembered = getFileConnection(workspaceState, fsPath)
@@ -77,18 +81,18 @@ export function registerRunQuery(
       const found = findDocument(arg.uri)
       if (!found) return
       doc = found
-      stmt = statementAt(doc.getText(), Math.min(arg.offset, doc.getText().length), doc.languageId)?.text
+      stmt = statementAt(doc.getText(), Math.min(arg.offset, doc.getText().length), syntaxOf(doc))?.text
     } else if (arg && 'fsPath' in arg) {
       const found = findDocument(arg)
       if (!found) return
       doc = found
-      stmt = statementAt(doc.getText(), 0, doc.languageId)?.text
+      stmt = statementAt(doc.getText(), 0, syntaxOf(doc))?.text
     } else {
       const editor = vscode.window.activeTextEditor
       if (!editor) return
       doc = editor.document
       stmt = editor.selection.isEmpty
-        ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active), doc.languageId)?.text
+        ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active), syntaxOf(doc))?.text
         : doc.getText(editor.selection)
     }
     if (!stmt || !stmt.trim()) {
@@ -162,7 +166,7 @@ export function registerRunQuery(
     if (!editor) return
     const doc = editor.document
     const source = editor.selection.isEmpty ? doc.getText() : doc.getText(editor.selection)
-    const statements = splitAll(source, doc.languageId).map(s => s.text)
+    const statements = splitAll(source, syntaxOf(doc)).map(s => s.text)
     if (statements.length === 0) {
       void vscode.window.showWarningMessage(`${BRAND}: no statements to run`)
       return

@@ -183,6 +183,7 @@ class PostgresAdapter implements Adapter {
 export const postgresFactory: AdapterFactory = {
   id: 'postgres',
   languageId: 'sql',
+  statementSyntax: 'sql',
   validate(raw) {
     const errs: string[] = []
     for (const f of ['host', 'database', 'user']) {

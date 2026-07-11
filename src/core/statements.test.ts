@@ -106,6 +106,36 @@ describe('splitAll', () => {
   })
 })
 
+describe('PartiQL splitting (dollar-quoting off)', () => {
+  it('does not read a bare $…$ as a dollar-quote, so a ; inside still splits', () => {
+    // postgres would treat `$x$ ; $x$` as one dollar-quoted block; PartiQL has no
+    // dollar-quoting, so every ; is a real boundary
+    expect(splitStatements('a $x$ ; $x$ b ; SELECT 2', true).map(s => s.text))
+      .toEqual(['a $x$ ; $x$ b', 'SELECT 2'])
+    expect(splitStatements('a $x$ ; $x$ b ; SELECT 2', false).map(s => s.text))
+      .toEqual(['a $x$', '$x$ b', 'SELECT 2'])
+  })
+
+  it('keeps quoted attribute paths and ? parameters intact while splitting on ;', () => {
+    const sql = 'SELECT "a;b" FROM "Music" WHERE "Artist" = ? AND "Title" = ?; DELETE FROM "Music" WHERE "Artist" = ?'
+    const r = splitStatements(sql, false)
+    expect(r).toHaveLength(2)
+    expect(r[0].text).toBe('SELECT "a;b" FROM "Music" WHERE "Artist" = ? AND "Title" = ?')
+    expect(r[1].text).toBe('DELETE FROM "Music" WHERE "Artist" = ?')
+  })
+
+  it('leaves ; and $ inside single-quoted values alone', () => {
+    const r = splitStatements("INSERT INTO \"T\" VALUE {'p':'a;$5'}; SELECT 2", false)
+    expect(r.map(s => s.text)).toEqual(["INSERT INTO \"T\" VALUE {'p':'a;$5'}", 'SELECT 2'])
+  })
+
+  it('splitAll and statementAt route the partiql syntax', () => {
+    expect(splitAll('a $x$ ; $x$ b', 'partiql').map(s => s.text)).toEqual(['a $x$', '$x$ b'])
+    expect(statementAt('a $x$ ; $x$ b', 0, 'partiql')?.text).toBe('a $x$')
+    expect(statementAt('a $x$ ; $x$ b', 0, 'sql')?.text).toBe('a $x$ ; $x$ b')
+  })
+})
+
 describe('statementAt with languageId', () => {
   const text = '# comment\nGET crew:1:name\nHGETALL boat:1'
 

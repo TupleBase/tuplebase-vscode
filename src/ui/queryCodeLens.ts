@@ -3,7 +3,8 @@ import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
 import { BRAND } from '../core/brand'
 import { getFileConnection, setFileConnection } from '../core/fileConn'
-import { splitRedisCommands, splitStatements } from '../core/statements'
+import { splitAll } from '../core/statements'
+import { fileStatementSyntax } from '../core/dialect'
 
 const emitter = new vscode.EventEmitter<void>()
 
@@ -19,7 +20,8 @@ export function buildQueryCodeLenses(
   store: ConfigStore,
 ): vscode.CodeLens[] {
   const text = doc.getText()
-  const statements = doc.languageId === 'redis' ? splitRedisCommands(text) : splitStatements(text)
+  const syntax = fileStatementSyntax(manager, store, workspaceState, doc.uri.fsPath, doc.languageId)
+  const statements = splitAll(text, syntax)
   const bound = getFileConnection(workspaceState, doc.uri.fsPath)
   const lenses: vscode.CodeLens[] = []
   for (const stmt of statements) {

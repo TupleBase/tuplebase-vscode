@@ -217,6 +217,7 @@ class RedisAdapter implements Adapter {
 export const redisFactory: AdapterFactory = {
   id: 'redis',
   languageId: 'redis',
+  statementSyntax: 'redis',
   validate(raw) {
     return typeof raw.host === 'string' && raw.host !== '' ? [] : ['host is required']
   },

@@ -57,7 +57,7 @@ export const dynamodbCompletion: CompletionContribution = {
     // DynamoDB speaks PartiQL over the same 'sql' language files as postgres;
     // the host routes here by the file's connection adapter, not the language.
     if (!ctx.connected) return []
-    const stmt = statementAt(ctx.fullText, ctx.offset, 'sql')
+    const stmt = statementAt(ctx.fullText, ctx.offset, 'partiql')
     if (!stmt) return []
     const prefix = wordPrefix(ctx.fullText.slice(stmt.start, ctx.offset))
     const [tables, attrs] = await Promise.all([ctx.search('table', prefix), ctx.search('column', prefix)])

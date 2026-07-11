@@ -51,9 +51,15 @@ export interface Adapter {
   dispose(): Promise<void>
 }
 
+// How a file of statements is split into runnable units. 'sql' is postgres-tuned
+// (dollar-quoting); 'partiql' is DynamoDB's SQL dialect (no dollar-quoting);
+// 'redis' is one command per line. Defaults to 'sql' when a factory omits it.
+export type StatementSyntax = 'sql' | 'partiql' | 'redis'
+
 export interface AdapterFactory {
   id: AdapterId
   languageId: string   // editor language whose files run against this adapter ('sql', 'redis', …)
+  statementSyntax?: StatementSyntax
   validate(raw: Record<string, unknown>): string[]
   requiredSecrets(cfg: ConnectionConfig): string[]
   create(cfg: ResolvedConnection): Adapter
