@@ -43,6 +43,7 @@
           "enum": [
             "postgres",
             "mysql",
+            "sqlite",
             "redis",
             "dynamodb"
           ]
@@ -210,6 +211,32 @@
               "host",
               "database",
               "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "sqlite"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path to the SQLite database file — absolute, or relative to the working directory; ${env:VAR} is interpolated."
+              }
+            },
+            "required": [
+              "path"
             ],
             "additionalProperties": false
           }

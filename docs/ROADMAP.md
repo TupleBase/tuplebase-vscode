@@ -40,7 +40,7 @@ Connect to Postgres, MySQL, Redis and DynamoDB from one explorer. Connections li
 
 ### 🚧 1. Implement the candidate adapters
 
-Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), CockroachDB (via `postgres`).
+Build out the databases under **Candidates** in [`DATABASES.md`](DATABASES.md), each via the add-adapter checklist (folder + one registry line + `npm run gen:schema` + unit/IT tests). The lazy-chunk registry and the paginating `execute` contract are in place, so each new adapter stays cheap and paginates from day one. **Done:** MySQL (adapter), SQLite (adapter), CockroachDB (via `postgres`).
 
 Split by whether it can run **locally** (Docker container or a file → the same live-container IT as Postgres/MySQL: add a compose service + seed + `db:<x>` script) vs. **cloud-only** (needs an account, so live IT can't run in CI).
 
@@ -49,7 +49,7 @@ Each has a local image/file, so it gets a real live-container integration test l
 
 | DB | Local image / driver | Notes |
 |---|---|---|
-| SQLite | file, no server (`node:sqlite` / better-sqlite3) | easiest — start here; great for dev/demo |
+| ✅ SQLite | file, no server (sql.js, pure JS) | **shipped** — `src/adapters/sqlite/`, `path` field, writes persist to the file; real IT runs in `npm test` (no container) |
 | MariaDB | `mariadb` | **verify it works through the `mysql` adapter first** — likely no new adapter |
 | MongoDB | `mongo` | first non-SQL surface (MQL) |
 | MS SQL Server | `mcr.microsoft.com/mssql/server` | Linux; `ACCEPT_EULA=Y` + SA password (heavy image) |

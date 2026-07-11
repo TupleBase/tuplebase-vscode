@@ -4,4 +4,5 @@ dist/
 .serena/
 .vscode-test/
 dev/empty-ws/
+dev/seed/sqlite/*.sqlite
 .claude/

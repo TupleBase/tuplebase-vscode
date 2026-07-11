@@ -20,6 +20,10 @@
         "port": 5432,
         "database": "rowboat",
         "user": "rowboat"
+      },
+      "local-sqlite": {
+        "adapter": "sqlite",
+        "path": "dev/seed/sqlite/demo.sqlite"
       }
     },
     "Test": {
