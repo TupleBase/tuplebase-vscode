@@ -396,6 +396,10 @@
     "db:seed:redis": "grep -v '^#' dev/seed/redis/seed.redis | docker compose exec -T redis redis-cli",
     "db:seed:dynamo": "node dev/seed/dynamo/seed.mjs",
     "db:seed": "npm run db:seed:redis && npm run db:seed:dynamo",
+    "db:seed:big:postgres": "docker compose exec -T postgres psql -U rowboat -d rowboat < dev/seed/postgres/big.sql",
+    "db:seed:big:redis": "node -e \"for(let i=1;i<=5000;i++)console.log('SET pagedemo:'+i+' value-'+i)\" | docker compose exec -T redis redis-cli",
+    "db:seed:big:dynamo": "node dev/seed/dynamo/big.mjs",
+    "db:seed:big": "npm run db:seed:big:postgres && npm run db:seed:big:redis && npm run db:seed:big:dynamo",
     "db:all": "docker compose --profile all up -d --wait && npm run db:seed",
     "db:down": "docker compose --profile all down",
     "test:vscode": "npm run build && vscode-test"
