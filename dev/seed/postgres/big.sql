@@ -1,5 +1,5 @@
 -- Opt-in large dataset for exercising results paging / grid volume.
--- Run with: npm run db:seed:big  (or db:seed:big:postgres)
+-- Run with: npm run db:seed:big  (or `npm run db:seed:big -- postgres`)
 DROP TABLE IF EXISTS pagination_demo;
 
 CREATE TABLE pagination_demo (

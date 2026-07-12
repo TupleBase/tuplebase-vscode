@@ -19,15 +19,17 @@ Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 
 ## Databases
 
-`npm run db:<engine>` starts + seeds one engine: `postgres`, `mysql`, `mariadb`, `sqlite` (no container — builds a demo file), `mssql`, `clickhouse`, `cassandra`, `neo4j`, `mongodb`, `elasticsearch`, `kafka`, `redis`, `dynamo`. Ports and images are in `docker-compose.yml`; seeds in `dev/seed/<engine>/`.
+- `npm run db:<engine>` — start + seed one engine: `postgres`, `mysql`, `mariadb`, `sqlite` (no container — builds a demo file), `mssql`, `clickhouse`, `cassandra`, `neo4j`, `mongodb`, `elasticsearch`, `kafka`, `redis`, `dynamo`.
+- `npm run db:all` — start + seed everything (heavy — mainly for the full integration suite, `RB_IT=1`).
+- `npm run db:down` — stop all containers.
 
-**Postgres is the default dev engine** — lightest, and `scratch.sql` targets it; one engine exercises the whole extension path. `npm run db:all` starts everything (heavy — mainly for the full integration suite, `RB_IT=1`); `npm run db:down` stops all containers.
+**Postgres is the default dev engine** — lightest, and `scratch.sql` targets it; one engine exercises the whole extension path. Ports and images are in `docker-compose.yml`; seeds in `dev/seed/<engine>/`.
 
 ## Reseed & reset
 
 - **postgres / mysql / mariadb / clickhouse** seed via the image's init hook — reseed needs a fresh volume: `docker compose --profile <engine> down -v && npm run db:<engine>`.
-- **All other engines** reseed in place — just re-run `npm run db:<engine>` (the redis seed starts with `FLUSHALL`).
-- **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or per-engine `db:seed:big:postgres` / `:redis` / `:dynamo`.
+- **All other engines** reseed in place — `npm run db:seed -- <engine>` (or re-run `npm run db:<engine>`; the redis seed starts with `FLUSHALL`). Bare `npm run db:seed` reseeds them all.
+- **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or one engine: `npm run db:seed:big -- postgres` (`postgres` / `redis` / `dynamo`).
 - **Stored password**: run **Rowboat: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
 ## Checks & tests

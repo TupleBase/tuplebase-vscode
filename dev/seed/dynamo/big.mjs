@@ -1,5 +1,5 @@
 // Opt-in large dataset for exercising results paging / grid volume.
-// Run with: npm run db:seed:big  (or db:seed:big:dynamo)
+// Run with: npm run db:seed:big  (or `npm run db:seed:big -- dynamo`)
 import {
   BatchWriteItemCommand,
   CreateTableCommand,
