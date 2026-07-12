@@ -2,47 +2,18 @@
 
 ## Prerequisites
 
-```bash
-nvm use            # node 24 (.nvmrc)
-npm install
-npm run db:postgres   # dockerized postgres on :5432, seeded (password: rowboat)
-npm run db:redis      # dockerized redis on :6379, seeded
-npm run db:dynamo     # dockerized dynamodb-local on :8000, seeded
-npm run db:sqlite     # builds the dev SQLite demo file (dev/seed/sqlite/demo.sqlite) — no container
-npm run db:mariadb    # dockerized MariaDB on :3307, seeded (reached via the mysql adapter)
-npm run db:clickhouse # dockerized ClickHouse on :8123, seeded
-npm run db:mssql      # dockerized SQL Server on :1433, seeded (heavy image; SA password in db:mssql)
-npm run db:cassandra  # dockerized Cassandra on :9042, seeded (slow JVM boot)
-npm run db:neo4j      # dockerized Neo4j on :7687 (Bolt) / :7474, seeded
-npm run db:mongodb    # dockerized MongoDB on :27017, seeded
-npm run db:elasticsearch # dockerized Elasticsearch on :9200, seeded (heavy image)
-npm run db:kafka      # dockerized Kafka (KRaft) on :9092, seeded
-npm run db:seed:big   # opt-in high-volume seeds for paging (pg 10k rows, redis 5k keys, dynamo 2k items)
-```
-
-`db:seed:big` runs against the already-started containers and is additive; use the per-engine variants (`db:seed:big:postgres` / `:redis` / `:dynamo`) to load just one.
+Setup, launch configs and the per-engine `db:<engine>` container commands (start, seed, reseed) live in [DEVELOPMENT.md](DEVELOPMENT.md). Start the engines the tests you're running need — or `npm run db:all` for everything.
 
 ## Manual testing (Extension Development Host)
 
-The main way to try the extension while developing:
+Run the extension per [DEVELOPMENT.md](DEVELOPMENT.md#run-the-extension) (`npm run watch` + **F5**), then exercise:
 
-```bash
-npm run watch   # esbuild watch, leave running
-```
-
-1. Open this repo in VS Code and press **F5** (Run → Start Debugging). Two launch configs exist:
-   - **Run Extension** — dev host opens `dev/playground` (its `.rowboat.json` points at the dockerized postgres, and `scratch.sql` is ready to run). The dev host gets its own folder because VS Code won't open a folder that's already open in another window — pointing it at this repo would silently give you an empty window.
-   - **Run Extension (empty workspace)** — dev host opens `dev/empty-ws` (no config) to exercise the welcome view and the Create Config flow.
-2. A new window opens — the Extension Development Host — with the extension loaded.
-3. Things to exercise:
-   - **Schema explorer** — Rowboat icon in the activity bar; expand schemas and tables.
-   - **Environment picker** — status bar item; switch environments.
-   - **Run a query** — open a `.sql` file, write a query, press **cmd+enter**. Results render in the Tabulator grid with paging and cancel.
-   - **Redis** — open `scratch.redis` (one command per line, `#` comments), cursor on a line, **cmd+enter**. The explorer shows key namespaces grouped on `:`.
-   - **Fixtures** — the local harbor dataset includes joined Postgres tables, Redis strings/hashes/lists/sets/sorted sets/streams, and DynamoDB composite-key tables with LSI/GSI metadata and nested document values.
-   - **Password prompt** — first connection asks for the password (`rowboat`) and stores it in the OS keychain (VS Code SecretStorage). It won't ask again.
-
-While `watch` is running, reload the dev host with **cmd+R** after a code change. Breakpoints in `src/` hit in the main window's debugger.
+- **Schema explorer** — Rowboat icon in the activity bar; expand schemas and tables.
+- **Connection binding** — first run on an unbound file prompts a connection picker; the binding sticks per file.
+- **Run a query** — open a `.sql` file, write a query, press **cmd+enter**. Results render in the Tabulator grid with paging and cancel.
+- **Redis** — open `scratch.redis` (one command per line, `#` comments), cursor on a line, **cmd+enter**. The explorer shows key namespaces grouped on `:`.
+- **Fixtures** — the local harbor dataset includes joined Postgres tables, Redis strings/hashes/lists/sets/sorted sets/streams, and DynamoDB composite-key tables with LSI/GSI metadata and nested document values.
+- **Password prompt** — first connection asks for the password (`rowboat`) and stores it in the OS keychain (VS Code SecretStorage). It won't ask again.
 
 ## Automated tests
 
@@ -59,5 +30,4 @@ CI (`.github/workflows/ci.yml`) runs on every push and PR as two jobs: a **unit*
 
 ## Resetting state
 
-- **Database**: `docker compose --profile postgres down -v && npm run db:postgres` re-creates and re-seeds (redis: `npm run db:redis` re-seeds in place — the seed starts with `FLUSHALL`).
-- **Stored password**: in the dev host, run **Rowboat: Clear Stored Credentials** from the command palette. (Secrets are keyed by environment + connection name, so renaming a connection in `.rowboat.json` also triggers a fresh prompt.)
+Reseeding databases and clearing stored credentials: see [DEVELOPMENT.md](DEVELOPMENT.md#resetting-state).
