@@ -32,6 +32,16 @@ Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 - **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or one engine: `npm run db:seed:big -- postgres` (works for every engine).
 - **Stored password**: run **Rowboat: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
+### Targeting one engine: the `--` matters
+
+npm only forwards arguments that come after a standalone `--`. Anything written as a flag before it is parsed as npm's own config and silently dropped (`npm warn Unknown cli config`) — and the seed script, receiving no engine, falls back to seeding **all** of them.
+
+```bash
+npm run db:seed -- kafka        # ✓ reseed kafka only
+npm run db:seed:big -- kafka    # ✓ big paging data for kafka only
+npm run db:seed:big --kafka     # ✗ npm eats "--kafka" → seeds every engine
+```
+
 ## Checks & tests
 
 ```bash
