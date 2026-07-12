@@ -39,7 +39,6 @@ npm only forwards arguments that come after a standalone `--`. Anything written 
 ```bash
 npm run db:seed -- kafka        # ✓ reseed kafka only
 npm run db:seed:big -- kafka    # ✓ big paging data for kafka only
-npm run db:seed:big --kafka     # ✗ npm eats "--kafka" → seeds every engine
 ```
 
 ## Checks & tests
