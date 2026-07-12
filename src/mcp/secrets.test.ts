@@ -14,17 +14,4 @@ describe('envSecretSource', () => {
     expect(src.get('orders-pg', 'password')).toBe('hunter2')
     expect(src.get('orders-pg', 'missing')).toBeUndefined()
   })
-
-  it('falls back to the legacy ROWBOAT secret name', () => {
-    const src = envSecretSource({ ROWBOAT_SECRET_ORDERS_PG_PASSWORD: 'legacy' })
-    expect(src.get('orders-pg', 'password')).toBe('legacy')
-  })
-
-  it('prefers the TUPLEBASE secret when both names are set', () => {
-    const src = envSecretSource({
-      TUPLEBASE_SECRET_ORDERS_PG_PASSWORD: 'current',
-      ROWBOAT_SECRET_ORDERS_PG_PASSWORD: 'legacy',
-    })
-    expect(src.get('orders-pg', 'password')).toBe('current')
-  })
 })

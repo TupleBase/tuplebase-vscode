@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -12,11 +12,8 @@ import { McpService } from './service'
 const log = (msg: string) => process.stderr.write(`[tuplebase-mcp] ${msg}\n`)
 
 function loadConfig(): { config: TupleBaseConfig; baseDir: string } {
-  const explicit = process.env.TUPLEBASE_CONFIG ?? process.env.ROWBOAT_CONFIG ?? process.argv[2]
-  const currentDefault = resolve('.tuplebase.json')
-  const path = explicit
-    ? resolve(explicit)
-    : existsSync(currentDefault) ? currentDefault : resolve('.rowboat.json')
+  const explicit = process.env.TUPLEBASE_CONFIG ?? process.argv[2]
+  const path = explicit ? resolve(explicit) : resolve('.tuplebase.json')
   const baseDir = dirname(path)
   let text: string
   try {
@@ -37,10 +34,8 @@ const asError = (e: unknown) => ({
 })
 
 async function main() {
-  const allowWrites = /^(1|true|yes)$/i.test(
-    process.env.TUPLEBASE_MCP_ALLOW_WRITES ?? process.env.ROWBOAT_MCP_ALLOW_WRITES ?? '',
-  )
-  const maxRows = Number(process.env.TUPLEBASE_MCP_MAX_ROWS ?? process.env.ROWBOAT_MCP_MAX_ROWS) || undefined
+  const allowWrites = /^(1|true|yes)$/i.test(process.env.TUPLEBASE_MCP_ALLOW_WRITES ?? '')
+  const maxRows = Number(process.env.TUPLEBASE_MCP_MAX_ROWS) || undefined
   const { config, baseDir } = loadConfig()
   const service = new McpService(config, await loadFactories(), envSecretSource(), { allowWrites, maxRows, baseDir })
 

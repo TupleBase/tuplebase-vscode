@@ -14,10 +14,6 @@ export function secretEnvVar(connName: string, field: string): string {
 
 export function envSecretSource(env: Record<string, string | undefined> = process.env): SecretSource {
   return {
-    get: (connName, field) => {
-      const current = secretEnvVar(connName, field)
-      const legacy = current.replace(/^TUPLEBASE_/, 'ROWBOAT_')
-      return env[current] ?? env[legacy]
-    },
+    get: (connName, field) => env[secretEnvVar(connName, field)],
   }
 }

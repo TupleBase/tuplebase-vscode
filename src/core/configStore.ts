@@ -2,24 +2,20 @@ import * as vscode from 'vscode'
 import { parseConfig, TupleBaseConfig, ConfigError } from './config'
 import type { ConnectionConfig } from '../adapters/types'
 import { selectConfigFilename } from './configFile'
-import { BRAND, CONFIG_FILENAME, LEGACY_CONFIG_FILENAME } from './product'
+import { CONFIG_FILENAME } from './product'
 
 export class ConfigStore implements vscode.Disposable {
   private _config: TupleBaseConfig | undefined
   private _uri: vscode.Uri | undefined
   private emitter = new vscode.EventEmitter<void>()
   readonly onDidChange = this.emitter.event
-  private watchers: vscode.FileSystemWatcher[]
-  private migrationOffered = false
+  private watcher: vscode.FileSystemWatcher
 
   constructor(private diagnostics: vscode.DiagnosticCollection) {
-    this.watchers = [CONFIG_FILENAME, LEGACY_CONFIG_FILENAME].map(filename => {
-      const watcher = vscode.workspace.createFileSystemWatcher(`**/${filename}`)
-      watcher.onDidChange(() => this.load())
-      watcher.onDidCreate(() => this.load())
-      watcher.onDidDelete(() => this.load())
-      return watcher
-    })
+    this.watcher = vscode.workspace.createFileSystemWatcher(`**/${CONFIG_FILENAME}`)
+    this.watcher.onDidChange(() => this.load())
+    this.watcher.onDidCreate(() => this.load())
+    this.watcher.onDidDelete(() => this.load())
   }
 
   get config() { return this._config }
@@ -40,9 +36,6 @@ export class ConfigStore implements vscode.Disposable {
         const { config, errors } = parseConfig(Buffer.from(bytes).toString('utf8'))
         this._config = config
         this.publishDiagnostics(uri, errors)
-        if (filename === LEGACY_CONFIG_FILENAME) {
-          void this.offerMigration(uri, vscode.Uri.joinPath(folder.uri, CONFIG_FILENAME))
-        }
       } catch {
         // no config file — welcome view handles it
         this.diagnostics.clear()
@@ -83,25 +76,8 @@ export class ConfigStore implements vscode.Disposable {
     )
   }
 
-  private async offerMigration(from: vscode.Uri, to: vscode.Uri): Promise<void> {
-    if (this.migrationOffered) return
-    this.migrationOffered = true
-    const action = `Rename to ${CONFIG_FILENAME}`
-    const selected = await vscode.window.showInformationMessage(
-      `${BRAND}: ${LEGACY_CONFIG_FILENAME} is deprecated. Rename it to ${CONFIG_FILENAME}?`,
-      action,
-    )
-    if (selected !== action) return
-    try {
-      await vscode.workspace.fs.rename(from, to, { overwrite: false })
-      await this.load()
-    } catch (error) {
-      void vscode.window.showErrorMessage(`${BRAND}: could not rename config: ${error instanceof Error ? error.message : String(error)}`)
-    }
-  }
-
   dispose() {
-    for (const watcher of this.watchers) watcher.dispose()
+    this.watcher.dispose()
     this.emitter.dispose()
   }
 }

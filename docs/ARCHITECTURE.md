@@ -108,10 +108,6 @@ Nothing else changes — config validation (`KNOWN_ADAPTERS` = registry ids), th
 - **Secret-free.** Passwords never live in the file. `config.ts` rejects secret-looking fields. Per-connection extras: `readonly` (block writes), `ssh` (bastion tunnel, see below), `promptPassword` (prompt every connect instead of storing).
 - **`${env:VAR}`** interpolation is applied to string values (and ssh string fields).
 
-### Legacy filename migration
-
-During the pre-release rename window, `ConfigStore` and the extension manifest also discover `.rowboat.json`. If both filenames exist, `.tuplebase.json` wins; if only the legacy file exists, TupleBase loads it and offers an explicit rename without silently modifying the workspace. JSON schema validation applies to both filenames. VS Code SecretStorage and workspace state are scoped to the extension id, so credentials and file bindings from development builds under the old id are intentionally not migrated.
-
 ### Secrets
 
 `SecretVault` (`src/core/secrets.ts`) wraps VS Code SecretStorage (OS keychain), keyed by connection name + field. `ConnectionManager.getSecret` prompts once and stores; with `promptPassword: true` it prompts every connect and stores nothing. Per-connection **Reset Credentials** clears one connection's secrets; **Clear Stored Credentials** clears all.

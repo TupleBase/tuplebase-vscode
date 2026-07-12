@@ -20,12 +20,10 @@ Node process over stdio — no VS Code required at run time.
 
 The server is `dist/mcp/server.js` (built by `npm run build`). It reads:
 
-- **`TUPLEBASE_CONFIG`** — path to your `.tuplebase.json` (falls back to `argv[2]`, then `./.tuplebase.json`, then legacy `./.rowboat.json`).
+- **`TUPLEBASE_CONFIG`** — path to your `.tuplebase.json` (falls back to `argv[2]`, then `./.tuplebase.json`).
 - **`TUPLEBASE_SECRET_<CONN>_<FIELD>`** — each connection's secret (e.g. `TUPLEBASE_SECRET_APP_DB_PASSWORD`). The connection name and field are uppercased with non-alphanumerics collapsed to `_`. The server can't read VS Code's keychain, so secrets arrive as env vars.
 - **`TUPLEBASE_MCP_ALLOW_WRITES`** — `1`/`true` to permit writes (still subject to each connection's `readonly`).
 - **`TUPLEBASE_MCP_MAX_ROWS`** — row cap per query (default 200).
-
-For the pre-release migration window, the server also accepts the equivalent `ROWBOAT_CONFIG`, `ROWBOAT_SECRET_*`, `ROWBOAT_MCP_ALLOW_WRITES` and `ROWBOAT_MCP_MAX_ROWS` names. The `TUPLEBASE_*` value wins when both are set; generated client configuration uses only the new names.
 
 ### Get the config from VS Code (recommended)
 

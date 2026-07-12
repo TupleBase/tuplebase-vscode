@@ -24,16 +24,14 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
-    "workspaceContains:**/.tuplebase.json",
-    "workspaceContains:**/.rowboat.json"
+    "workspaceContains:**/.tuplebase.json"
   ],
   "contributes": {
     "languages": [
       {
         "id": "jsonc",
         "filenames": [
-          ".tuplebase.json",
-          ".rowboat.json"
+          ".tuplebase.json"
         ]
       },
       {
@@ -57,10 +55,6 @@
     "jsonValidation": [
       {
         "fileMatch": ".tuplebase.json",
-        "url": "./schemas/tuplebase.schema.json"
-      },
-      {
-        "fileMatch": ".rowboat.json",
         "url": "./schemas/tuplebase.schema.json"
       }
     ],

@@ -3,4 +3,3 @@
 export const BRAND = 'TupleBase'
 export const PRODUCT_ID = 'tuplebase'
 export const CONFIG_FILENAME = '.tuplebase.json'
-export const LEGACY_CONFIG_FILENAME = '.rowboat.json'

@@ -14,10 +14,6 @@ Press **F5** in VS Code → the Extension Development Host opens `dev/playground
 
 Full guide — launch configs, all 13 local databases, seeding/reseeding, resetting state: **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 
-## Migrating from Rowboat
-
-TupleBase still discovers and validates `.rowboat.json` during the pre-release migration window. When only the legacy file exists, the extension loads it and offers to rename it to `.tuplebase.json`; when both exist, `.tuplebase.json` wins. The renamed extension has separate VS Code storage, so existing development installs must select file connections and enter stored credentials once again. Legacy `ROWBOAT_*` MCP environment variables are also accepted, with `TUPLEBASE_*` taking precedence.
-
 ## Docs
 
 | Doc | What's in it |
