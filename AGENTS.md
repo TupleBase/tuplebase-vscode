@@ -2,7 +2,7 @@
 
 TupleBase is a VS Code extension for querying 12+ database engines through one adapter interface, with a bundled MCP server. What it is and the full doc index: [README.md](README.md).
 
-Project management (roadmap, task board, cross-department decisions) lives in the sibling repo [`tuplebase-project`](https://github.com/FeliceGeracitano/tuplebase-project), not here — this repo is code + its own docs only.
+Project management (roadmap, task board, cross-department decisions) lives in the sibling repo [`tuplebase-project`](https://github.com/TupleBase/tuplebase-project), not here — this repo is code + its own docs only.
 
 ## Verify your changes
 
