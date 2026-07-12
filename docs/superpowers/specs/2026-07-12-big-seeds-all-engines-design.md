@@ -29,9 +29,9 @@ No new dependencies: every driver needed is already used by the normal seeds.
 
 | Engine | File | Mechanism | Rows |
 |---|---|---|---|
-| mysql | `dev/seed/mysql/big.sql` | pipe via `compose exec -T mysql mysql -urowboat -prowboat rowboat`; recursive CTE with `SET SESSION cte_max_recursion_depth = 10000` | 10 000 |
+| mysql | `dev/seed/mysql/big.sql` | pipe via `compose exec -T mysql mysql -utuplebase -ptuplebase tuplebase`; recursive CTE with `SET SESSION cte_max_recursion_depth = 10000` | 10 000 |
 | mariadb | `dev/seed/mariadb/big.sql` | pipe via mariadb client; `seq_1_to_10000` sequence engine (no CTE depth knob) | 10 000 |
-| clickhouse | `dev/seed/clickhouse/big.sql` | pipe via `compose exec -T clickhouse clickhouse-client -d rowboat --multiquery`; MergeTree table filled `FROM numbers(10000)` | 10 000 |
+| clickhouse | `dev/seed/clickhouse/big.sql` | pipe via `compose exec -T clickhouse clickhouse-client -d tuplebase --multiquery`; MergeTree table filled `FROM numbers(10000)` | 10 000 |
 | sqlite | `dev/seed/sqlite/big.mjs` | sql.js opens the existing `demo.sqlite`, drops/recreates the table, rewrites the file | 10 000 |
 | mssql | `dev/seed/mssql/big.mjs` | `mssql` driver, same creds as `seed.mjs`; INSERT batches of 1000 (T-SQL row-VALUES limit) | 10 000 |
 | cassandra | `dev/seed/cassandra/big.mjs` | prepared inserts in small concurrent batches | 2 000 |

@@ -1,5 +1,5 @@
 -- Seed for the dev MariaDB container (mounted at /docker-entrypoint-initdb.d).
--- MariaDB speaks the MySQL wire protocol, so Rowboat reaches it through the
+-- MariaDB speaks the MySQL wire protocol, so TupleBase reaches it through the
 -- `mysql` adapter — this fixture mirrors the MySQL one.
 create table crew (
   id int primary key,

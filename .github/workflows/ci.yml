@@ -45,4 +45,4 @@ jobs:
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
       - run: ${{ matrix.up }}
-      - run: RB_IT=1 npx vitest run ${{ matrix.tests }}
+      - run: TUPLEBASE_IT=1 npx vitest run ${{ matrix.tests }}

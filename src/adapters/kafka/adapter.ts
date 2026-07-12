@@ -29,7 +29,7 @@ class KafkaAdapter implements Adapter {
     if (!this.admin) {
       const { Kafka, logLevel } = await import('kafkajs')   // lazy: driver loads on first connect
       this.kafka = new Kafka({
-        clientId: 'rowboat',
+        clientId: 'tuplebase',
         brokers: [`${String(this.cfg.host)}:${Number(this.cfg.port ?? 9092)}`],
         logLevel: logLevel.NOTHING,
         connectionTimeout: 8000,
@@ -113,7 +113,7 @@ class KafkaAdapter implements Adapter {
     }
     if (total === 0) return []
 
-    const consumer = this.kafka!.consumer({ groupId: `rowboat-tail-${topic}-${Date.now()}` })
+    const consumer = this.kafka!.consumer({ groupId: `tuplebase-tail-${topic}-${Date.now()}` })
     const collected: { partition: number; offset: number; key: string | null; value: string | null; ts: string }[] = []
     await consumer.connect()
     try {

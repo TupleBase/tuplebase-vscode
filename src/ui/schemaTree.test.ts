@@ -68,11 +68,11 @@ describe('SchemaTreeProvider without a live adapter', () => {
     expect(only.node.hasChildren).toBe(false)
   })
 
-  it('placeholder click runs rowboat.connect for the connection', async () => {
+  it('placeholder click runs tuplebase.connect for the connection', async () => {
     const provider = makeProvider(false)
     const [placeholder] = await provider.getChildren(connEl)
     const item = provider.getTreeItem(placeholder) as { command?: { command: string; arguments?: unknown[] } }
-    expect(item.command?.command).toBe('rowboat.connect')
+    expect(item.command?.command).toBe('tuplebase.connect')
     expect(item.command?.arguments?.[0]).toMatchObject({ type: 'connection', conn: { name: 'db1' } })
   })
 
@@ -100,14 +100,14 @@ describe('SchemaTreeProvider with a live adapter', () => {
   it('renders connected state on the connection item', () => {
     const provider = makeProvider(true)
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
-    expect(item.contextValue).toBe('rowboat.connection.connected')
+    expect(item.contextValue).toBe('tuplebase.connection.connected')
     expect(item.iconPath?.id).toBe('database')
   })
 
   it('renders disconnected state on the connection item', () => {
     const provider = makeProvider(false)
     const item = provider.getTreeItem(connEl) as { contextValue?: string; iconPath?: { id: string } }
-    expect(item.contextValue).toBe('rowboat.connection.disconnected')
+    expect(item.contextValue).toBe('tuplebase.connection.disconnected')
     expect(item.iconPath?.id).toBe('database')
   })
 
@@ -139,7 +139,7 @@ describe('SchemaTreeProvider group hierarchy', () => {
     const provider = makeProvider(false)
     const item = provider.getTreeItem({ type: 'group', name: 'local' }) as { label: string; contextValue?: string; iconPath?: { id: string } }
     expect(item.label).toBe('local')
-    expect(item.contextValue).toBe('rowboat.group')
+    expect(item.contextValue).toBe('tuplebase.group')
     expect(item.iconPath?.id).toBe('folder')
   })
 })

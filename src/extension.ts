@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { BRAND } from './core/brand'
+import { BRAND, CONFIG_FILENAME } from './core/product'
 import { ConfigStore } from './core/configStore'
 import { SecretVault } from './core/secrets'
 import { ConnectionManager } from './core/connections'
@@ -18,7 +18,7 @@ import { registerExplorerCommands } from './ui/explorerCommands'
 import { registerMcpConfig } from './ui/mcpConfig'
 
 export async function activate(context: vscode.ExtensionContext) {
-  const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
+  const diagnostics = vscode.languages.createDiagnosticCollection('tuplebase')
   const store = new ConfigStore(diagnostics)
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault)
@@ -45,10 +45,10 @@ export async function activate(context: vscode.ExtensionContext) {
     registerNewQueryOnConnection(context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),
     registerQueryCodeLens(manager, store, context.workspaceState),
-    vscode.commands.registerCommand('rowboat.addGroup', async () => {
+    vscode.commands.registerCommand('tuplebase.addGroup', async () => {
       const uri = store.configUri
       if (!uri) {
-        void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json — run "Rowboat: Create Config File" first`)
+        void vscode.window.showWarningMessage(`${BRAND}: no ${CONFIG_FILENAME} — run "TupleBase: Create Config File" first`)
         return
       }
       const existing = new Set(store.groupNames())
@@ -61,23 +61,23 @@ export async function activate(context: vscode.ExtensionContext) {
       const text = Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8')
       await vscode.workspace.fs.writeFile(uri, Buffer.from(addGroup(text, name.trim()), 'utf8'))
     }),
-    vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
+    vscode.commands.registerCommand('tuplebase.clearCredentials', async () => {
       const deleted = await vault.clearAll()
       void vscode.window.showInformationMessage(`${BRAND}: cleared ${deleted.length} stored secret(s)`)
     }),
-    vscode.commands.registerCommand('rowboat.createConfig', async () => {
+    vscode.commands.registerCommand('tuplebase.createConfig', async () => {
       const folder = vscode.workspace.workspaceFolders?.[0]
       if (!folder) {
         void vscode.window.showErrorMessage(`${BRAND}: open a folder first — the config file lives at the workspace root.`)
         return
       }
-      const uri = vscode.Uri.joinPath(folder.uri, '.rowboat.json')
+      const uri = vscode.Uri.joinPath(folder.uri, CONFIG_FILENAME)
       const template = `{
-  // Rowboat config — safe to commit: secrets are never stored here.
+  // TupleBase config — safe to commit: secrets are never stored here.
   "version": 1,
   "groups": {
     "local": {
-      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "rowboat", "user": "rowboat" }
+      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "tuplebase", "user": "tuplebase" }
     }
   }
 }

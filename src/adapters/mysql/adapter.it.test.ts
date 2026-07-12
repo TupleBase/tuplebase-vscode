@@ -4,11 +4,11 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'mysql', readonly: false,
-  host: 'localhost', port: 3306, database: 'rowboat', user: 'rowboat',
-  secrets: { password: 'rowboat' },
+  host: 'localhost', port: 3306, database: 'tuplebase', user: 'tuplebase',
+  secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.RB_IT)('mysql adapter (needs `npm run db:mysql`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter (needs `npm run db:mysql`)', () => {
   it('connects and runs a query', async () => {
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)
@@ -35,7 +35,7 @@ describe.skipIf(!process.env.RB_IT)('mysql adapter (needs `npm run db:mysql`)', 
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)
     const schemas = await a.getChildren(null)
-    const db = schemas.find(s => s.label === 'rowboat')!
+    const db = schemas.find(s => s.label === 'tuplebase')!
     expect(db.kind).toBe('schema')
     const tables = await a.getChildren(db)
     expect(tables.map(t => t.label)).toContain('crew')

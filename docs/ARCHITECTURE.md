@@ -1,6 +1,6 @@
 # Architecture
 
-How Rowboat is put together, and the seams you touch to **add a database type** or
+How TupleBase is put together, and the seams you touch to **add a database type** or
 work on **connections**. Read this before changing adapters, the connection form,
 config parsing or the MCP server.
 
@@ -11,7 +11,7 @@ Related docs: [`DATABASES.md`](DATABASES.md) (support matrix + add-adapter check
 ## The big picture
 
 ```
-.rowboat.json  ──parse──▶  ConfigStore ──▶ ConnectionManager ──▶ Adapter ──▶ database
+.tuplebase.json  ──parse──▶  ConfigStore ──▶ ConnectionManager ──▶ Adapter ──▶ database
    (config)                    │                  │                (driver)
                                │                  ├─ SecretVault (OS keychain)
                                ▼                  └─ SSH tunnel (ssh2)
@@ -26,7 +26,7 @@ Related docs: [`DATABASES.md`](DATABASES.md) (support matrix + add-adapter check
 Everything database-specific lives behind **one adapter registry**. The rest of the
 extension (tree, form, run flow, completion, MCP) is generic and reads from it.
 
-- `.rowboat.json` — the user's config: version, groups, connections. Secret-free and committable. Parsed by `src/core/config.ts`.
+- `.tuplebase.json` — the user's config: version, groups, connections. Secret-free and committable. Parsed by `src/core/config.ts`.
 - **ConfigStore** (`src/core/configStore.ts`) — loads/watches the file, exposes connections/groups, publishes changes.
 - **ConnectionManager** (`src/core/connections.ts`) — resolves secrets, opens SSH tunnels, creates + caches live adapters.
 - **Adapter** (`src/adapters/<db>/adapter.ts`) — talks to one database: connect, execute, browse schema, search for completion.
@@ -79,9 +79,9 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
    - `index.ts` — `export { <id>Factory as factory } from './adapter'` and `export { <id>Completion as completion } from './completion'`.
    - `<id>.svg` + `<id>-connected.svg` — 16×16 marks.
 2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. That's the one line.
-3. **Regenerate the JSON schema** — `npm run gen:schema` rebuilds `schemas/rowboat.schema.json` from the presentations' `fields`. Never hand-edit that file.
+3. **Regenerate the JSON schema** — `npm run gen:schema` rebuilds `schemas/tuplebase.schema.json` from the presentations' `fields`. Never hand-edit that file.
 4. **Add the driver dependency** to `package.json`. esbuild bundles it into the adapter's chunk (mark any optional native `.node` bindings `external` in `esbuild.mjs`).
-5. **Test it** — unit tests next to the code (`adapter.test.ts`, `completion.test.ts`) and a live-container integration test (`adapter.it.test.ts`, gated by `RB_IT=1`), plus a compose service + seed under `dev/`.
+5. **Test it** — unit tests next to the code (`adapter.test.ts`, `completion.test.ts`) and a live-container integration test (`adapter.it.test.ts`, gated by `TUPLEBASE_IT=1`), plus a compose service + seed under `dev/`.
 6. **Move its row** from Candidates to Shipped in `DATABASES.md`.
 
 Nothing else changes — config validation (`KNOWN_ADAPTERS` = registry ids), the connection form, tree icons, completion registration and the connection manager all derive from the registry.
@@ -90,7 +90,7 @@ Nothing else changes — config validation (`KNOWN_ADAPTERS` = registry ids), th
 
 ## Connections & config
 
-`.rowboat.json`:
+`.tuplebase.json`:
 
 ```jsonc
 {
@@ -107,6 +107,10 @@ Nothing else changes — config validation (`KNOWN_ADAPTERS` = registry ids), th
 - **Groups** are folders. A query runs against the connection **bound to its file** (there is no active environment). `src/core/fileConn.ts` tracks the file→connection binding in `workspaceState`.
 - **Secret-free.** Passwords never live in the file. `config.ts` rejects secret-looking fields. Per-connection extras: `readonly` (block writes), `ssh` (bastion tunnel, see below), `promptPassword` (prompt every connect instead of storing).
 - **`${env:VAR}`** interpolation is applied to string values (and ssh string fields).
+
+### Legacy filename migration
+
+During the pre-release rename window, `ConfigStore` and the extension manifest also discover `.rowboat.json`. If both filenames exist, `.tuplebase.json` wins; if only the legacy file exists, TupleBase loads it and offers an explicit rename without silently modifying the workspace. JSON schema validation applies to both filenames. VS Code SecretStorage and workspace state are scoped to the extension id, so credentials and file bindings from development builds under the old id are intentionally not migrated.
 
 ### Secrets
 
@@ -152,7 +156,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 | `dist/mcp/server.js` + `dist/mcp/adapters/<id>/` | the standalone MCP server + its adapter chunks |
 | `dist/test/*.js` | the VS Code smoke test |
 
-`npm run build` runs `gen:schema` then esbuild. `tsconfig.json` uses **bundler** module resolution (matches esbuild; allows extensionless dynamic imports). See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `RB_IT=1 npx vitest run`, `npm run test:vscode`).
+`npm run build` runs `gen:schema` then esbuild. `tsconfig.json` uses **bundler** module resolution (matches esbuild; allows extensionless dynamic imports). See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `TUPLEBASE_IT=1 npx vitest run`, `npm run test:vscode`).
 
 ---
 

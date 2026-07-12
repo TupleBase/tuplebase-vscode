@@ -45,12 +45,12 @@ await producer.send({
 await producer.send({
   topic: 'voyages',
   messages: [
-    { key: 'v1', value: JSON.stringify({ id: 1, boat: 'Rowboat One', status: 'completed', from: 'LIS', to: 'OPO' }) },
-    { key: 'v2', value: JSON.stringify({ id: 2, boat: 'Rowboat Two', status: 'completed', from: 'OPO', to: 'VGO' }) },
-    { key: 'v3', value: JSON.stringify({ id: 3, boat: 'Rowboat One', status: 'underway', from: 'VGO', to: 'BOD' }) },
+    { key: 'v1', value: JSON.stringify({ id: 1, boat: 'TupleBase One', status: 'completed', from: 'LIS', to: 'OPO' }) },
+    { key: 'v2', value: JSON.stringify({ id: 2, boat: 'TupleBase Two', status: 'completed', from: 'OPO', to: 'VGO' }) },
+    { key: 'v3', value: JSON.stringify({ id: 3, boat: 'TupleBase One', status: 'underway', from: 'VGO', to: 'BOD' }) },
     { key: 'v4', value: JSON.stringify({ id: 4, boat: 'Northern Light', status: 'planned', from: 'DUB', to: 'REK' }) },
     { key: 'v5', value: JSON.stringify({ id: 5, boat: 'Tide Turner', status: 'completed', from: 'LIS', to: 'DUB' }) },
-    { key: 'v6', value: JSON.stringify({ id: 6, boat: 'Rowboat Two', status: 'cancelled', from: 'BOD', to: 'LIS' }) },
+    { key: 'v6', value: JSON.stringify({ id: 6, boat: 'TupleBase Two', status: 'cancelled', from: 'BOD', to: 'LIS' }) },
   ],
 })
 await producer.send({
@@ -65,9 +65,9 @@ await producer.send({
 await producer.send({
   topic: 'maintenance',
   messages: [
-    { key: 'RB-001', value: JSON.stringify({ boat: 'Rowboat One', category: 'engine', resolved: true }) },
-    { key: 'RB-002', value: JSON.stringify({ boat: 'Rowboat Two', category: 'hull', resolved: false }) },
-    { key: 'RB-003', value: JSON.stringify({ boat: 'Tide Turner', category: 'rigging', resolved: false }) },
+    { key: 'TB-001', value: JSON.stringify({ boat: 'TupleBase One', category: 'engine', resolved: true }) },
+    { key: 'TB-002', value: JSON.stringify({ boat: 'TupleBase Two', category: 'hull', resolved: false }) },
+    { key: 'TB-003', value: JSON.stringify({ boat: 'Tide Turner', category: 'rigging', resolved: false }) },
   ],
 })
 await producer.disconnect()

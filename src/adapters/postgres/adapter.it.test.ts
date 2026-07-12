@@ -4,11 +4,11 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'postgres', readonly: false,
-  host: 'localhost', port: 5432, database: 'rowboat', user: 'rowboat',
-  secrets: { password: 'rowboat' },
+  host: 'localhost', port: 5432, database: 'tuplebase', user: 'tuplebase',
+  secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgres`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('postgres adapter (needs `npm run db:postgres`)', () => {
   it('validates config', () => {
     expect(postgresFactory.validate({ adapter: 'postgres' })).toContain('host is required')
     expect(postgresFactory.validate({ adapter: 'postgres', host: 'x', database: 'y', user: 'z' })).toEqual([])

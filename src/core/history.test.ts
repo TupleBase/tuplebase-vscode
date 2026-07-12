@@ -14,7 +14,7 @@ describe('HistoryStore', () => {
   let store: HistoryStore
 
   beforeEach(() => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rowboat-history-'))
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tuplebase-history-'))
     store = new HistoryStore(dir)
   })
   afterEach(() => {

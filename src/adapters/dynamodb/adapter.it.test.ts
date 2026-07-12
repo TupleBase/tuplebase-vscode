@@ -13,7 +13,7 @@ const opts = (over: Partial<ExecuteOptions> = {}): ExecuteOptions =>
 
 const col = (r: ResultEnvelope, name: string) => r.columns.findIndex(c => c.name === name)
 
-describe.skipIf(!process.env.RB_IT)('dynamodb adapter (needs `npm run db:dynamo`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('dynamodb adapter (needs `npm run db:dynamo`)', () => {
   it('validates config', () => {
     expect(dynamodbFactory.validate({ adapter: 'dynamodb' })).toContain('region is required')
     expect(dynamodbFactory.validate({ adapter: 'dynamodb', region: 'local' })).toEqual([])

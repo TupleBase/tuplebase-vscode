@@ -3,15 +3,15 @@
 import mssql from 'mssql'
 
 const base = {
-  server: 'localhost', port: 1433, user: 'sa', password: 'Rowboat!Pass1',
+  server: 'localhost', port: 1433, user: 'sa', password: 'TupleBase!Pass1',
   options: { encrypt: false, trustServerCertificate: true },
 }
 
 const master = await new mssql.ConnectionPool({ ...base, database: 'master' }).connect()
-await master.request().batch("if db_id('rowboat') is null create database rowboat")
+await master.request().batch("if db_id('tuplebase') is null create database tuplebase")
 await master.close()
 
-const db = await new mssql.ConnectionPool({ ...base, database: 'rowboat' }).connect()
+const db = await new mssql.ConnectionPool({ ...base, database: 'tuplebase' }).connect()
 await db.request().batch("if object_id('dbo.pagination_demo') is not null drop table dbo.pagination_demo")
 await db.request().batch(
   'create table dbo.pagination_demo (id int primary key, label nvarchar(50) not null, bucket int not null, amount decimal(10,2) not null, created_at datetime2 not null)',
@@ -29,4 +29,4 @@ for (let start = 1; start <= COUNT; start += 1000) {
   )
 }
 await db.close()
-console.log(`seeded mssql big: rowboat.dbo.pagination_demo (${COUNT} rows)`)
+console.log(`seeded mssql big: tuplebase.dbo.pagination_demo (${COUNT} rows)`)

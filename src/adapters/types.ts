@@ -24,7 +24,7 @@ export interface ConnectionConfig {
 
 export interface ResolvedConnection extends ConnectionConfig {
   secrets: Record<string, string>
-  // Absolute directory of the .rowboat.json this connection came from. File-based
+  // Absolute directory of the .tuplebase.json this connection came from. File-based
   // adapters (e.g. SQLite) resolve a relative `path` against it, so config paths
   // are relative to the config file rather than the process cwd.
   baseDir?: string

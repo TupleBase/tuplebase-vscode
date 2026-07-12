@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Adapter, AdapterFactory, ExecuteOptions, TreeNode } from '../adapters/types'
-import type { RowboatConfig } from '../core/config'
+import type { TupleBaseConfig } from '../core/config'
 import { McpService, type McpServiceOptions } from './service'
 import type { SecretSource } from './secrets'
 
@@ -27,7 +27,7 @@ function fakeFactory(recorder: { executed: string[] }, requiredSecrets: string[]
   }
 }
 
-const config: RowboatConfig = {
+const config: TupleBaseConfig = {
   version: 1,
   groups: ['g'],
   connections: {
@@ -99,6 +99,6 @@ describe('McpService secrets', () => {
     const recorder = { executed: [] as string[] }
     const factories = new Map<string, AdapterFactory>([['postgres', fakeFactory(recorder, ['password'])]])
     const service = new McpService(config, factories, noSecrets)
-    await expect(service.runQuery('rw', 'select 1')).rejects.toThrow(/ROWBOAT_SECRET_RW_PASSWORD/)
+    await expect(service.runQuery('rw', 'select 1')).rejects.toThrow(/TUPLEBASE_SECRET_RW_PASSWORD/)
   })
 })

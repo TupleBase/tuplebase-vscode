@@ -4,7 +4,7 @@ import { MongoClient } from 'mongodb'
 
 const client = new MongoClient('mongodb://localhost:27017')
 await client.connect()
-const coll = client.db('rowboat').collection('pagination_demo')
+const coll = client.db('tuplebase').collection('pagination_demo')
 await coll.drop().catch(() => {})
 
 const COUNT = 10000
@@ -15,4 +15,4 @@ const docs = Array.from({ length: COUNT }, (_, idx) => {
 })
 await coll.insertMany(docs)
 await client.close()
-console.log(`seeded mongodb big: rowboat.pagination_demo (${COUNT} docs)`)
+console.log(`seeded mongodb big: tuplebase.pagination_demo (${COUNT} docs)`)

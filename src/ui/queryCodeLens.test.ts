@@ -74,10 +74,10 @@ describe('buildQueryCodeLenses', () => {
     const lenses = buildQueryCodeLenses(doc, makeState('local-pg'), manager, store) as unknown as Lens[]
     expect(lenses).toHaveLength(4)
     expect(lenses[0].command?.title).toBe('▶ Run')
-    expect(lenses[0].command?.command).toBe('rowboat.runQuery')
+    expect(lenses[0].command?.command).toBe('tuplebase.runQuery')
     expect(lenses[0].command?.arguments?.[0]).toMatchObject({ offset: 0 })
     expect(lenses[1].command?.title).toBe('$(circle-outline) local-pg')
-    expect(lenses[1].command?.command).toBe('rowboat.selectConnectionForFile')
+    expect(lenses[1].command?.command).toBe('tuplebase.selectConnectionForFile')
     expect(lenses[2].command?.arguments?.[0]).toMatchObject({ offset: text.indexOf('select 2') })
   })
 

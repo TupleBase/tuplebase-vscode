@@ -77,20 +77,20 @@ INSERT INTO ports (code, name, country, latitude, longitude) VALUES
   ('REK', 'Reykjavik', 'Iceland', 64.14660, -21.94260);
 
 INSERT INTO crew (name, role, email, home_port_id, joined, active) VALUES
-  ('ada', 'captain', 'ada@rowboat.local', 1, '2021-03-14', true),
-  ('linus', 'rower', 'linus@rowboat.local', 2, '2022-07-21', true),
-  ('grace', 'navigator', 'grace@rowboat.local', 1, '2020-11-09', true),
-  ('margaret', 'engineer', 'margaret@rowboat.local', 4, '2023-01-18', true),
-  ('donald', 'deckhand', 'donald@rowboat.local', 3, '2024-04-04', true),
-  ('barbara', 'medic', 'barbara@rowboat.local', 5, '2023-09-12', true),
-  ('ken', 'rower', 'ken@rowboat.local', 2, '2022-12-01', false),
-  ('frances', 'quartermaster', 'frances@rowboat.local', 6, '2021-08-30', true);
+  ('ada', 'captain', 'ada@tuplebase.local', 1, '2021-03-14', true),
+  ('linus', 'rower', 'linus@tuplebase.local', 2, '2022-07-21', true),
+  ('grace', 'navigator', 'grace@tuplebase.local', 1, '2020-11-09', true),
+  ('margaret', 'engineer', 'margaret@tuplebase.local', 4, '2023-01-18', true),
+  ('donald', 'deckhand', 'donald@tuplebase.local', 3, '2024-04-04', true),
+  ('barbara', 'medic', 'barbara@tuplebase.local', 5, '2023-09-12', true),
+  ('ken', 'rower', 'ken@tuplebase.local', 2, '2022-12-01', false),
+  ('frances', 'quartermaster', 'frances@tuplebase.local', 6, '2021-08-30', true);
 
 INSERT INTO boats (name, registration, capacity, launched_on, status) VALUES
-  ('Rowboat One', 'RB-001', 6, '2018-05-12', 'active'),
-  ('Rowboat Two', 'RB-002', 8, '2020-08-23', 'active'),
-  ('Tide Turner', 'RB-003', 10, '2016-02-28', 'maintenance'),
-  ('Northern Light', 'RB-004', 12, '2024-06-15', 'active');
+  ('TupleBase One', 'TB-001', 6, '2018-05-12', 'active'),
+  ('TupleBase Two', 'TB-002', 8, '2020-08-23', 'active'),
+  ('Tide Turner', 'TB-003', 10, '2016-02-28', 'maintenance'),
+  ('Northern Light', 'TB-004', 12, '2024-06-15', 'active');
 
 INSERT INTO voyages (boat_id, origin_port_id, destination_port_id, departed_at, arrived_at, status, distance_nm) VALUES
   (1, 1, 2, '2026-07-01 08:00:00+00', '2026-07-02 14:30:00+00', 'completed', 178.4),

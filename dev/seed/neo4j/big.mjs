@@ -2,7 +2,7 @@
 // Run with: npm run db:seed:big  (or `npm run db:seed:big -- neo4j`)
 import neo4j from 'neo4j-driver'
 
-const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'rowboatpass'))
+const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'tuplebasepass'))
 const session = driver.session()
 await session.run('MATCH (n:PageDemo) DETACH DELETE n')
 

@@ -1,6 +1,6 @@
 # MCP server — let agents query your databases
 
-Rowboat ships a standalone [Model Context Protocol](https://modelcontextprotocol.io)
+TupleBase ships a standalone [Model Context Protocol](https://modelcontextprotocol.io)
 server that exposes your configured connections to AI agents. It reuses the same
 adapters, config parser and read-only guardrail as the extension, and runs as a plain
 Node process over stdio — no VS Code required at run time.
@@ -20,26 +20,28 @@ Node process over stdio — no VS Code required at run time.
 
 The server is `dist/mcp/server.js` (built by `npm run build`). It reads:
 
-- **`ROWBOAT_CONFIG`** — path to your `.rowboat.json` (falls back to `argv[2]`, then `./.rowboat.json`).
-- **`ROWBOAT_SECRET_<CONN>_<FIELD>`** — each connection's secret (e.g. `ROWBOAT_SECRET_APP_DB_PASSWORD`). The connection name and field are uppercased with non-alphanumerics collapsed to `_`. The server can't read VS Code's keychain, so secrets arrive as env vars.
-- **`ROWBOAT_MCP_ALLOW_WRITES`** — `1`/`true` to permit writes (still subject to each connection's `readonly`).
-- **`ROWBOAT_MCP_MAX_ROWS`** — row cap per query (default 200).
+- **`TUPLEBASE_CONFIG`** — path to your `.tuplebase.json` (falls back to `argv[2]`, then `./.tuplebase.json`, then legacy `./.rowboat.json`).
+- **`TUPLEBASE_SECRET_<CONN>_<FIELD>`** — each connection's secret (e.g. `TUPLEBASE_SECRET_APP_DB_PASSWORD`). The connection name and field are uppercased with non-alphanumerics collapsed to `_`. The server can't read VS Code's keychain, so secrets arrive as env vars.
+- **`TUPLEBASE_MCP_ALLOW_WRITES`** — `1`/`true` to permit writes (still subject to each connection's `readonly`).
+- **`TUPLEBASE_MCP_MAX_ROWS`** — row cap per query (default 200).
+
+For the pre-release migration window, the server also accepts the equivalent `ROWBOAT_CONFIG`, `ROWBOAT_SECRET_*`, `ROWBOAT_MCP_ALLOW_WRITES` and `ROWBOAT_MCP_MAX_ROWS` names. The `TUPLEBASE_*` value wins when both are set; generated client configuration uses only the new names.
 
 ### Get the config from VS Code (recommended)
 
-Run **Rowboat: Show MCP Server Config** from the command palette. It opens a ready-to-paste
-client config that points at the bundled server, sets `ROWBOAT_CONFIG`, and fills in each
-connection's `ROWBOAT_SECRET_*` **from the OS keychain** — so you don't handle secrets by hand:
+Run **TupleBase: Show MCP Server Config** from the command palette. It opens a ready-to-paste
+client config that points at the bundled server, sets `TUPLEBASE_CONFIG`, and fills in each
+connection's `TUPLEBASE_SECRET_*` **from the OS keychain** — so you don't handle secrets by hand:
 
 ```jsonc
 {
   "mcpServers": {
-    "rowboat": {
+    "tuplebase": {
       "command": "node",
       "args": ["/abs/path/to/dist/mcp/server.js"],
       "env": {
-        "ROWBOAT_CONFIG": "/abs/path/to/.rowboat.json",
-        "ROWBOAT_SECRET_APP_DB_PASSWORD": "…"
+        "TUPLEBASE_CONFIG": "/abs/path/to/.tuplebase.json",
+        "TUPLEBASE_SECRET_APP_DB_PASSWORD": "…"
       }
     }
   }
@@ -48,11 +50,11 @@ connection's `ROWBOAT_SECRET_*` **from the OS keychain** — so you don't handle
 
 > The generated config contains your stored secrets in plaintext — treat it like any
 > other credentials file. Connections whose secret isn't in the keychain yet are listed;
-> connect them once in Rowboat, then regenerate.
+> connect them once in TupleBase, then regenerate.
 
 ## Verifying it's running
 
-- **Startup** — the server logs to **stderr** (stdout is the protocol): `[rowboat-mcp] ready — N connection(s) (read-only)`. Config problems are logged as `[rowboat-mcp] config: …`.
+- **Startup** — the server logs to **stderr** (stdout is the protocol): `[tuplebase-mcp] ready — N connection(s) (read-only)`. Config problems are logged as `[tuplebase-mcp] config: …`.
 - **Smoke test the tools** — from your MCP client:
   1. `list_connections` → your connections appear, each with `readonly: true` (default).
   2. `inspect_schema { connection: "app-db" }` → top-level schema nodes.
@@ -76,13 +78,13 @@ GUI clients are expected-to-work with the snippet above.)
 ## Allowing writes
 
 Agents are read-only by default. To let an agent write, start the server with
-`ROWBOAT_MCP_ALLOW_WRITES=1` **and** make sure the target connection isn't `readonly` in
-`.rowboat.json`. Both must hold — a `readonly` connection stays read-only even with writes
+`TUPLEBASE_MCP_ALLOW_WRITES=1` **and** make sure the target connection isn't `readonly` in
+`.tuplebase.json`. Both must hold — a `readonly` connection stays read-only even with writes
 enabled.
 
 ## Troubleshooting
 
-- **No connections listed** — `ROWBOAT_CONFIG` is wrong or the file failed to parse. Check the `[rowboat-mcp] config:` stderr lines.
-- **"Missing secret … set ROWBOAT_SECRET_…"** — that connection's secret isn't in the env. Regenerate the config from VS Code after connecting the connection once (so the secret is in the keychain), or set the env var yourself.
-- **Writes rejected** — expected unless `ROWBOAT_MCP_ALLOW_WRITES=1` and the connection is not `readonly`.
+- **No connections listed** — `TUPLEBASE_CONFIG` is wrong or the file failed to parse. Check the `[tuplebase-mcp] config:` stderr lines.
+- **"Missing secret … set TUPLEBASE_SECRET_…"** — that connection's secret isn't in the env. Regenerate the config from VS Code after connecting the connection once (so the secret is in the keychain), or set the env var yourself.
+- **Writes rejected** — expected unless `TUPLEBASE_MCP_ALLOW_WRITES=1` and the connection is not `readonly`.
 - **A connection can't connect** — the standalone server uses the same drivers/tunnels as the extension; a config or network issue there affects it too. `list_connections` still works even if one connection can't connect.

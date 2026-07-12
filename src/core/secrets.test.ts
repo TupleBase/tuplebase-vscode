@@ -21,7 +21,7 @@ function fakes() {
 
 describe('SecretVault', () => {
   it('builds namespaced keys from connection name and field', () => {
-    expect(SecretVault.key('orders-db', 'password')).toBe('rowboat.orders-db.password')
+    expect(SecretVault.key('orders-db', 'password')).toBe('tuplebase.orders-db.password')
   })
 
   it('stores and retrieves by connection name', async () => {
@@ -38,9 +38,9 @@ describe('SecretVault', () => {
     await v.store('db', 'user', 'admin')
     await v.store('other', 'password', 'b')
     await v.deleteConnection('db')
-    expect(secrets.has('rowboat.db.password')).toBe(false)
-    expect(secrets.has('rowboat.db.user')).toBe(false)
-    expect(secrets.has('rowboat.other.password')).toBe(true)
+    expect(secrets.has('tuplebase.db.password')).toBe(false)
+    expect(secrets.has('tuplebase.db.user')).toBe(false)
+    expect(secrets.has('tuplebase.other.password')).toBe(true)
   })
 
   it('clearAll deletes every indexed key and returns them', async () => {
@@ -49,7 +49,7 @@ describe('SecretVault', () => {
     await v.store('db', 'password', 'a')
     await v.store('other', 'password', 'b')
     const deleted = await v.clearAll()
-    expect(deleted.sort()).toEqual(['rowboat.db.password', 'rowboat.other.password'])
+    expect(deleted.sort()).toEqual(['tuplebase.db.password', 'tuplebase.other.password'])
     expect(secrets.size).toBe(0)
   })
 

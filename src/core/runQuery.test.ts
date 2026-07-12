@@ -38,7 +38,7 @@ vi.mock('vscode', () => ({
   workspace: workspaceMock,
   commands: {
     registerCommand: (id: string, fn: (arg?: unknown) => Promise<void>) => {
-      if (id === 'rowboat.runQuery') handlers.run = fn
+      if (id === 'tuplebase.runQuery') handlers.run = fn
       return { dispose() {} }
     },
   },

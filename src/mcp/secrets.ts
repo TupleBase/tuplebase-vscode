@@ -6,12 +6,18 @@ export interface SecretSource {
   get(connName: string, field: string): string | undefined
 }
 
-// ROWBOAT_SECRET_<CONN>_<FIELD>, non-alphanumerics collapsed to '_', uppercased.
+// TUPLEBASE_SECRET_<CONN>_<FIELD>, non-alphanumerics collapsed to '_', uppercased.
 export function secretEnvVar(connName: string, field: string): string {
   const norm = (s: string) => s.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase()
-  return `ROWBOAT_SECRET_${norm(connName)}_${norm(field)}`
+  return `TUPLEBASE_SECRET_${norm(connName)}_${norm(field)}`
 }
 
 export function envSecretSource(env: Record<string, string | undefined> = process.env): SecretSource {
-  return { get: (connName, field) => env[secretEnvVar(connName, field)] }
+  return {
+    get: (connName, field) => {
+      const current = secretEnvVar(connName, field)
+      const legacy = current.replace(/^TUPLEBASE_/, 'ROWBOAT_')
+      return env[current] ?? env[legacy]
+    },
+  }
 }

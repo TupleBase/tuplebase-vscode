@@ -4,14 +4,14 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'mssql', readonly: false,
-  host: 'localhost', port: 1433, database: 'rowboat', user: 'sa',
-  secrets: { password: 'Rowboat!Pass1' },
+  host: 'localhost', port: 1433, database: 'tuplebase', user: 'sa',
+  secrets: { password: 'TupleBase!Pass1' },
 }
 
 const run = (a: ReturnType<typeof mssqlFactory.create>, sql: string, pageSize = 500) =>
   a.execute(sql, { pageSize, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.RB_IT)('mssql adapter (needs `npm run db:mssql`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mssql adapter (needs `npm run db:mssql`)', () => {
   it('connects and runs a query', async () => {
     const a = mssqlFactory.create(cfg)
     await a.connect(cfg)

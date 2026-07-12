@@ -2,13 +2,13 @@ import * as vscode from 'vscode'
 import type { ConnectionConfig, TreeNode } from '../adapters/types'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
-import { BRAND } from '../core/brand'
+import { BRAND } from '../core/product'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
 import { adapterById } from '../adapters/registry'
 
-const CONN_MIME = 'application/vnd.rowboat.connection'
+const CONN_MIME = 'application/vnd.tuplebase.connection'
 
 export type ExplorerNode =
   | { type: 'group'; name: string }
@@ -55,7 +55,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     if (el.type === 'group') {
       const item = new vscode.TreeItem(el.name, vscode.TreeItemCollapsibleState.Collapsed)
       item.iconPath = new vscode.ThemeIcon('folder')
-      item.contextValue = 'rowboat.group'
+      item.contextValue = 'tuplebase.group'
       const conns = this.store.connectionsByGroup(el.name)
       if (conns.length > 0 && conns.every(c => c.readonly)) item.description = '(read-only)'
       return item
@@ -66,7 +66,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       item.description = el.conn.adapter
       item.iconPath = this.connectionIcon(el.conn.adapter, connected)
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
-      item.contextValue = connected ? 'rowboat.connection.connected' : 'rowboat.connection.disconnected'
+      item.contextValue = connected ? 'tuplebase.connection.connected' : 'tuplebase.connection.disconnected'
       return item
     }
     const item = new vscode.TreeItem(
@@ -75,14 +75,14 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     )
     item.description = el.node.detail
     item.iconPath = new vscode.ThemeIcon(KIND_ICONS[el.node.kind] ?? 'circle-outline')
-    item.contextValue = `rowboat.${el.node.kind}`
+    item.contextValue = `tuplebase.${el.node.kind}`
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
     if (el.node.kind === 'connect') {
       item.tooltip = `Connect to ${el.connName}`
       const conn = this.store.connection(el.connName)
       if (conn) {
         item.command = {
-          command: 'rowboat.connect',
+          command: 'tuplebase.connect',
           title: 'Connect',
           arguments: [{ type: 'connection', conn } satisfies ExplorerNode],
         }
@@ -125,7 +125,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
 }
 
 // Drag a connection node onto a group to move it there — persisted to
-// .rowboat.json via jsonc writeback; the file watcher refreshes the tree.
+// .tuplebase.json via jsonc writeback; the file watcher refreshes the tree.
 function connectionDragAndDrop(store: ConfigStore): vscode.TreeDragAndDropController<ExplorerNode> {
   return {
     dragMimeTypes: [CONN_MIME],
@@ -166,7 +166,7 @@ export function registerSchemaTree(
   extensionUri?: vscode.Uri,
 ): vscode.Disposable {
   const provider = new SchemaTreeProvider(manager, store, extensionUri)
-  const view = vscode.window.createTreeView('rowboat.explorer', {
+  const view = vscode.window.createTreeView('tuplebase.explorer', {
     treeDataProvider: provider,
     dragAndDropController: connectionDragAndDrop(store),
   })
@@ -174,8 +174,8 @@ export function registerSchemaTree(
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeConnections(() => provider.refresh()),
-    vscode.commands.registerCommand('rowboat.refreshExplorer', () => provider.refresh()),
-    vscode.commands.registerCommand('rowboat.connect', async (el?: ExplorerNode) => {
+    vscode.commands.registerCommand('tuplebase.refreshExplorer', () => provider.refresh()),
+    vscode.commands.registerCommand('tuplebase.connect', async (el?: ExplorerNode) => {
       if (el?.type !== 'connection') return
       try {
         await manager.getAdapter(el.conn.name)
@@ -187,7 +187,7 @@ export function registerSchemaTree(
         }
       }
     }),
-    vscode.commands.registerCommand('rowboat.disconnect', async (el?: ExplorerNode) => {
+    vscode.commands.registerCommand('tuplebase.disconnect', async (el?: ExplorerNode) => {
       if (el?.type === 'connection') {
         try {
           await manager.disconnect(el.conn.name)
@@ -196,7 +196,7 @@ export function registerSchemaTree(
         }
       }
     }),
-    vscode.commands.registerCommand('rowboat.resetCredentials', async (el?: ExplorerNode) => {
+    vscode.commands.registerCommand('tuplebase.resetCredentials', async (el?: ExplorerNode) => {
       if (el?.type !== 'connection') return
       await manager.forgetSecrets(el.conn.name)
       void vscode.window.showInformationMessage(

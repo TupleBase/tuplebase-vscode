@@ -10,7 +10,7 @@ const cfg: ResolvedConnection = {
 
 const opts = () => ({ pageSize: 500, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.RB_IT)('redis adapter (needs `npm run db:redis`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('redis adapter (needs `npm run db:redis`)', () => {
   it('validates config', () => {
     expect(redisFactory.validate({ adapter: 'redis' })).toContain('host is required')
     expect(redisFactory.validate({ adapter: 'redis', host: 'x' })).toEqual([])
@@ -36,7 +36,7 @@ describe.skipIf(!process.env.RB_IT)('redis adapter (needs `npm run db:redis`)', 
     await a.connect(cfg)
     const r = await a.execute('HGETALL boat:1', opts())
     expect(r.columns.map(c => c.name)).toEqual(['field', 'value'])
-    expect(r.rows).toContainEqual(['name', 'Rowboat One'])
+    expect(r.rows).toContainEqual(['name', 'TupleBase One'])
     expect(r.rows).toContainEqual(['oars', '2'])
     await a.dispose()
   })

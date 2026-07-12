@@ -46,10 +46,10 @@ const ENGINES = {
 };
 
 const BIG = {
-  postgres:      () => pipeSql('postgres', ['psql', '-U', 'rowboat', '-d', 'rowboat'], 'big.sql'),
-  mysql:         () => pipeSql('mysql', ['mysql', '-urowboat', '-prowboat', 'rowboat'], 'big.sql'),
-  mariadb:       () => pipeSql('mariadb', ['mariadb', '-urowboat', '-prowboat', 'rowboat'], 'big.sql'),
-  clickhouse:    () => pipeSql('clickhouse', ['clickhouse-client', '-d', 'rowboat'], 'big.sql'),
+  postgres:      () => pipeSql('postgres', ['psql', '-U', 'tuplebase', '-d', 'tuplebase'], 'big.sql'),
+  mysql:         () => pipeSql('mysql', ['mysql', '-utuplebase', '-ptuplebase', 'tuplebase'], 'big.sql'),
+  mariadb:       () => pipeSql('mariadb', ['mariadb', '-utuplebase', '-ptuplebase', 'tuplebase'], 'big.sql'),
+  clickhouse:    () => pipeSql('clickhouse', ['clickhouse-client', '-d', 'tuplebase'], 'big.sql'),
   sqlite:        () => nodeSeed('sqlite', 'big.mjs'),
   redis:         () => redisCli(Array.from({ length: 5000 }, (_, i) => `SET pagedemo:${i + 1} value-${i + 1}`).join('\n')),
   dynamo:        () => nodeSeed('dynamo', 'big.mjs'),

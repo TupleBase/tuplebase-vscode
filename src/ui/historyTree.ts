@@ -18,8 +18,8 @@ class HistoryTreeProvider implements vscode.TreeDataProvider<HistoryEntry> {
     item.description = entry.conn
     item.tooltip = `${entry.statement}\n\n${entry.group}/${entry.conn} — ${entry.ok ? 'ok' : 'failed'} in ${entry.elapsedMs}ms`
     item.iconPath = new vscode.ThemeIcon(entry.ok ? 'history' : 'error')
-    item.contextValue = 'rowboat.historyEntry'
-    item.command = { command: 'rowboat.history.open', title: 'Open From History', arguments: [entry] }
+    item.contextValue = 'tuplebase.historyEntry'
+    item.command = { command: 'tuplebase.history.open', title: 'Open From History', arguments: [entry] }
     return item
   }
 
@@ -33,7 +33,7 @@ export function registerHistoryTree(
   workspaceState: vscode.Memento,
 ): vscode.Disposable & { refresh(): void } {
   const provider = new HistoryTreeProvider(store)
-  const view = vscode.window.createTreeView('rowboat.history', { treeDataProvider: provider })
+  const view = vscode.window.createTreeView('tuplebase.history', { treeDataProvider: provider })
 
   const open = async (entry: HistoryEntry) => {
     const doc = await vscode.workspace.openTextDocument({ content: entry.statement, language: entry.languageId })
@@ -43,13 +43,13 @@ export function registerHistoryTree(
 
   const disposable = vscode.Disposable.from(
     view,
-    vscode.commands.registerCommand('rowboat.history.open', open),
-    vscode.commands.registerCommand('rowboat.history.rerun', async (entry?: HistoryEntry) => {
+    vscode.commands.registerCommand('tuplebase.history.open', open),
+    vscode.commands.registerCommand('tuplebase.history.rerun', async (entry?: HistoryEntry) => {
       if (!entry) return
       await open(entry)
-      await vscode.commands.executeCommand('rowboat.runQuery')
+      await vscode.commands.executeCommand('tuplebase.runQuery')
     }),
-    vscode.commands.registerCommand('rowboat.history.clear', () => {
+    vscode.commands.registerCommand('tuplebase.history.clear', () => {
       store.clear()
       provider.refresh()
     }),

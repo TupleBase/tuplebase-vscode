@@ -1,13 +1,13 @@
 {
-  "name": "rowboat",
-  "displayName": "Rowboat",
-  "description": "Paddle through your rows. Query Postgres, Redis and DynamoDB from VS Code.",
+  "name": "tuplebase",
+  "displayName": "TupleBase",
+  "description": "Query Postgres, MySQL, SQLite, Redis, DynamoDB and more from VS Code.",
   "version": "0.1.0",
-  "publisher": "felicegeracitano",
+  "publisher": "tuplebase",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FeliceGeracitano/rowboat"
+    "url": "https://github.com/FeliceGeracitano/tuplebase"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -24,6 +24,7 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
+    "workspaceContains:**/.tuplebase.json",
     "workspaceContains:**/.rowboat.json"
   ],
   "contributes": {
@@ -31,6 +32,7 @@
       {
         "id": "jsonc",
         "filenames": [
+          ".tuplebase.json",
           ".rowboat.json"
         ]
       },
@@ -54,42 +56,46 @@
     ],
     "jsonValidation": [
       {
+        "fileMatch": ".tuplebase.json",
+        "url": "./schemas/tuplebase.schema.json"
+      },
+      {
         "fileMatch": ".rowboat.json",
-        "url": "./schemas/rowboat.schema.json"
+        "url": "./schemas/tuplebase.schema.json"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "rowboat",
-          "title": "Rowboat",
-          "icon": "media/rowboat.svg"
+          "id": "tuplebase",
+          "title": "TupleBase",
+          "icon": "media/tuplebase.svg"
         }
       ],
       "panel": [
         {
-          "id": "rowboat-panel",
-          "title": "Rowboat Results",
-          "icon": "media/rowboat.svg"
+          "id": "tuplebase-panel",
+          "title": "TupleBase Results",
+          "icon": "media/tuplebase.svg"
         }
       ]
     },
     "views": {
-      "rowboat": [
+      "tuplebase": [
         {
-          "id": "rowboat.explorer",
+          "id": "tuplebase.explorer",
           "name": "Explorer",
-          "icon": "media/rowboat.svg"
+          "icon": "media/tuplebase.svg"
         },
         {
-          "id": "rowboat.history",
+          "id": "tuplebase.history",
           "name": "History",
-          "icon": "media/rowboat.svg"
+          "icon": "media/tuplebase.svg"
         }
       ],
-      "rowboat-panel": [
+      "tuplebase-panel": [
         {
-          "id": "rowboat.results",
+          "id": "tuplebase.results",
           "type": "webview",
           "name": "Results"
         }
@@ -97,283 +103,283 @@
     },
     "viewsWelcome": [
       {
-        "view": "rowboat.explorer",
-        "contents": "No .rowboat.json found in this workspace.\n[Create Config](command:rowboat.createConfig)"
+        "view": "tuplebase.explorer",
+        "contents": "No .tuplebase.json found in this workspace.\n[Create Config](command:tuplebase.createConfig)"
       }
     ],
     "commands": [
       {
-        "command": "rowboat.runQuery",
+        "command": "tuplebase.runQuery",
         "title": "Run Query (statement at cursor or selection)",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(play)"
       },
       {
-        "command": "rowboat.runFile",
+        "command": "tuplebase.runFile",
         "title": "Run All Statements (whole file or selection)",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(run-all)"
       },
       {
-        "command": "rowboat.addGroup",
+        "command": "tuplebase.addGroup",
         "title": "New Group",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(new-folder)"
       },
       {
-        "command": "rowboat.addConnection",
+        "command": "tuplebase.addConnection",
         "title": "New Connection",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(add)"
       },
       {
-        "command": "rowboat.renameGroup",
+        "command": "tuplebase.renameGroup",
         "title": "Rename Group",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.deleteGroup",
+        "command": "tuplebase.deleteGroup",
         "title": "Delete Group",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(trash)"
       },
       {
-        "command": "rowboat.editConnection",
+        "command": "tuplebase.editConnection",
         "title": "Edit Connection",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(edit)"
       },
       {
-        "command": "rowboat.removeConnection",
+        "command": "tuplebase.removeConnection",
         "title": "Remove Connection",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(trash)"
       },
       {
-        "command": "rowboat.newQuery",
+        "command": "tuplebase.newQuery",
         "title": "New Query Scratch (pick engine)",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(file-code)"
       },
       {
-        "command": "rowboat.refreshExplorer",
+        "command": "tuplebase.refreshExplorer",
         "title": "Refresh Explorer",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(refresh)"
       },
       {
-        "command": "rowboat.clearCredentials",
+        "command": "tuplebase.clearCredentials",
         "title": "Clear Stored Credentials",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.resetCredentials",
+        "command": "tuplebase.resetCredentials",
         "title": "Reset Credentials (re-enter password)",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(key)"
       },
       {
-        "command": "rowboat.createConfig",
+        "command": "tuplebase.createConfig",
         "title": "Create Config File",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.showMcpConfig",
+        "command": "tuplebase.showMcpConfig",
         "title": "Show MCP Server Config",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.connect",
+        "command": "tuplebase.connect",
         "title": "Connect",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(plug)"
       },
       {
-        "command": "rowboat.disconnect",
+        "command": "tuplebase.disconnect",
         "title": "Disconnect",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(debug-disconnect)"
       },
       {
-        "command": "rowboat.newQueryOnConnection",
+        "command": "tuplebase.newQueryOnConnection",
         "title": "New Query on This Connection",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(file-code)"
       },
       {
-        "command": "rowboat.selectConnectionForFile",
+        "command": "tuplebase.selectConnectionForFile",
         "title": "Select Connection for Current File",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.history.rerun",
+        "command": "tuplebase.history.rerun",
         "title": "Rerun From History",
-        "category": "Rowboat"
+        "category": "TupleBase"
       },
       {
-        "command": "rowboat.history.clear",
+        "command": "tuplebase.history.clear",
         "title": "Clear Query History",
-        "category": "Rowboat",
+        "category": "TupleBase",
         "icon": "$(clear-all)"
       }
     ],
     "menus": {
       "editor/title/run": [
         {
-          "command": "rowboat.runQuery",
+          "command": "tuplebase.runQuery",
           "when": "resourceLangId == sql || resourceLangId == redis",
           "group": "navigation@1"
         },
         {
-          "command": "rowboat.runFile",
+          "command": "tuplebase.runFile",
           "when": "resourceLangId == sql || resourceLangId == redis",
           "group": "navigation@2"
         }
       ],
       "view/title": [
         {
-          "command": "rowboat.addConnection",
-          "when": "view == rowboat.explorer",
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer",
           "group": "navigation@1"
         },
         {
-          "command": "rowboat.addGroup",
-          "when": "view == rowboat.explorer",
+          "command": "tuplebase.addGroup",
+          "when": "view == tuplebase.explorer",
           "group": "navigation@2"
         },
         {
-          "command": "rowboat.refreshExplorer",
-          "when": "view == rowboat.explorer",
+          "command": "tuplebase.refreshExplorer",
+          "when": "view == tuplebase.explorer",
           "group": "navigation@3"
         },
         {
-          "command": "rowboat.history.clear",
-          "when": "view == rowboat.history",
+          "command": "tuplebase.history.clear",
+          "when": "view == tuplebase.history",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "rowboat.addConnection",
-          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
           "group": "inline@1"
         },
         {
-          "command": "rowboat.addConnection",
-          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
           "group": "1_modify@1"
         },
         {
-          "command": "rowboat.renameGroup",
-          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "command": "tuplebase.renameGroup",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
           "group": "1_modify@2"
         },
         {
-          "command": "rowboat.deleteGroup",
-          "when": "view == rowboat.explorer && viewItem == rowboat.group",
+          "command": "tuplebase.deleteGroup",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
           "group": "1_modify@3"
         },
         {
-          "command": "rowboat.editConnection",
-          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "command": "tuplebase.editConnection",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
           "group": "1_modify@8"
         },
         {
-          "command": "rowboat.removeConnection",
-          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "command": "tuplebase.removeConnection",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
           "group": "1_modify@9"
         },
         {
-          "command": "rowboat.resetCredentials",
-          "when": "view == rowboat.explorer && (viewItem == rowboat.connection.connected || viewItem == rowboat.connection.disconnected)",
+          "command": "tuplebase.resetCredentials",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
           "group": "1_modify@10"
         },
         {
-          "command": "rowboat.connect",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
+          "command": "tuplebase.connect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected",
           "group": "inline@1"
         },
         {
-          "command": "rowboat.newQueryOnConnection",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected",
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
           "group": "inline@1"
         },
         {
-          "command": "rowboat.newQueryOnConnection",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected",
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
           "group": "0_open@1"
         },
         {
-          "command": "rowboat.newQueryOnConnection",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected",
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected",
           "group": "0_open@1"
         },
         {
-          "command": "rowboat.disconnect",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected",
+          "command": "tuplebase.disconnect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
           "group": "inline@2"
         },
         {
-          "command": "rowboat.connect",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.disconnected"
+          "command": "tuplebase.connect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected"
         },
         {
-          "command": "rowboat.disconnect",
-          "when": "view == rowboat.explorer && viewItem == rowboat.connection.connected"
+          "command": "tuplebase.disconnect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected"
         },
         {
-          "command": "rowboat.history.rerun",
-          "when": "view == rowboat.history"
+          "command": "tuplebase.history.rerun",
+          "when": "view == tuplebase.history"
         }
       ],
       "commandPalette": [
         {
-          "command": "rowboat.selectConnectionForFile",
+          "command": "tuplebase.selectConnectionForFile",
           "when": "editorLangId == sql || editorLangId == redis"
         },
         {
-          "command": "rowboat.connect",
+          "command": "tuplebase.connect",
           "when": "false"
         },
         {
-          "command": "rowboat.disconnect",
+          "command": "tuplebase.disconnect",
           "when": "false"
         },
         {
-          "command": "rowboat.resetCredentials",
+          "command": "tuplebase.resetCredentials",
           "when": "false"
         },
         {
-          "command": "rowboat.newQueryOnConnection",
+          "command": "tuplebase.newQueryOnConnection",
           "when": "false"
         },
         {
-          "command": "rowboat.renameGroup",
+          "command": "tuplebase.renameGroup",
           "when": "false"
         },
         {
-          "command": "rowboat.deleteGroup",
+          "command": "tuplebase.deleteGroup",
           "when": "false"
         },
         {
-          "command": "rowboat.editConnection",
+          "command": "tuplebase.editConnection",
           "when": "false"
         },
         {
-          "command": "rowboat.removeConnection",
+          "command": "tuplebase.removeConnection",
           "when": "false"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "rowboat.runQuery",
+        "command": "tuplebase.runQuery",
         "key": "ctrl+enter",
         "mac": "cmd+enter",
         "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
       },
       {
-        "command": "rowboat.runFile",
+        "command": "tuplebase.runFile",
         "key": "ctrl+shift+enter",
         "mac": "cmd+shift+enter",
         "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
@@ -383,21 +389,21 @@
       "workbench.hover.delay": 200
     },
     "configuration": {
-      "title": "Rowboat",
+      "title": "TupleBase",
       "properties": {
-        "rowboat.queryTimeoutMs": {
+        "tuplebase.queryTimeoutMs": {
           "type": "number",
           "default": 30000,
           "minimum": 1,
-          "description": "Maximum time in milliseconds for a query before Rowboat cancels it."
+          "description": "Maximum time in milliseconds for a query before TupleBase cancels it."
         },
-        "rowboat.resultsPageSize": {
+        "tuplebase.resultsPageSize": {
           "type": "number",
           "default": 500,
           "minimum": 1,
-          "description": "How many rows a query fetches per run (capped by rowboat.maxRows)."
+          "description": "How many rows a query fetches per run (capped by tuplebase.maxRows)."
         },
-        "rowboat.maxRows": {
+        "tuplebase.maxRows": {
           "type": "number",
           "default": 5000,
           "minimum": 1,

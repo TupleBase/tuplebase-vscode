@@ -19,9 +19,9 @@ SET crew:5:name donald
 SET crew:5:role deckhand
 SET crew:5:status shore-leave
 
-HSET boat:1 name "Rowboat One" registration RB-001 oars 2 capacity 6 status active home_port LIS
-HSET boat:2 name "Rowboat Two" registration RB-002 oars 4 capacity 8 status active home_port OPO
-HSET boat:3 name "Tide Turner" registration RB-003 oars 4 capacity 10 status maintenance home_port VGO
+HSET boat:1 name "TupleBase One" registration TB-001 oars 2 capacity 6 status active home_port LIS
+HSET boat:2 name "TupleBase Two" registration TB-002 oars 4 capacity 8 status active home_port OPO
+HSET boat:3 name "Tide Turner" registration TB-003 oars 4 capacity 10 status maintenance home_port VGO
 HSET port:LIS name Lisbon country Portugal latitude 38.72230 longitude -9.13930
 HSET port:OPO name Porto country Portugal latitude 41.15790 longitude -8.62910
 HSET port:VGO name Vigo country Spain latitude 42.24060 longitude -8.72070

@@ -4,15 +4,15 @@ services:
     profiles: ["postgres", "all"]
     ports: ["5432:5432"]
     environment:
-      POSTGRES_USER: rowboat
-      POSTGRES_PASSWORD: rowboat
-      POSTGRES_DB: rowboat
+      POSTGRES_USER: tuplebase
+      POSTGRES_PASSWORD: tuplebase
+      POSTGRES_DB: tuplebase
     volumes:
       - ./dev/seed/postgres:/docker-entrypoint-initdb.d
     healthcheck:
       # TCP (127.0.0.1, not the socket): the entrypoint's temporary init server
       # listens on the socket only, so this stays red until the final server is up.
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U rowboat -d rowboat"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U tuplebase -d tuplebase"]
       interval: 2s
       timeout: 3s
       retries: 30
@@ -21,17 +21,17 @@ services:
     profiles: ["mysql", "all"]
     ports: ["3306:3306"]
     environment:
-      MYSQL_ROOT_PASSWORD: rowboat
-      MYSQL_DATABASE: rowboat
-      MYSQL_USER: rowboat
-      MYSQL_PASSWORD: rowboat
+      MYSQL_ROOT_PASSWORD: tuplebase
+      MYSQL_DATABASE: tuplebase
+      MYSQL_USER: tuplebase
+      MYSQL_PASSWORD: tuplebase
     volumes:
       - ./dev/seed/mysql:/docker-entrypoint-initdb.d
     healthcheck:
       # query over TCP (127.0.0.1, not the socket) as the real user — this only
       # passes once the final networked server is up, not the temporary init
       # server the socket-based `mysqladmin ping` would report healthy too early.
-      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u rowboat -prowboat rowboat -e 'SELECT 1' >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u tuplebase -ptuplebase tuplebase -e 'SELECT 1' >/dev/null 2>&1 || exit 1"]
       interval: 3s
       timeout: 5s
       retries: 40
@@ -41,10 +41,10 @@ services:
     profiles: ["mariadb", "all"]
     ports: ["3307:3306"]
     environment:
-      MARIADB_ROOT_PASSWORD: rowboat
-      MARIADB_DATABASE: rowboat
-      MARIADB_USER: rowboat
-      MARIADB_PASSWORD: rowboat
+      MARIADB_ROOT_PASSWORD: tuplebase
+      MARIADB_DATABASE: tuplebase
+      MARIADB_USER: tuplebase
+      MARIADB_PASSWORD: tuplebase
     volumes:
       - ./dev/seed/mariadb:/docker-entrypoint-initdb.d
     healthcheck:
@@ -70,9 +70,9 @@ services:
     profiles: ["neo4j", "all"]
     ports: ["7474:7474", "7687:7687"]
     environment:
-      NEO4J_AUTH: neo4j/rowboatpass
+      NEO4J_AUTH: neo4j/tuplebasepass
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p rowboatpass 'RETURN 1' || exit 1"]
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p tuplebasepass 'RETURN 1' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 40
@@ -145,7 +145,7 @@ services:
     ports: ["1433:1433"]
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Rowboat!Pass1"
+      MSSQL_SA_PASSWORD: "TupleBase!Pass1"
       MSSQL_PID: "Developer"
     healthcheck:
       test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
@@ -158,7 +158,7 @@ services:
     profiles: ["clickhouse", "all"]
     ports: ["8123:8123"]
     environment:
-      CLICKHOUSE_DB: rowboat
+      CLICKHOUSE_DB: tuplebase
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
     volumes:

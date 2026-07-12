@@ -4,14 +4,14 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'clickhouse', readonly: false,
-  host: 'localhost', port: 8123, database: 'rowboat', user: 'default',
+  host: 'localhost', port: 8123, database: 'tuplebase', user: 'default',
   secrets: {},
 }
 
 const run = (a: ReturnType<typeof clickhouseFactory.create>, sql: string, pageSize = 500, pageToken?: string) =>
   a.execute(sql, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.RB_IT)('clickhouse adapter (needs `npm run db:clickhouse`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('clickhouse adapter (needs `npm run db:clickhouse`)', () => {
   it('connects and runs a query', async () => {
     const a = clickhouseFactory.create(cfg)
     await a.connect(cfg)
@@ -41,7 +41,7 @@ describe.skipIf(!process.env.RB_IT)('clickhouse adapter (needs `npm run db:click
     const a = clickhouseFactory.create(cfg)
     await a.connect(cfg)
     const dbs = await a.getChildren(null)
-    const db = dbs.find(s => s.label === 'rowboat')!
+    const db = dbs.find(s => s.label === 'tuplebase')!
     expect(db.kind).toBe('schema')
     const tables = await a.getChildren(db)
     expect(tables.map(t => t.label)).toContain('crew')

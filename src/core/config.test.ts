@@ -24,7 +24,7 @@ describe('parseConfig (groups model)', () => {
       // comment allowed
       "version": 1,
       "groups": {
-        "local": { "local-pg": { "adapter": "postgres", "host": "localhost", "user": "rowboat" } },
+        "local": { "local-pg": { "adapter": "postgres", "host": "localhost", "user": "tuplebase" } },
         "prod":  { "orders-pg": { "adapter": "postgres", "host": "p" } }
       }
     }`

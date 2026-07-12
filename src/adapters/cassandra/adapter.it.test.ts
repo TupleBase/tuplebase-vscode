@@ -4,14 +4,14 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'cassandra', readonly: false,
-  host: 'localhost', port: 9042, datacenter: 'datacenter1', keyspace: 'rowboat',
+  host: 'localhost', port: 9042, datacenter: 'datacenter1', keyspace: 'tuplebase',
   secrets: {},
 }
 
 const run = (a: ReturnType<typeof cassandraFactory.create>, cql: string, pageSize = 500, pageToken?: string) =>
   a.execute(cql, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.RB_IT)('cassandra adapter (needs `npm run db:cassandra`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('cassandra adapter (needs `npm run db:cassandra`)', () => {
   it('connects and runs a query', async () => {
     const a = cassandraFactory.create(cfg)
     await a.connect(cfg)
@@ -47,7 +47,7 @@ describe.skipIf(!process.env.RB_IT)('cassandra adapter (needs `npm run db:cassan
     const a = cassandraFactory.create(cfg)
     await a.connect(cfg)
     const keyspaces = await a.getChildren(null)
-    const ks = keyspaces.find(s => s.label === 'rowboat')!
+    const ks = keyspaces.find(s => s.label === 'tuplebase')!
     expect(ks.kind).toBe('schema')
     const tables = await a.getChildren(ks)
     expect(tables.map(t => t.label)).toContain('crew')

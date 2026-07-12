@@ -1,24 +1,28 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { parseConfig, type RowboatConfig } from '../core/config'
+import { parseConfig, type TupleBaseConfig } from '../core/config'
 import { loadFactories } from '../adapters/registry'
 import { envSecretSource } from './secrets'
 import { McpService } from './service'
 
 // stdout is the MCP transport — everything else goes to stderr
-const log = (msg: string) => process.stderr.write(`[rowboat-mcp] ${msg}\n`)
+const log = (msg: string) => process.stderr.write(`[tuplebase-mcp] ${msg}\n`)
 
-function loadConfig(): { config: RowboatConfig; baseDir: string } {
-  const path = resolve(process.env.ROWBOAT_CONFIG ?? process.argv[2] ?? '.rowboat.json')
+function loadConfig(): { config: TupleBaseConfig; baseDir: string } {
+  const explicit = process.env.TUPLEBASE_CONFIG ?? process.env.ROWBOAT_CONFIG ?? process.argv[2]
+  const currentDefault = resolve('.tuplebase.json')
+  const path = explicit
+    ? resolve(explicit)
+    : existsSync(currentDefault) ? currentDefault : resolve('.rowboat.json')
   const baseDir = dirname(path)
   let text: string
   try {
     text = readFileSync(path, 'utf8')
   } catch {
-    log(`no config at ${path} — starting with no connections (set ROWBOAT_CONFIG)`)
+    log(`no config at ${path} — starting with no connections (set TUPLEBASE_CONFIG)`)
     return { config: { version: 1, groups: [], connections: {} }, baseDir }
   }
   const { config, errors } = parseConfig(text)
@@ -33,16 +37,18 @@ const asError = (e: unknown) => ({
 })
 
 async function main() {
-  const allowWrites = /^(1|true|yes)$/i.test(process.env.ROWBOAT_MCP_ALLOW_WRITES ?? '')
-  const maxRows = Number(process.env.ROWBOAT_MCP_MAX_ROWS) || undefined
+  const allowWrites = /^(1|true|yes)$/i.test(
+    process.env.TUPLEBASE_MCP_ALLOW_WRITES ?? process.env.ROWBOAT_MCP_ALLOW_WRITES ?? '',
+  )
+  const maxRows = Number(process.env.TUPLEBASE_MCP_MAX_ROWS ?? process.env.ROWBOAT_MCP_MAX_ROWS) || undefined
   const { config, baseDir } = loadConfig()
   const service = new McpService(config, await loadFactories(), envSecretSource(), { allowWrites, maxRows, baseDir })
 
-  const server = new McpServer({ name: 'rowboat', version: '0.1.0' })
+  const server = new McpServer({ name: 'tuplebase', version: '0.1.0' })
 
   server.registerTool('list_connections', {
     title: 'List connections',
-    description: 'List the databases configured in .rowboat.json (name, group, adapter type, whether writes are allowed, whether it tunnels over SSH).',
+    description: 'List the databases configured in .tuplebase.json (name, group, adapter type, whether writes are allowed, whether it tunnels over SSH).',
     inputSchema: {},
   }, async () => asText(service.listConnections()))
 

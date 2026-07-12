@@ -1,4 +1,4 @@
-import { BRAND } from './brand'
+import { BRAND } from './product'
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
 import type { ConnectionConfig, SshConfig } from '../adapters/types'
 import { adapterIds, adapterById } from '../adapters/registry'
@@ -79,7 +79,7 @@ const SECRET_FIELDS = ['password', 'passwd', 'secret', 'token', 'accesskeyid', '
 
 export interface ConfigError { path: string; message: string }
 
-export interface RowboatConfig {
+export interface TupleBaseConfig {
   version: number
   groups: string[]
   connections: Record<string, ConnectionConfig>
@@ -99,7 +99,7 @@ export function interpolate(value: string, env: Record<string, string | undefine
 export function parseConfig(
   text: string,
   env: Record<string, string | undefined> = process.env,
-): { config?: RowboatConfig; errors: ConfigError[] } {
+): { config?: TupleBaseConfig; errors: ConfigError[] } {
   const parseErrors: ParseError[] = []
   const raw = parse(text, parseErrors, { allowTrailingComma: true })
   if (parseErrors.length > 0) {
@@ -117,7 +117,7 @@ export function parseConfig(
 
   const errors: ConfigError[] = []
   const groups: string[] = []
-  const connections: RowboatConfig['connections'] = {}
+  const connections: TupleBaseConfig['connections'] = {}
 
   for (const [groupName, groupRaw] of Object.entries(raw.groups as Record<string, unknown>)) {
     groups.push(groupName)

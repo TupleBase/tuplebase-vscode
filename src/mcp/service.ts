@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import type {
   Adapter, AdapterFactory, ConnectionConfig, ResolvedConnection, ResultEnvelope, TreeNode,
 } from '../adapters/types'
-import type { RowboatConfig } from '../core/config'
+import type { TupleBaseConfig } from '../core/config'
 import { isWriteStatement } from '../core/querySafety'
 import { openTunnel, type Tunnel, type TunnelSecrets } from '../core/sshTunnel'
 import { adapterById } from '../adapters/registry'
@@ -13,7 +13,7 @@ import { secretEnvVar, type SecretSource } from './secrets'
 export interface McpServiceOptions {
   allowWrites?: boolean   // default false — agents are read-only
   maxRows?: number        // default 200
-  baseDir?: string        // .rowboat.json directory — relative file paths (SQLite) resolve against it
+  baseDir?: string        // .tuplebase.json directory — relative file paths (SQLite) resolve against it
 }
 
 export interface ConnectionSummary {
@@ -43,7 +43,7 @@ export class McpService {
   private readonly baseDir: string | undefined
 
   constructor(
-    private readonly config: RowboatConfig,
+    private readonly config: TupleBaseConfig,
     private readonly factories: Map<string, AdapterFactory>,
     private readonly secrets: SecretSource,
     options: McpServiceOptions = {},
@@ -145,7 +145,7 @@ export class McpService {
   async runQuery(name: string, statement: string): Promise<QueryResult> {
     const cfg = this.connConfig(name)
     if (this.effectiveReadonly(cfg) && isWriteStatement(cfg.adapter, statement)) {
-      throw new Error(`Write blocked: "${name}" is read-only for agents (start the server with ROWBOAT_MCP_ALLOW_WRITES=1 and clear readonly to allow)`)
+      throw new Error(`Write blocked: "${name}" is read-only for agents (start the server with TUPLEBASE_MCP_ALLOW_WRITES=1 and clear readonly to allow)`)
     }
     const adapter = await this.connect(name)
     const envelope: ResultEnvelope = await adapter.execute(statement, {

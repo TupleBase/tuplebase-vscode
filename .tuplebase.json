@@ -1,0 +1,12 @@
+{
+  // TupleBase dev config — safe to commit: secrets are never stored here.
+  // Start databases with: npm run db:postgres + db:redis + db:dynamo (pg password: tuplebase)
+  "version": 1,
+  "groups": {
+    "local": {
+      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "tuplebase", "user": "tuplebase" },
+      "local-redis": { "adapter": "redis", "host": "localhost", "port": 6379 },
+      "local-dynamo": { "adapter": "dynamodb", "region": "local", "endpoint": "http://localhost:8000" }
+    }
+  }
+}

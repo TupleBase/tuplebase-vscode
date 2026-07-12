@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
-import { BRAND } from '../core/brand'
+import { BRAND } from '../core/product'
 import { getFileConnection, setFileConnection } from '../core/fileConn'
 import { splitAll } from '../core/statements'
 import { fileStatementSyntax } from '../core/dialect'
@@ -33,12 +33,12 @@ export function buildQueryCodeLenses(
       // lenses with a pipe; each segment clicks independently)
       new vscode.CodeLens(range, {
         title: '▶ Run',
-        command: 'rowboat.runQuery',
+        command: 'tuplebase.runQuery',
         arguments: [{ uri: doc.uri, offset: stmt.start }],
       }),
       new vscode.CodeLens(range, {
         title: bound ? `${manager.isConnected(bound) ? '$(pass-filled)' : '$(circle-outline)'} ${bound}` : 'select connection…',
-        command: 'rowboat.selectConnectionForFile',
+        command: 'tuplebase.selectConnectionForFile',
         arguments: [doc.uri],
       }),
     )
@@ -59,7 +59,7 @@ export function registerQueryCodeLens(
     vscode.languages.registerCodeLensProvider([{ language: 'sql' }, { language: 'redis' }], provider),
     manager.onDidChangeConnections(() => emitter.fire()),
     store.onDidChange(() => emitter.fire()),
-    vscode.commands.registerCommand('rowboat.selectConnectionForFile', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('tuplebase.selectConnectionForFile', async (uri?: vscode.Uri) => {
       const doc = uri
         ? vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString())
         : vscode.window.activeTextEditor?.document
@@ -67,7 +67,7 @@ export function registerQueryCodeLens(
       const matching = store.connections()
         .filter(c => presentationOf(c.adapter)?.languageId === doc.languageId)
       if (matching.length === 0) {
-        void vscode.window.showWarningMessage(`${BRAND}: no ${doc.languageId} connections in .rowboat.json`)
+        void vscode.window.showWarningMessage(`${BRAND}: no ${doc.languageId} connections in .tuplebase.json`)
         return
       }
       const picked = await vscode.window.showQuickPick(

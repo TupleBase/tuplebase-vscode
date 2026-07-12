@@ -26,7 +26,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   static register(context: vscode.ExtensionContext): ResultsPanel {
     const panel = new ResultsPanel(context.extensionUri)
     context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider('rowboat.results', panel),
+      vscode.window.registerWebviewViewProvider('tuplebase.results', panel),
       panel.cancelEmitter,
       panel.loadMoreEmitter,
     )
@@ -50,7 +50,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   }
 
   async show() {
-    await vscode.commands.executeCommand('rowboat.results.focus')
+    await vscode.commands.executeCommand('tuplebase.results.focus')
   }
 
   post(msg: ResultsMessage) {

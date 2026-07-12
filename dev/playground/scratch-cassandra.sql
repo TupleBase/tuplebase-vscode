@@ -1,5 +1,5 @@
 -- Cassandra (CQL) demo (npm run db:cassandra) — bind to the local-cassandra connection
--- (keyspace rowboat). Results page with the driver's native pageState token.
+-- (keyspace tuplebase). Results page with the driver's native pageState token.
 SELECT id, name, role FROM crew;
 
 SELECT name, role FROM crew WHERE id = 1;

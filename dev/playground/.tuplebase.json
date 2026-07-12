@@ -1,6 +1,6 @@
 {
-  // Rowboat dev config — safe to commit: secrets are never stored here.
-  // Start databases with: npm run db:postgres + db:redis + db:dynamo (pg password: rowboat)
+  // TupleBase dev config — safe to commit: secrets are never stored here.
+  // Start databases with: npm run db:postgres + db:redis + db:dynamo (pg password: tuplebase)
   "version": 1,
   "groups": {
     "local": {
@@ -18,22 +18,22 @@
         "adapter": "postgres",
         "host": "localhost",
         "port": 5432,
-        "database": "rowboat",
-        "user": "rowboat"
+        "database": "tuplebase",
+        "user": "tuplebase"
       },
       "local-mysql": {
         "adapter": "mysql",
         "host": "localhost",
         "port": 3306,
-        "database": "rowboat",
-        "user": "rowboat"
+        "database": "tuplebase",
+        "user": "tuplebase"
       },
       "local-mariadb": {
         "adapter": "mysql",
         "host": "localhost",
         "port": 3307,
-        "database": "rowboat",
-        "user": "rowboat"
+        "database": "tuplebase",
+        "user": "tuplebase"
       },
       "local-sqlite": {
         "adapter": "sqlite",
@@ -43,14 +43,14 @@
         "adapter": "clickhouse",
         "host": "localhost",
         "port": 8123,
-        "database": "rowboat",
+        "database": "tuplebase",
         "user": "default"
       },
       "local-mssql": {
         "adapter": "mssql",
         "host": "localhost",
         "port": 1433,
-        "database": "rowboat",
+        "database": "tuplebase",
         "user": "sa"
       },
       "local-cassandra": {
@@ -58,7 +58,7 @@
         "host": "localhost",
         "port": 9042,
         "datacenter": "datacenter1",
-        "keyspace": "rowboat"
+        "keyspace": "tuplebase"
       },
       "local-neo4j": {
         "adapter": "neo4j",
@@ -71,7 +71,7 @@
         "adapter": "mongodb",
         "host": "localhost",
         "port": 27017,
-        "database": "rowboat"
+        "database": "tuplebase"
       },
       "local-elasticsearch": {
         "adapter": "elasticsearch",

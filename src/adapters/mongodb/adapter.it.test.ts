@@ -4,13 +4,13 @@ import type { ResolvedConnection } from '../types'
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'mongodb', readonly: false,
-  host: 'localhost', port: 27017, database: 'rowboat', secrets: {},
+  host: 'localhost', port: 27017, database: 'tuplebase', secrets: {},
 }
 
 const run = (a: ReturnType<typeof mongodbFactory.create>, cmd: string, pageSize = 500, pageToken?: string) =>
   a.execute(cmd, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.RB_IT)('mongodb adapter (needs `npm run db:mongodb`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mongodb adapter (needs `npm run db:mongodb`)', () => {
   it('runs find, count and distinct', async () => {
     const a = mongodbFactory.create(cfg)
     await a.connect(cfg)

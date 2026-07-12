@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Rowboat configuration",
+  "title": "TupleBase configuration",
   "type": "object",
   "required": [
     "version",
@@ -239,7 +239,7 @@
               },
               "path": {
                 "type": "string",
-                "description": "Path to the SQLite database file — absolute, or relative to the .rowboat.json location; ${env:VAR} is interpolated."
+                "description": "Path to the SQLite database file — absolute, or relative to the .tuplebase.json location; ${env:VAR} is interpolated."
               }
             },
             "required": [

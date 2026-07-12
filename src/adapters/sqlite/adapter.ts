@@ -27,7 +27,7 @@ export function parseSqNodeId(id: string): string[] {
 }
 
 // Resolve the database file path. Absolute paths pass through; a relative path is
-// resolved against the .rowboat.json directory (baseDir) so config paths are
+// resolved against the .tuplebase.json directory (baseDir) so config paths are
 // relative to the config file, not the (unpredictable) extension-host cwd.
 export function resolveDbPath(cfg: { path?: unknown; baseDir?: string }): string {
   const p = String(cfg.path ?? '')

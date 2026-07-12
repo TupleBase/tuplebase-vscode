@@ -1,6 +1,6 @@
 # Database support
 
-Which databases Rowboat speaks, and which are candidates. Each database is a self-contained plugin under `src/adapters/<db>/` (adapter, form fields, presentation, completion, icon), collected in `src/adapters/registry.ts`.
+Which databases TupleBase speaks, and which are candidates. Each database is a self-contained plugin under `src/adapters/<db>/` (adapter, form fields, presentation, completion, icon), collected in `src/adapters/registry.ts`.
 
 ## Shipped
 

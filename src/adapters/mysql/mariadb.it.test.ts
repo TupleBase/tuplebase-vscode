@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { mysqlFactory } from './adapter'
 import type { ResolvedConnection } from '../types'
 
-// MariaDB speaks the MySQL wire protocol, so Rowboat reaches it through the
+// MariaDB speaks the MySQL wire protocol, so TupleBase reaches it through the
 // `mysql` adapter (no separate adapter — the CockroachDB-via-postgres pattern).
 // This test proves the mysql adapter drives a real MariaDB container end to end.
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'mysql', readonly: false,
-  host: 'localhost', port: 3307, database: 'rowboat', user: 'rowboat',
-  secrets: { password: 'rowboat' },
+  host: 'localhost', port: 3307, database: 'tuplebase', user: 'tuplebase',
+  secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.RB_IT)('mysql adapter against MariaDB (needs `npm run db:mariadb`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter against MariaDB (needs `npm run db:mariadb`)', () => {
   it('connects and runs a query', async () => {
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)
@@ -28,7 +28,7 @@ describe.skipIf(!process.env.RB_IT)('mysql adapter against MariaDB (needs `npm r
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)
     const schemas = await a.getChildren(null)
-    const db = schemas.find(s => s.label === 'rowboat')!
+    const db = schemas.find(s => s.label === 'tuplebase')!
     expect(db.kind).toBe('schema')
     const tables = await a.getChildren(db)
     expect(tables.map(t => t.label)).toContain('crew')

@@ -25,7 +25,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   private findConfig(name: string): ConnectionConfig {
     const cfg = this.store.connection(name)
-    if (!cfg) throw new Error(`Connection "${name}" not found (.rowboat.json)`)
+    if (!cfg) throw new Error(`Connection "${name}" not found (.tuplebase.json)`)
     return cfg
   }
 
@@ -62,7 +62,7 @@ export class ConnectionManager implements vscode.Disposable {
     for (const field of factory.requiredSecrets(cfg)) {
       secrets[field] = await this.getSecret(cfg.name, field, `${field} for ${cfg.group}/${cfg.name}`, persist)
     }
-    // config paths (e.g. SQLite `path`) resolve against the .rowboat.json directory
+    // config paths (e.g. SQLite `path`) resolve against the .tuplebase.json directory
     const baseDir = this.store.configUri ? dirname(this.store.configUri.fsPath) : undefined
     return { ...cfg, secrets, ...(baseDir ? { baseDir } : {}) }
   }

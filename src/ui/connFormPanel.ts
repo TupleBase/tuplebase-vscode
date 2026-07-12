@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { BRAND } from '../core/brand'
+import { BRAND } from '../core/product'
 import { addConnection, removeConnection } from '../core/configWriter'
 import { buildConnection, validate, withReadonly } from '../webview/connFormSpec'
 import { adapterById, presentations } from '../adapters/registry'
@@ -32,7 +32,7 @@ export function registerNewConnectionForm(
   const open = async (group: string, edit?: EditContext) => {
     const uri = store.configUri
     if (!uri) {
-      void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json — run "Rowboat: Create Config File" first`)
+      void vscode.window.showWarningMessage(`${BRAND}: no .tuplebase.json — run "TupleBase: Create Config File" first`)
       return
     }
     const init = edit
@@ -41,7 +41,7 @@ export function registerNewConnectionForm(
     const originalName = edit?.conn.name
 
     const panel = vscode.window.createWebviewPanel(
-      'rowboat.newConnection',
+      'tuplebase.newConnection',
       edit ? `Edit connection · ${edit.conn.name}` : `New connection · ${group}`,
       vscode.ViewColumn.Active,
       { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'dist', 'webview')] },
@@ -86,12 +86,12 @@ export function registerNewConnectionForm(
   }
 
   return vscode.Disposable.from(
-    vscode.commands.registerCommand('rowboat.addConnection', (node?: { type?: string; name?: string }) => {
+    vscode.commands.registerCommand('tuplebase.addConnection', (node?: { type?: string; name?: string }) => {
       // from a group's "+" → that group; from the explorer toolbar (no node) →
       // a default bucket, created on save. Drag it into a real group afterwards.
       void open(node?.type === 'group' && node.name ? node.name : UNGROUPED_GROUP)
     }),
-    vscode.commands.registerCommand('rowboat.editConnection', (node?: { type?: string; conn?: ConnectionConfig }) => {
+    vscode.commands.registerCommand('tuplebase.editConnection', (node?: { type?: string; conn?: ConnectionConfig }) => {
       if (node?.type !== 'connection' || !node.conn) return
       void open(node.conn.group, { group: node.conn.group, conn: node.conn })
     }),

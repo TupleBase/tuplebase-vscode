@@ -1,4 +1,4 @@
-// Generates schemas/rowboat.schema.json from the adapter descriptors, so a new
+// Generates schemas/tuplebase.schema.json from the adapter descriptors, so a new
 // database's config validation comes from its field list rather than a
 // hand-edited schema. Run `npm run gen:schema` after changing any adapter fields.
 import type { AdapterPresentation, Field } from './types'
@@ -65,7 +65,7 @@ function branchFor(p: AdapterPresentation): JsonSchema {
 export function buildJsonSchema(adapters: AdapterPresentation[] = presentations()): JsonSchema {
   return {
     $schema: 'http://json-schema.org/draft-07/schema#',
-    title: 'Rowboat configuration',
+    title: 'TupleBase configuration',
     type: 'object',
     required: ['version', 'groups'],
     properties: {

@@ -1,10 +1,10 @@
-# Rowboat Plan 01 — Walking Skeleton (Postgres end-to-end) Implementation Plan
+# TupleBase Plan 01 — Walking Skeleton (Postgres end-to-end) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A working VS Code extension that loads `.rowboat.json` environments, connects to Postgres (password via SecretStorage), shows a schema tree in a Rowboat activity-bar container, and runs SQL from an editor into a Tabulator results grid in the bottom panel.
+**Goal:** A working VS Code extension that loads `.tuplebase.json` environments, connects to Postgres (password via SecretStorage), shows a schema tree in a TupleBase activity-bar container, and runs SQL from an editor into a Tabulator results grid in the bottom panel.
 
-**Architecture:** Monolithic extension, in-process adapters behind an internal `Adapter` interface (spec: `~/memory/2026-07-05-rowboat-design.md`). Drivers lazy-required. Two esbuild bundles: extension host (CJS) + results webview. Pure modules (config, statements) tested with vitest; Postgres adapter integration-tested against docker-compose.
+**Architecture:** Monolithic extension, in-process adapters behind an internal `Adapter` interface (spec: `~/memory/2026-07-05-tuplebase-design.md`). Drivers lazy-required. Two esbuild bundles: extension host (CJS) + results webview. Pure modules (config, statements) tested with vitest; Postgres adapter integration-tested against docker-compose.
 
 **Tech Stack:** TypeScript, esbuild, vitest, `pg`, `jsonc-parser`, `tabulator-tables`, `@vscode/test-electron`.
 
@@ -12,8 +12,8 @@
 
 - Node modules: `pg` (MIT), `jsonc-parser` (MIT), `tabulator-tables` (MIT) only. NO native modules. NO new deps beyond tasks below.
 - esbuild: `platform: 'node', format: 'cjs', external: ['vscode', 'pg-native']` for the host bundle.
-- Config file name: `.rowboat.json` at workspace root. Secret fields NEVER in config or its schema.
-- SecretStorage keys: `rowboat.<env>.<conn>.<field>`. Key index in globalState under `rowboat.secretKeys`.
+- Config file name: `.tuplebase.json` at workspace root. Secret fields NEVER in config or its schema.
+- SecretStorage keys: `tuplebase.<env>.<conn>.<field>`. Key index in globalState under `tuplebase.secretKeys`.
 - Commits: conventional format (`feat:`, `test:`, `chore:`). Never mention Claude/AI in commit messages, descriptions, or PRs. No Co-Authored-By lines.
 - All webview assets bundled locally, loaded via `asWebviewUri`, CSP base `default-src 'none'`. No CDN/network in webview.
 - `engines.vscode`: `^1.90.0`.
@@ -23,59 +23,59 @@
 ### Task 1: Extension scaffold
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `esbuild.mjs`, `.vscodeignore`, `.gitignore`, `.vscode/launch.json`, `src/extension.ts`, `media/rowboat.svg`, `vitest.config.ts`
+- Create: `package.json`, `tsconfig.json`, `esbuild.mjs`, `.vscodeignore`, `.gitignore`, `.vscode/launch.json`, `src/extension.ts`, `media/tuplebase.svg`, `vitest.config.ts`
 
 **Interfaces:**
-- Produces: npm scripts `build`, `watch`, `test`, `check`. `activate(context)`/`deactivate()` in `src/extension.ts`. View container id `rowboat`, view ids `rowboat.explorer` (tree) and `rowboat.results` (webview, panel). Command ids `rowboat.runQuery`, `rowboat.selectEnvironment`, `rowboat.refreshExplorer`, `rowboat.clearCredentials`.
+- Produces: npm scripts `build`, `watch`, `test`, `check`. `activate(context)`/`deactivate()` in `src/extension.ts`. View container id `tuplebase`, view ids `tuplebase.explorer` (tree) and `tuplebase.results` (webview, panel). Command ids `tuplebase.runQuery`, `tuplebase.selectEnvironment`, `tuplebase.refreshExplorer`, `tuplebase.clearCredentials`.
 
 - [ ] **Step 1: package.json**
 
 ```json
 {
-  "name": "rowboat",
-  "displayName": "Rowboat",
+  "name": "tuplebase",
+  "displayName": "TupleBase",
   "description": "Paddle through your rows. Query Postgres, Redis and DynamoDB from VS Code.",
   "version": "0.1.0",
-  "publisher": "felicegeracitano",
+  "publisher": "tuplebase",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/FeliceGeracitano/rowboat" },
+  "repository": { "type": "git", "url": "https://github.com/FeliceGeracitano/tuplebase" },
   "engines": { "vscode": "^1.90.0" },
   "categories": ["Other"],
   "keywords": ["postgres", "redis", "dynamodb", "sql", "database"],
   "main": "./dist/extension.js",
-  "activationEvents": ["workspaceContains:**/.rowboat.json"],
+  "activationEvents": ["workspaceContains:**/.tuplebase.json"],
   "contributes": {
     "viewsContainers": {
-      "activitybar": [{ "id": "rowboat", "title": "Rowboat", "icon": "media/rowboat.svg" }],
-      "panel": [{ "id": "rowboat-panel", "title": "Rowboat Results", "icon": "media/rowboat.svg" }]
+      "activitybar": [{ "id": "tuplebase", "title": "TupleBase", "icon": "media/tuplebase.svg" }],
+      "panel": [{ "id": "tuplebase-panel", "title": "TupleBase Results", "icon": "media/tuplebase.svg" }]
     },
     "views": {
-      "rowboat": [{ "id": "rowboat.explorer", "name": "Explorer", "icon": "media/rowboat.svg" }],
-      "rowboat-panel": [{ "id": "rowboat.results", "type": "webview", "name": "Results" }]
+      "tuplebase": [{ "id": "tuplebase.explorer", "name": "Explorer", "icon": "media/tuplebase.svg" }],
+      "tuplebase-panel": [{ "id": "tuplebase.results", "type": "webview", "name": "Results" }]
     },
     "viewsWelcome": [
       {
-        "view": "rowboat.explorer",
-        "contents": "No .rowboat.json found in this workspace.\n[Create Config](command:rowboat.createConfig)"
+        "view": "tuplebase.explorer",
+        "contents": "No .tuplebase.json found in this workspace.\n[Create Config](command:tuplebase.createConfig)"
       }
     ],
     "commands": [
-      { "command": "rowboat.runQuery", "title": "Rowboat: Run Query", "icon": "$(play)" },
-      { "command": "rowboat.selectEnvironment", "title": "Rowboat: Select Environment" },
-      { "command": "rowboat.refreshExplorer", "title": "Rowboat: Refresh Explorer", "icon": "$(refresh)" },
-      { "command": "rowboat.clearCredentials", "title": "Rowboat: Clear Stored Credentials" },
-      { "command": "rowboat.createConfig", "title": "Rowboat: Create Config File" }
+      { "command": "tuplebase.runQuery", "title": "TupleBase: Run Query", "icon": "$(play)" },
+      { "command": "tuplebase.selectEnvironment", "title": "TupleBase: Select Environment" },
+      { "command": "tuplebase.refreshExplorer", "title": "TupleBase: Refresh Explorer", "icon": "$(refresh)" },
+      { "command": "tuplebase.clearCredentials", "title": "TupleBase: Clear Stored Credentials" },
+      { "command": "tuplebase.createConfig", "title": "TupleBase: Create Config File" }
     ],
     "menus": {
       "editor/title/run": [
-        { "command": "rowboat.runQuery", "when": "resourceLangId == sql", "group": "navigation" }
+        { "command": "tuplebase.runQuery", "when": "resourceLangId == sql", "group": "navigation" }
       ],
       "view/title": [
-        { "command": "rowboat.refreshExplorer", "when": "view == rowboat.explorer", "group": "navigation" }
+        { "command": "tuplebase.refreshExplorer", "when": "view == tuplebase.explorer", "group": "navigation" }
       ]
     },
     "keybindings": [
-      { "command": "rowboat.runQuery", "key": "ctrl+enter", "mac": "cmd+enter", "when": "editorTextFocus && resourceLangId == sql" }
+      { "command": "tuplebase.runQuery", "key": "ctrl+enter", "mac": "cmd+enter", "when": "editorTextFocus && resourceLangId == sql" }
     ]
   },
   "scripts": {
@@ -199,7 +199,7 @@ export default defineConfig({ test: { include: ['src/**/*.test.ts'] } })
 import * as vscode from 'vscode'
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('rowboat activated')
+  console.log('tuplebase activated')
 }
 
 export function deactivate() {}
@@ -211,7 +211,7 @@ export function deactivate() {}
 export {}
 ```
 
-`media/rowboat.svg` (24x24 monochrome boat, uses currentColor per VS Code guidelines):
+`media/tuplebase.svg` (24x24 monochrome boat, uses currentColor per VS Code guidelines):
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
   <path d="M3 14l2 5h14l2-5z"/>
@@ -241,7 +241,7 @@ git commit -m "feat: extension scaffold with esbuild, vitest and manifest"
 - Modify: `package.json` (scripts)
 
 **Interfaces:**
-- Produces: `npm run db:postgres` starts postgres on `localhost:5432` (user `rowboat`, password `rowboat`, db `rowboat`) seeded with `crew` and `voyages` tables. `npm run db:down` stops all. Profiles: `postgres`, `redis`, `dynamodb`, `all` (redis/dynamo services added in Plan 02).
+- Produces: `npm run db:postgres` starts postgres on `localhost:5432` (user `tuplebase`, password `tuplebase`, db `tuplebase`) seeded with `crew` and `voyages` tables. `npm run db:down` stops all. Profiles: `postgres`, `redis`, `dynamodb`, `all` (redis/dynamo services added in Plan 02).
 
 - [ ] **Step 1: docker-compose.yml**
 
@@ -252,9 +252,9 @@ services:
     profiles: ["postgres", "all"]
     ports: ["5432:5432"]
     environment:
-      POSTGRES_USER: rowboat
-      POSTGRES_PASSWORD: rowboat
-      POSTGRES_DB: rowboat
+      POSTGRES_USER: tuplebase
+      POSTGRES_PASSWORD: tuplebase
+      POSTGRES_DB: tuplebase
     volumes:
       - ./dev/seed/postgres:/docker-entrypoint-initdb.d
 ```
@@ -296,7 +296,7 @@ INSERT INTO voyages (crew_id, destination, departed_at) VALUES
 
 - [ ] **Step 4: verify**
 
-Run: `npm run db:postgres && sleep 3 && docker compose exec postgres psql -U rowboat -c "select count(*) from crew;"`
+Run: `npm run db:postgres && sleep 3 && docker compose exec postgres psql -U tuplebase -c "select count(*) from crew;"`
 Expected: `3`
 
 - [ ] **Step 5: Commit**
@@ -512,14 +512,14 @@ git commit -m "feat: adapter contract types and sql statement splitting"
 ```ts
 // src/core/config.ts
 export interface ConfigError { path: string; message: string }
-export interface RowboatConfig {
+export interface TupleBaseConfig {
   defaultEnvironment?: string
   environments: Record<string, Record<string, ConnectionConfig>>
 }
 export function interpolate(value: string, env: Record<string, string | undefined>): string
 // throws Error('Missing environment variable: NAME') when no default given
 export function parseConfig(text: string, env?: Record<string, string | undefined>):
-  { config?: RowboatConfig; errors: ConfigError[] }
+  { config?: TupleBaseConfig; errors: ConfigError[] }
 ```
 
 Known adapter ids for validation: `['postgres', 'redis', 'dynamodb']` (exported as `KNOWN_ADAPTERS`).
@@ -555,7 +555,7 @@ const VALID = `{
   "defaultEnvironment": "dev",
   "environments": {
     "dev": {
-      "orders-db": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "rowboat", "user": "rowboat" }
+      "orders-db": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "tuplebase", "user": "tuplebase" }
     }
   }
 }`
@@ -611,7 +611,7 @@ const SECRET_FIELDS = ['password', 'passwd', 'secret', 'token', 'accesskeyid', '
 
 export interface ConfigError { path: string; message: string }
 
-export interface RowboatConfig {
+export interface TupleBaseConfig {
   defaultEnvironment?: string
   environments: Record<string, Record<string, ConnectionConfig>>
 }
@@ -630,7 +630,7 @@ export function interpolate(value: string, env: Record<string, string | undefine
 export function parseConfig(
   text: string,
   env: Record<string, string | undefined> = process.env
-): { config?: RowboatConfig; errors: ConfigError[] } {
+): { config?: TupleBaseConfig; errors: ConfigError[] } {
   const parseErrors: ParseError[] = []
   const raw = parse(text, parseErrors, { allowTrailingComma: true })
   if (parseErrors.length > 0) {
@@ -643,7 +643,7 @@ export function parseConfig(
     return { errors: [{ path: 'environments', message: 'missing "environments" object' }] }
   }
 
-  const environments: RowboatConfig['environments'] = {}
+  const environments: TupleBaseConfig['environments'] = {}
   for (const [envName, conns] of Object.entries(raw.environments as Record<string, unknown>)) {
     environments[envName] = {}
     if (typeof conns !== 'object' || conns === null) {
@@ -659,7 +659,7 @@ export function parseConfig(
       const conn = { ...(connRaw as Record<string, unknown>) }
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
-          errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — Rowboat keeps secrets out of config (prompted and stored on your machine)` })
+          errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — TupleBase keeps secrets out of config (prompted and stored on your machine)` })
         }
       }
       if (typeof conn.adapter !== 'string' || !KNOWN_ADAPTERS.includes(conn.adapter)) {
@@ -694,7 +694,7 @@ Expected: PASS (10 tests).
 
 ```bash
 git add package.json package-lock.json src/core/config.ts src/core/config.test.ts
-git commit -m "feat: rowboat config parsing with env interpolation and secret rejection"
+git commit -m "feat: tuplebase config parsing with env interpolation and secret rejection"
 ```
 
 ---
@@ -702,11 +702,11 @@ git commit -m "feat: rowboat config parsing with env interpolation and secret re
 ### Task 5: Config file IntelliSense (JSON schema) + ConfigStore
 
 **Files:**
-- Create: `schemas/rowboat.schema.json`, `src/core/configStore.ts`
+- Create: `schemas/tuplebase.schema.json`, `src/core/configStore.ts`
 - Modify: `package.json` (contributes)
 
 **Interfaces:**
-- Consumes: `parseConfig`, `RowboatConfig`, `ConfigError` from `src/core/config.ts`.
+- Consumes: `parseConfig`, `TupleBaseConfig`, `ConfigError` from `src/core/config.ts`.
 - Produces:
 
 ```ts
@@ -714,21 +714,21 @@ git commit -m "feat: rowboat config parsing with env interpolation and secret re
 export class ConfigStore implements vscode.Disposable {
   constructor(diagnostics: vscode.DiagnosticCollection)
   readonly onDidChange: vscode.Event<void>
-  get config(): RowboatConfig | undefined
+  get config(): TupleBaseConfig | undefined
   get configUri(): vscode.Uri | undefined
-  async load(): Promise<void>           // finds .rowboat.json in first workspace folder, parses, publishes diagnostics
+  async load(): Promise<void>           // finds .tuplebase.json in first workspace folder, parses, publishes diagnostics
   environmentNames(): string[]
   connections(env: string): ConnectionConfig[]
   dispose(): void
 }
 ```
 
-- [ ] **Step 1: JSON schema** — `schemas/rowboat.schema.json`:
+- [ ] **Step 1: JSON schema** — `schemas/tuplebase.schema.json`:
 
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Rowboat configuration",
+  "title": "TupleBase configuration",
   "type": "object",
   "required": ["environments"],
   "properties": {
@@ -805,10 +805,10 @@ Note: schema deliberately has NO password/secret properties, and `additionalProp
 
 ```json
 "languages": [
-  { "id": "jsonc", "filenames": [".rowboat.json"] }
+  { "id": "jsonc", "filenames": [".tuplebase.json"] }
 ],
 "jsonValidation": [
-  { "fileMatch": ".rowboat.json", "url": "./schemas/rowboat.schema.json" }
+  { "fileMatch": ".tuplebase.json", "url": "./schemas/tuplebase.schema.json" }
 ]
 ```
 
@@ -818,18 +818,18 @@ Remove `schemas/**` exclusion risk: ensure `.vscodeignore` does NOT exclude `sch
 
 ```ts
 import * as vscode from 'vscode'
-import { parseConfig, RowboatConfig, ConfigError } from './config'
+import { parseConfig, TupleBaseConfig, ConfigError } from './config'
 import type { ConnectionConfig } from '../adapters/types'
 
 export class ConfigStore implements vscode.Disposable {
-  private _config: RowboatConfig | undefined
+  private _config: TupleBaseConfig | undefined
   private _uri: vscode.Uri | undefined
   private emitter = new vscode.EventEmitter<void>()
   readonly onDidChange = this.emitter.event
   private watcher: vscode.FileSystemWatcher
 
   constructor(private diagnostics: vscode.DiagnosticCollection) {
-    this.watcher = vscode.workspace.createFileSystemWatcher('**/.rowboat.json')
+    this.watcher = vscode.workspace.createFileSystemWatcher('**/.tuplebase.json')
     this.watcher.onDidChange(() => this.load())
     this.watcher.onDidCreate(() => this.load())
     this.watcher.onDidDelete(() => this.load())
@@ -843,7 +843,7 @@ export class ConfigStore implements vscode.Disposable {
     this._uri = undefined
     const folder = vscode.workspace.workspaceFolders?.[0]
     if (folder) {
-      const uri = vscode.Uri.joinPath(folder.uri, '.rowboat.json')
+      const uri = vscode.Uri.joinPath(folder.uri, '.tuplebase.json')
       try {
         const bytes = await vscode.workspace.fs.readFile(uri)
         this._uri = uri
@@ -855,7 +855,7 @@ export class ConfigStore implements vscode.Disposable {
         this.diagnostics.clear()
       }
     }
-    await vscode.commands.executeCommand('setContext', 'rowboat.hasConfig', !!this._config)
+    await vscode.commands.executeCommand('setContext', 'tuplebase.hasConfig', !!this._config)
     this.emitter.fire()
   }
 
@@ -921,7 +921,7 @@ export interface KeyIndex {        // subset of vscode.Memento
 }
 export class SecretVault {
   constructor(backend: SecretBackend, state: KeyIndex)
-  static key(env: string, conn: string, field: string): string  // `rowboat.${env}.${conn}.${field}`
+  static key(env: string, conn: string, field: string): string  // `tuplebase.${env}.${conn}.${field}`
   get(env: string, conn: string, field: string): Promise<string | undefined>
   store(env: string, conn: string, field: string, value: string): Promise<void>
   deleteConnection(env: string, conn: string): Promise<void>
@@ -953,7 +953,7 @@ function fakes() {
 
 describe('SecretVault', () => {
   it('builds namespaced keys', () => {
-    expect(SecretVault.key('dev', 'orders-db', 'password')).toBe('rowboat.dev.orders-db.password')
+    expect(SecretVault.key('dev', 'orders-db', 'password')).toBe('tuplebase.dev.orders-db.password')
   })
 
   it('stores, retrieves and indexes', async () => {
@@ -969,8 +969,8 @@ describe('SecretVault', () => {
     await v.store('dev', 'db', 'password', 'a')
     await v.store('prod', 'db', 'password', 'b')
     await v.deleteConnection('dev', 'db')
-    expect(secrets.has('rowboat.dev.db.password')).toBe(false)
-    expect(secrets.has('rowboat.prod.db.password')).toBe(true)
+    expect(secrets.has('tuplebase.dev.db.password')).toBe(false)
+    expect(secrets.has('tuplebase.prod.db.password')).toBe(true)
   })
 
   it('clearAll deletes every indexed key and returns them', async () => {
@@ -979,7 +979,7 @@ describe('SecretVault', () => {
     await v.store('dev', 'db', 'password', 'a')
     await v.store('prod', 'db', 'password', 'b')
     const deleted = await v.clearAll()
-    expect(deleted.sort()).toEqual(['rowboat.dev.db.password', 'rowboat.prod.db.password'])
+    expect(deleted.sort()).toEqual(['tuplebase.dev.db.password', 'tuplebase.prod.db.password'])
     expect(secrets.size).toBe(0)
   })
 })
@@ -1005,13 +1005,13 @@ export interface KeyIndex {
   update(key: string, value: unknown): Thenable<void>
 }
 
-const INDEX_KEY = 'rowboat.secretKeys'
+const INDEX_KEY = 'tuplebase.secretKeys'
 
 export class SecretVault {
   constructor(private backend: SecretBackend, private state: KeyIndex) {}
 
   static key(env: string, conn: string, field: string): string {
-    return `rowboat.${env}.${conn}.${field}`
+    return `tuplebase.${env}.${conn}.${field}`
   }
 
   private index(): string[] {
@@ -1030,7 +1030,7 @@ export class SecretVault {
   }
 
   async deleteConnection(env: string, conn: string) {
-    const prefix = `rowboat.${env}.${conn}.`
+    const prefix = `tuplebase.${env}.${conn}.`
     const idx = this.index()
     const doomed = idx.filter(k => k.startsWith(prefix))
     for (const k of doomed) await this.backend.delete(k)
@@ -1064,7 +1064,7 @@ git commit -m "feat: secret vault over vscode secretstorage with key index"
 
 **Files:**
 - Create: `src/adapters/postgres.ts`
-- Test: `src/adapters/postgres.it.test.ts` (integration — runs only when `RB_IT=1`)
+- Test: `src/adapters/postgres.it.test.ts` (integration — runs only when `TUPLEBASE_IT=1`)
 - Modify: `package.json` (add dependency `pg@^8.22.0`, devDependency `@types/pg@^8.11.0`)
 
 **Interfaces:**
@@ -1085,11 +1085,11 @@ import type { ResolvedConnection } from './types'
 
 const cfg: ResolvedConnection = {
   env: 'test', name: 'it', adapter: 'postgres',
-  host: 'localhost', port: 5432, database: 'rowboat', user: 'rowboat',
-  secrets: { password: 'rowboat' },
+  host: 'localhost', port: 5432, database: 'tuplebase', user: 'tuplebase',
+  secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgres`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('postgres adapter (needs `npm run db:postgres`)', () => {
   it('validates config', () => {
     expect(postgresFactory.validate({ adapter: 'postgres' })).toContain('host is required')
     expect(postgresFactory.validate({ adapter: 'postgres', host: 'x', database: 'y', user: 'z' })).toEqual([])
@@ -1158,7 +1158,7 @@ describe.skipIf(!process.env.RB_IT)('postgres adapter (needs `npm run db:postgre
 
 - [ ] **Step 3: run to verify fail**
 
-Run: `npm run db:postgres && RB_IT=1 npx vitest run src/adapters/postgres.it.test.ts`
+Run: `npm run db:postgres && TUPLEBASE_IT=1 npx vitest run src/adapters/postgres.it.test.ts`
 Expected: FAIL — cannot resolve `./postgres`.
 
 - [ ] **Step 4: implement**
@@ -1319,7 +1319,7 @@ export const postgresFactory: AdapterFactory = {
 
 - [ ] **Step 5: run to verify pass**
 
-Run: `RB_IT=1 npx vitest run src/adapters/postgres.it.test.ts`
+Run: `TUPLEBASE_IT=1 npx vitest run src/adapters/postgres.it.test.ts`
 Expected: PASS (7 tests). Also run `npx vitest run` — non-IT runs skip this file (describe.skipIf).
 
 - [ ] **Step 6: Commit**
@@ -1347,7 +1347,7 @@ export class ConnectionManager implements vscode.Disposable {
   constructor(configStore: ConfigStore, vault: SecretVault, workspaceState: vscode.Memento)
   readonly factories: Map<string, AdapterFactory>          // 'postgres' registered; more in Plan 02
   readonly onDidChangeEnvironment: vscode.Event<string>
-  get activeEnvironment(): string | undefined              // workspaceState 'rowboat.activeEnv', falls back to defaultEnvironment, then first env
+  get activeEnvironment(): string | undefined              // workspaceState 'tuplebase.activeEnv', falls back to defaultEnvironment, then first env
   async setActiveEnvironment(env: string): Promise<void>   // disposes all live adapters, fires event
   async getAdapter(connName: string): Promise<Adapter>     // resolves config+secrets (prompts via showInputBox if missing), creates+connects, caches per env/conn
   async reconnectWithFreshSecret(connName: string): Promise<Adapter>  // deletes stored secret, re-prompts, reconnects
@@ -1361,7 +1361,7 @@ Prompting: for each `factory.requiredSecrets(cfg)` field missing from vault → 
 ```ts
 // src/ui/statusBar.ts
 export function createEnvStatusBar(manager: ConnectionManager, store: ConfigStore): vscode.Disposable
-// shows `$(rowboat-ish icon or plain) Rowboat: <env>`, click → rowboat.selectEnvironment QuickPick
+// shows `$(tuplebase-ish icon or plain) TupleBase: <env>`, click → tuplebase.selectEnvironment QuickPick
 ```
 
 - [ ] **Step 1: implement ConnectionManager**
@@ -1374,7 +1374,7 @@ import { postgresFactory } from '../adapters/postgres'
 import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 
-const ACTIVE_ENV_KEY = 'rowboat.activeEnv'
+const ACTIVE_ENV_KEY = 'tuplebase.activeEnv'
 
 export class ConnectionManager implements vscode.Disposable {
   readonly factories = new Map<string, AdapterFactory>([[postgresFactory.id, postgresFactory]])
@@ -1403,7 +1403,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   private findConfig(connName: string): ConnectionConfig {
     const env = this.activeEnvironment
-    if (!env) throw new Error('No Rowboat environment configured (.rowboat.json)')
+    if (!env) throw new Error('No TupleBase environment configured (.tuplebase.json)')
     const cfg = this.store.connections(env).find(c => c.name === connName)
     if (!cfg) throw new Error(`Connection "${connName}" not found in environment "${env}"`)
     return cfg
@@ -1474,12 +1474,12 @@ import { ConfigStore } from '../core/configStore'
 
 export function createEnvStatusBar(manager: ConnectionManager, store: ConfigStore): vscode.Disposable {
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100)
-  item.command = 'rowboat.selectEnvironment'
+  item.command = 'tuplebase.selectEnvironment'
   const render = () => {
     const env = manager.activeEnvironment
     if (env) {
-      item.text = `$(database) Rowboat: ${env}`
-      item.tooltip = 'Select Rowboat environment'
+      item.text = `$(database) TupleBase: ${env}`
+      item.tooltip = 'Select TupleBase environment'
       item.show()
     } else {
       item.hide()
@@ -1489,13 +1489,13 @@ export function createEnvStatusBar(manager: ConnectionManager, store: ConfigStor
     item,
     manager.onDidChangeEnvironment(render),
     store.onDidChange(render),
-    vscode.commands.registerCommand('rowboat.selectEnvironment', async () => {
+    vscode.commands.registerCommand('tuplebase.selectEnvironment', async () => {
       const names = store.environmentNames()
       if (!names.length) {
-        void vscode.window.showWarningMessage('No environments in .rowboat.json')
+        void vscode.window.showWarningMessage('No environments in .tuplebase.json')
         return
       }
-      const picked = await vscode.window.showQuickPick(names, { placeHolder: 'Rowboat environment' })
+      const picked = await vscode.window.showQuickPick(names, { placeHolder: 'TupleBase environment' })
       if (picked) await manager.setActiveEnvironment(picked)
     }),
   ]
@@ -1515,7 +1515,7 @@ import { ConnectionManager } from './core/connections'
 import { createEnvStatusBar } from './ui/statusBar'
 
 export async function activate(context: vscode.ExtensionContext) {
-  const diagnostics = vscode.languages.createDiagnosticCollection('rowboat')
+  const diagnostics = vscode.languages.createDiagnosticCollection('tuplebase')
   const store = new ConfigStore(diagnostics)
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault, context.workspaceState)
@@ -1525,20 +1525,20 @@ export async function activate(context: vscode.ExtensionContext) {
     store,
     manager,
     createEnvStatusBar(manager, store),
-    vscode.commands.registerCommand('rowboat.clearCredentials', async () => {
+    vscode.commands.registerCommand('tuplebase.clearCredentials', async () => {
       const deleted = await vault.clearAll()
-      void vscode.window.showInformationMessage(`Rowboat: cleared ${deleted.length} stored secret(s)`)
+      void vscode.window.showInformationMessage(`TupleBase: cleared ${deleted.length} stored secret(s)`)
     }),
-    vscode.commands.registerCommand('rowboat.createConfig', async () => {
+    vscode.commands.registerCommand('tuplebase.createConfig', async () => {
       const folder = vscode.workspace.workspaceFolders?.[0]
       if (!folder) return
-      const uri = vscode.Uri.joinPath(folder.uri, '.rowboat.json')
+      const uri = vscode.Uri.joinPath(folder.uri, '.tuplebase.json')
       const template = `{
-  // Rowboat config — safe to commit: secrets are never stored here.
+  // TupleBase config — safe to commit: secrets are never stored here.
   "defaultEnvironment": "dev",
   "environments": {
     "dev": {
-      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "rowboat", "user": "rowboat" }
+      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "tuplebase", "user": "tuplebase" }
     }
   }
 }
@@ -1557,7 +1557,7 @@ export function deactivate() {}
 - [ ] **Step 4: build + typecheck + manual smoke**
 
 Run: `npm run build && npm run check`
-Then F5 → in Extension Development Host open the rowboat repo itself → status bar shows `Rowboat: dev` after Task 12's config exists (for now, use `Rowboat: Create Config File` from the welcome view; status bar appears).
+Then F5 → in Extension Development Host open the tuplebase repo itself → status bar shows `TupleBase: dev` after Task 12's config exists (for now, use `TupleBase: Create Config File` from the welcome view; status bar appears).
 
 - [ ] **Step 5: Commit**
 
@@ -1576,7 +1576,7 @@ git commit -m "feat: connection manager with secret prompting and environment st
 
 **Interfaces:**
 - Consumes: `ConnectionManager` (Task 8), `ConfigStore` (Task 5), `TreeNode` (Task 3).
-- Produces: `class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>`; `registerSchemaTree(manager, store): vscode.Disposable`. `ExplorerNode = { type: 'connection', conn: ConnectionConfig } | { type: 'dbnode', connName: string, node: TreeNode }`. Tree levels: connection (root, per active env) → adapter.getChildren chain. Connection nodes have `contextValue: 'rowboat.connection'`; command `rowboat.disconnect` on them.
+- Produces: `class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>`; `registerSchemaTree(manager, store): vscode.Disposable`. `ExplorerNode = { type: 'connection', conn: ConnectionConfig } | { type: 'dbnode', connName: string, node: TreeNode }`. Tree levels: connection (root, per active env) → adapter.getChildren chain. Connection nodes have `contextValue: 'tuplebase.connection'`; command `tuplebase.disconnect` on them.
 
 - [ ] **Step 1: implement**
 
@@ -1612,7 +1612,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
       item.description = el.conn.adapter
       item.iconPath = new vscode.ThemeIcon('plug')
-      item.contextValue = 'rowboat.connection'
+      item.contextValue = 'tuplebase.connection'
       return item
     }
     const item = new vscode.TreeItem(
@@ -1621,7 +1621,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     )
     item.description = el.node.detail
     item.iconPath = new vscode.ThemeIcon(KIND_ICONS[el.node.kind] ?? 'circle-outline')
-    item.contextValue = `rowboat.${el.node.kind}`
+    item.contextValue = `tuplebase.${el.node.kind}`
     return item
   }
 
@@ -1641,7 +1641,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       const children = await adapter.getChildren(el.node)
       return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
-      void vscode.window.showErrorMessage(`Rowboat: ${(e as Error).message}`)
+      void vscode.window.showErrorMessage(`TupleBase: ${(e as Error).message}`)
       return []
     }
   }
@@ -1649,13 +1649,13 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
 
 export function registerSchemaTree(manager: ConnectionManager, store: ConfigStore): vscode.Disposable {
   const provider = new SchemaTreeProvider(manager, store)
-  const view = vscode.window.createTreeView('rowboat.explorer', { treeDataProvider: provider })
+  const view = vscode.window.createTreeView('tuplebase.explorer', { treeDataProvider: provider })
   return vscode.Disposable.from(
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeEnvironment(() => provider.refresh()),
-    vscode.commands.registerCommand('rowboat.refreshExplorer', () => provider.refresh()),
-    vscode.commands.registerCommand('rowboat.disconnect', async (el?: ExplorerNode) => {
+    vscode.commands.registerCommand('tuplebase.refreshExplorer', () => provider.refresh()),
+    vscode.commands.registerCommand('tuplebase.disconnect', async (el?: ExplorerNode) => {
       if (el?.type === 'connection') {
         await manager.disposeAll()
         provider.refresh()
@@ -1668,14 +1668,14 @@ export function registerSchemaTree(manager: ConnectionManager, store: ConfigStor
 - [ ] **Step 2: manifest** — add to `contributes.commands`:
 
 ```json
-{ "command": "rowboat.disconnect", "title": "Rowboat: Disconnect" }
+{ "command": "tuplebase.disconnect", "title": "TupleBase: Disconnect" }
 ```
 
 and to `contributes.menus`:
 
 ```json
 "view/item/context": [
-  { "command": "rowboat.disconnect", "when": "view == rowboat.explorer && viewItem == rowboat.connection" }
+  { "command": "tuplebase.disconnect", "when": "view == tuplebase.explorer && viewItem == tuplebase.connection" }
 ]
 ```
 
@@ -1689,7 +1689,7 @@ context.subscriptions.push(registerSchemaTree(manager, store))
 
 - [ ] **Step 4: manual verify**
 
-Run: `npm run build && npm run check`, F5, open rowboat repo, ensure `npm run db:postgres` is up, create config via command if absent. Expand `local-pg` → password prompt → enter `rowboat` → `public` → `crew` → columns with types. Context-menu Disconnect works; refresh works.
+Run: `npm run build && npm run check`, F5, open tuplebase repo, ensure `npm run db:postgres` is up, create config via command if absent. Expand `local-pg` → password prompt → enter `tuplebase` → `public` → `crew` → columns with types. Context-menu Disconnect works; refresh works.
 
 - [ ] **Step 5: Commit**
 
@@ -1720,7 +1720,7 @@ export type ResultsRequest = { type: 'cancel' }  // webview → extension
 
 export class ResultsPanel implements vscode.WebviewViewProvider {
   constructor(extensionUri: vscode.Uri)
-  static register(context: vscode.ExtensionContext): ResultsPanel  // registers provider for 'rowboat.results'
+  static register(context: vscode.ExtensionContext): ResultsPanel  // registers provider for 'tuplebase.results'
   readonly onCancel: vscode.Event<void>
   async show(): Promise<void>                     // reveals the panel view
   post(msg: ResultsMessage): void
@@ -1771,7 +1771,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   static register(context: vscode.ExtensionContext): ResultsPanel {
     const panel = new ResultsPanel(context.extensionUri)
     context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider('rowboat.results', panel),
+      vscode.window.registerWebviewViewProvider('tuplebase.results', panel),
       panel.cancelEmitter,
     )
     return panel
@@ -1794,7 +1794,7 @@ export class ResultsPanel implements vscode.WebviewViewProvider {
   }
 
   async show() {
-    await vscode.commands.executeCommand('rowboat.results.focus')
+    await vscode.commands.executeCommand('tuplebase.results.focus')
   }
 
   post(msg: ResultsMessage) {
@@ -1931,7 +1931,7 @@ git commit -m "feat: results panel webview with tabulator grid"
 
 **Interfaces:**
 - Consumes: `statementAt` (Task 3), `ConnectionManager` (Task 8), `ResultsPanel` (Task 10), `ConfigStore` (Task 5).
-- Produces: command `rowboat.runQuery` — takes active editor's selection (or statement under cursor), picks connection for the file (QuickPick over active env's connections, remembered in workspaceState under `rowboat.fileConn.<fsPath>`), executes, posts to results panel. Auth errors offer "Re-enter password".
+- Produces: command `tuplebase.runQuery` — takes active editor's selection (or statement under cursor), picks connection for the file (QuickPick over active env's connections, remembered in workspaceState under `tuplebase.fileConn.<fsPath>`), executes, posts to results panel. Auth errors offer "Re-enter password".
 
 - [ ] **Step 1: implement**
 
@@ -1943,7 +1943,7 @@ import { ConnectionManager } from './connections'
 import { ConfigStore } from './configStore'
 import { ResultsPanel } from '../ui/resultsPanel'
 
-const FILE_CONN_PREFIX = 'rowboat.fileConn.'
+const FILE_CONN_PREFIX = 'tuplebase.fileConn.'
 const AUTH_ERROR_RE = /password authentication failed|SASL|28P01/i
 
 export function registerRunQuery(
@@ -1957,7 +1957,7 @@ export function registerRunQuery(
   const pickConnection = async (fsPath: string): Promise<string | undefined> => {
     const env = manager.activeEnvironment
     if (!env) {
-      void vscode.window.showWarningMessage('Rowboat: no .rowboat.json config found')
+      void vscode.window.showWarningMessage('TupleBase: no .tuplebase.json config found')
       return undefined
     }
     const key = FILE_CONN_PREFIX + fsPath
@@ -1979,7 +1979,7 @@ export function registerRunQuery(
       ? statementAt(doc.getText(), doc.offsetAt(editor.selection.active))?.text
       : doc.getText(editor.selection)
     if (!stmt || !stmt.trim()) {
-      void vscode.window.showWarningMessage('Rowboat: no statement at cursor')
+      void vscode.window.showWarningMessage('TupleBase: no statement at cursor')
       return
     }
     const connName = await pickConnection(doc.uri.fsPath)
@@ -2000,7 +2000,7 @@ export function registerRunQuery(
       panel.post({ type: 'error', message: `Error: ${message}` })
       if (AUTH_ERROR_RE.test(message)) {
         const retry = await vscode.window.showErrorMessage(
-          `Rowboat: authentication failed for ${connName}`, 'Re-enter password'
+          `TupleBase: authentication failed for ${connName}`, 'Re-enter password'
         )
         if (retry) {
           await manager.reconnectWithFreshSecret(connName)
@@ -2013,7 +2013,7 @@ export function registerRunQuery(
   }
 
   return vscode.Disposable.from(
-    vscode.commands.registerCommand('rowboat.runQuery', run),
+    vscode.commands.registerCommand('tuplebase.runQuery', run),
     panel.onCancel(() => inFlight?.abort()),
   )
 }
@@ -2031,11 +2031,11 @@ context.subscriptions.push(registerRunQuery(manager, store, panel, context.works
 
 - [ ] **Step 3: manual end-to-end verify**
 
-`npm run build`, F5, open rowboat repo (with `.rowboat.json` + compose postgres up):
-1. New file `scratch.sql`: `select * from crew;` → cmd+enter → connection QuickPick → `local-pg` → password `rowboat` → grid shows 3 rows, status `3 rows in Nms`.
+`npm run build`, F5, open tuplebase repo (with `.tuplebase.json` + compose postgres up):
+1. New file `scratch.sql`: `select * from crew;` → cmd+enter → connection QuickPick → `local-pg` → password `tuplebase` → grid shows 3 rows, status `3 rows in Nms`.
 2. Second run: no QuickPick (remembered), no password prompt (SecretStorage).
 3. `select * from nope;` → error with pg message in panel.
-4. Wrong password path: `Rowboat: Clear Stored Credentials`, run again, type wrong password → auth error → "Re-enter password" button works.
+4. Wrong password path: `TupleBase: Clear Stored Credentials`, run again, type wrong password → auth error → "Re-enter password" button works.
 
 - [ ] **Step 4: Commit**
 
@@ -2049,23 +2049,23 @@ git commit -m "feat: run query command wired end to end into results grid"
 ### Task 12: Dogfood config, smoke test, README
 
 **Files:**
-- Create: `.rowboat.json`, `src/test/smoke.test.ts` (test-electron), `.github/workflows/ci.yml`
+- Create: `.tuplebase.json`, `src/test/smoke.test.ts` (test-electron), `.github/workflows/ci.yml`
 - Modify: `README.md`, `package.json` (devDependencies `@vscode/test-electron@^2.4.0`, `@vscode/test-cli@^0.0.10`; script `test:vscode`)
 
 **Interfaces:**
 - Consumes: everything.
 - Produces: repo opens as its own test workspace; CI runs vitest + integration (compose) + smoke.
 
-- [ ] **Step 1: dogfood config** — `.rowboat.json` at repo root:
+- [ ] **Step 1: dogfood config** — `.tuplebase.json` at repo root:
 
 ```jsonc
 {
-  // Rowboat dev config — safe to commit: secrets are never stored here.
-  // Start databases with: npm run db:postgres   (password: rowboat)
+  // TupleBase dev config — safe to commit: secrets are never stored here.
+  // Start databases with: npm run db:postgres   (password: tuplebase)
   "defaultEnvironment": "dev",
   "environments": {
     "dev": {
-      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "rowboat", "user": "rowboat" }
+      "local-pg": { "adapter": "postgres", "host": "localhost", "port": 5432, "database": "tuplebase", "user": "tuplebase" }
     }
   }
 }
@@ -2080,13 +2080,13 @@ Run: `npm install -D @vscode/test-electron@^2.4.0 @vscode/test-cli@^0.0.10`
 import * as assert from 'node:assert'
 import * as vscode from 'vscode'
 
-suite('rowboat smoke', () => {
+suite('tuplebase smoke', () => {
   test('activates and registers commands', async () => {
-    const ext = vscode.extensions.getExtension('felicegeracitano.rowboat')
+    const ext = vscode.extensions.getExtension('tuplebase.tuplebase')
     assert.ok(ext, 'extension found')
     await ext.activate()
     const commands = await vscode.commands.getCommands(true)
-    for (const c of ['rowboat.runQuery', 'rowboat.selectEnvironment', 'rowboat.clearCredentials']) {
+    for (const c of ['tuplebase.runQuery', 'tuplebase.selectEnvironment', 'tuplebase.clearCredentials']) {
       assert.ok(commands.includes(c), `command ${c} registered`)
     }
   })
@@ -2127,14 +2127,14 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: docker compose --profile postgres up -d --wait
-      - run: RB_IT=1 npx vitest run
+      - run: TUPLEBASE_IT=1 npx vitest run
       - run: xvfb-run -a npm run test:vscode
 ```
 
 - [ ] **Step 4: README** — replace body with:
 
 ```markdown
-# Rowboat 🛶
+# TupleBase 🛶
 
 Paddle through your rows. A VS Code extension for querying databases — Postgres, Redis and DynamoDB behind one extensible adapter interface.
 
@@ -2146,27 +2146,27 @@ Walking skeleton: Postgres end-to-end (config → tree → query → grid). Redi
 
 ```bash
 npm install
-npm run db:postgres      # dockerized postgres, seeded (password: rowboat)
+npm run db:postgres      # dockerized postgres, seeded (password: tuplebase)
 npm run watch            # esbuild watch
-# press F5 → Extension Development Host opens; this repo is its own test workspace (.rowboat.json)
+# press F5 → Extension Development Host opens; this repo is its own test workspace (.tuplebase.json)
 ```
 
 Tests:
 
 ```bash
 npm test                 # unit (vitest)
-RB_IT=1 npx vitest run   # + integration (needs db:postgres)
+TUPLEBASE_IT=1 npx vitest run   # + integration (needs db:postgres)
 npm run test:vscode      # extension-host smoke
 ```
 
 ## Config
 
-`.rowboat.json` at your workspace root — committable, secret-free. Passwords are prompted once and stored in your OS keychain (VS Code SecretStorage). See the JSON schema for fields (IntelliSense works in the file).
+`.tuplebase.json` at your workspace root — committable, secret-free. Passwords are prompted once and stored in your OS keychain (VS Code SecretStorage). See the JSON schema for fields (IntelliSense works in the file).
 ```
 
 - [ ] **Step 5: full verify**
 
-Run: `npm run check && npm test && RB_IT=1 npx vitest run && npm run test:vscode`
+Run: `npm run check && npm test && TUPLEBASE_IT=1 npx vitest run && npm run test:vscode`
 Expected: all green.
 
 - [ ] **Step 6: Commit**

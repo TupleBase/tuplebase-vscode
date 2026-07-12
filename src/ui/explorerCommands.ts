@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { BRAND } from '../core/brand'
+import { BRAND } from '../core/product'
 import { ConfigStore } from '../core/configStore'
 import { deleteGroup, removeConnection, renameGroup } from '../core/configWriter'
 import type { ConnectionConfig } from '../adapters/types'
@@ -10,7 +10,7 @@ type ConnNode = { type?: string; conn?: ConnectionConfig }
 async function read(store: ConfigStore): Promise<{ uri: vscode.Uri; text: string } | undefined> {
   const uri = store.configUri
   if (!uri) {
-    void vscode.window.showWarningMessage(`${BRAND}: no .rowboat.json found`)
+    void vscode.window.showWarningMessage(`${BRAND}: no .tuplebase.json found`)
     return undefined
   }
   return { uri, text: Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8') }
@@ -18,11 +18,11 @@ async function read(store: ConfigStore): Promise<{ uri: vscode.Uri; text: string
 
 const write = (uri: vscode.Uri, text: string) => vscode.workspace.fs.writeFile(uri, Buffer.from(text, 'utf8'))
 
-// Context-menu CRUD for the explorer. Each command edits .rowboat.json via
+// Context-menu CRUD for the explorer. Each command edits .tuplebase.json via
 // configWriter (comments preserved) and lets the file watcher refresh the tree.
 export function registerExplorerCommands(store: ConfigStore): vscode.Disposable {
   return vscode.Disposable.from(
-    vscode.commands.registerCommand('rowboat.renameGroup', async (node?: GroupNode) => {
+    vscode.commands.registerCommand('tuplebase.renameGroup', async (node?: GroupNode) => {
       if (node?.type !== 'group' || !node.name) return
       const existing = new Set(store.groupNames())
       const name = await vscode.window.showInputBox({
@@ -41,7 +41,7 @@ export function registerExplorerCommands(store: ConfigStore): vscode.Disposable 
       if (cfg) await write(cfg.uri, renameGroup(cfg.text, node.name, next))
     }),
 
-    vscode.commands.registerCommand('rowboat.deleteGroup', async (node?: GroupNode) => {
+    vscode.commands.registerCommand('tuplebase.deleteGroup', async (node?: GroupNode) => {
       if (node?.type !== 'group' || !node.name) return
       const count = store.connectionsByGroup(node.name).length
       const ok = await vscode.window.showWarningMessage(
@@ -54,7 +54,7 @@ export function registerExplorerCommands(store: ConfigStore): vscode.Disposable 
       if (cfg) await write(cfg.uri, deleteGroup(cfg.text, node.name))
     }),
 
-    vscode.commands.registerCommand('rowboat.removeConnection', async (node?: ConnNode) => {
+    vscode.commands.registerCommand('tuplebase.removeConnection', async (node?: ConnNode) => {
       if (node?.type !== 'connection' || !node.conn) return
       const ok = await vscode.window.showWarningMessage(
         `Remove connection "${node.conn.name}"?`,

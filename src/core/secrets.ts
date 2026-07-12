@@ -9,7 +9,7 @@ export interface KeyIndex {
   update(key: string, value: unknown): Thenable<void>
 }
 
-const INDEX_KEY = 'rowboat.secretKeys'
+const INDEX_KEY = 'tuplebase.secretKeys'
 
 // encodeURIComponent leaves '.' untouched, so strip it explicitly to keep
 // segments dot-free (dots are the key separator; user-supplied env/conn/field
@@ -31,7 +31,7 @@ export class SecretVault {
   }
 
   static key(conn: string, field: string): string {
-    return `rowboat.${esc(conn)}.${esc(field)}`
+    return `tuplebase.${esc(conn)}.${esc(field)}`
   }
 
   private index(): string[] {
@@ -52,7 +52,7 @@ export class SecretVault {
   }
 
   async deleteConnection(conn: string) {
-    const prefix = `rowboat.${esc(conn)}.`
+    const prefix = `tuplebase.${esc(conn)}.`
     return this.withLock(async () => {
       const idx = this.index()
       const doomed = idx.filter(k => k.startsWith(prefix))

@@ -52,9 +52,9 @@ describe('replyToEnvelope', () => {
   })
 
   it('object reply (RESP3 hash) becomes field/value rows', () => {
-    const e = replyToEnvelope({ name: 'Rowboat One', oars: '2' }, 1, 500)
+    const e = replyToEnvelope({ name: 'TupleBase One', oars: '2' }, 1, 500)
     expect(e.columns.map(c => c.name)).toEqual(['field', 'value'])
-    expect(e.rows).toEqual([['name', 'Rowboat One'], ['oars', '2']])
+    expect(e.rows).toEqual([['name', 'TupleBase One'], ['oars', '2']])
   })
 
   it('caps rows at pageSize with a warning', () => {

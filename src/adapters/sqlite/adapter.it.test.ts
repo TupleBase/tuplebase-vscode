@@ -8,7 +8,7 @@ import type { ResolvedConnection } from '../types'
 // SQLite needs no server — this real integration test runs on every `npm test`,
 // unlike the container-gated adapters. It creates a temp file, drives the adapter
 // through it (write + persist + read + pagination + schema browse), then cleans up.
-const dbPath = join(tmpdir(), `rowboat-sqlite-it-${process.pid}-${Date.now()}.sqlite`)
+const dbPath = join(tmpdir(), `tuplebase-sqlite-it-${process.pid}-${Date.now()}.sqlite`)
 
 const cfg: ResolvedConnection = {
   group: 'test', name: 'it', adapter: 'sqlite', readonly: false,
@@ -87,8 +87,8 @@ describe('sqlite adapter', () => {
   })
 
   it('errors clearly when the file is missing', async () => {
-    const a = sqliteFactory.create({ ...cfg, path: join(tmpdir(), 'rowboat-sqlite-does-not-exist.sqlite') })
-    await expect(a.connect({ ...cfg, path: join(tmpdir(), 'rowboat-sqlite-does-not-exist.sqlite') }))
+    const a = sqliteFactory.create({ ...cfg, path: join(tmpdir(), 'tuplebase-sqlite-does-not-exist.sqlite') })
+    await expect(a.connect({ ...cfg, path: join(tmpdir(), 'tuplebase-sqlite-does-not-exist.sqlite') }))
       .rejects.toThrow(/not found/)
   })
 })

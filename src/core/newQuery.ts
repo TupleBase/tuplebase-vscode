@@ -10,7 +10,7 @@ const FLAVORS: { label: string; language: string }[] = [
 ]
 
 export function registerNewQuery(): vscode.Disposable {
-  return vscode.commands.registerCommand('rowboat.newQuery', async () => {
+  return vscode.commands.registerCommand('tuplebase.newQuery', async () => {
     const picked = await vscode.window.showQuickPick(FLAVORS, {
       placeHolder: 'New query for which engine?',
     })
@@ -24,7 +24,7 @@ export function registerNewQuery(): vscode.Disposable {
 export function registerNewQueryOnConnection(
   workspaceState: vscode.Memento,
 ): vscode.Disposable {
-  return vscode.commands.registerCommand('rowboat.newQueryOnConnection', async (el?: ExplorerNode) => {
+  return vscode.commands.registerCommand('tuplebase.newQueryOnConnection', async (el?: ExplorerNode) => {
     if (el?.type !== 'connection') return
     const language = presentationOf(el.conn.adapter)?.languageId ?? 'sql'
     const doc = await vscode.workspace.openTextDocument({ language })

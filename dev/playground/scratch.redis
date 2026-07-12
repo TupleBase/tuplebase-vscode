@@ -1,11 +1,11 @@
-# Rowboat scratch — put the cursor on a line and press cmd+enter
+# TupleBase scratch — put the cursor on a line and press cmd+enter
 GET crew:1:name
 HGETALL boat:1
 LRANGE queue:departures 0 -1
 SMEMBERS crew:active
 ZRANGE leaderboard:distance 0 -1 WITHSCORES
 XRANGE events:voyages - +
-SET greeting "hello from rowboat"
+SET greeting "hello from tuplebase"
 GET greeting
 SCAN 0 COUNT 100
 

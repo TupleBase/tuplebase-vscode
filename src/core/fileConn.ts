@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import type { Memento } from 'vscode'
 
-const PREFIX = 'rowboat.fileConn.'
+const PREFIX = 'tuplebase.fileConn.'
 
 // which connection a query file runs against (remembered per file); shared by
 // the run command and the completion providers

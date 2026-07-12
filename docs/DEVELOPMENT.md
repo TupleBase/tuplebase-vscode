@@ -6,31 +6,32 @@ Node runs on your machine (the F5 debug flow needs local VS Code); every databas
 
 ```bash
 nvm use && npm install
-npm run db:postgres   # dockerized postgres, seeded (password: rowboat)
+npm run db:postgres   # dockerized postgres, seeded (password: tuplebase)
 npm run watch         # esbuild watch, leave running
 ```
 
 Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 
-- **Run Extension** — dev host opens `dev/playground`; its `.rowboat.json` is pre-wired to every engine and `scratch.sql` is ready — run with **cmd+enter**.
+- **Run Extension** — dev host opens `dev/playground`; its `.tuplebase.json` is pre-wired to every engine and `scratch.sql` is ready — run with **cmd+enter**.
 - **Run Extension (empty workspace)** — dev host opens `dev/empty-ws` (no config), for the welcome view and Create Config flow.
 
-**cmd+R** in the dev host reloads after a code change; breakpoints in `src/` hit in the main window. The first connect prompts for the password (`rowboat`) and stores it in the OS keychain — it won't ask again.
+**cmd+R** in the dev host reloads after a code change; breakpoints in `src/` hit in the main window. The first connect prompts for the password (`tuplebase`) and stores it in the OS keychain — it won't ask again.
 
 ## Databases
 
 - `npm run db:<engine>` — start + seed one engine: `postgres`, `mysql`, `mariadb`, `sqlite` (no container — builds a demo file), `mssql`, `clickhouse`, `cassandra`, `neo4j`, `mongodb`, `elasticsearch`, `kafka`, `redis`, `dynamo`.
-- `npm run db:all` — start + seed everything (heavy — mainly for the full integration suite, `RB_IT=1`).
+- `npm run db:all` — start + seed everything (heavy — mainly for the full integration suite, `TUPLEBASE_IT=1`).
 - `npm run db:down` — stop all containers.
 
 **Postgres is the default dev engine** — lightest, and `scratch.sql` targets it; one engine exercises the whole extension path. Ports and images are in `docker-compose.yml`; seeds in `dev/seed/<engine>/`.
 
 ## Reseed & reset
 
+- **After updating from a pre-rename checkout**, recreate local containers because the development database names and credentials changed to `tuplebase`: `docker compose --profile all down -v`.
 - **postgres / mysql / mariadb / clickhouse** seed via the image's init hook — reseed needs a fresh volume: `docker compose --profile <engine> down -v && npm run db:<engine>`.
 - **All other engines** reseed in place — `npm run db:seed -- <engine>` (or re-run `npm run db:<engine>`; the redis seed starts with `FLUSHALL`). Bare `npm run db:seed` reseeds them all.
 - **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or one engine: `npm run db:seed:big -- postgres` (works for every engine).
-- **Stored password**: run **Rowboat: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
+- **Stored password**: run **TupleBase: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
 ### Targeting one engine: the `--` matters
 

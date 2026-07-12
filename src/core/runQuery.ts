@@ -1,5 +1,5 @@
 import * as vscode from 'vscode'
-import { BRAND } from './brand'
+import { BRAND } from './product'
 import { splitAll, statementAt } from './statements'
 import { fileStatementSyntax } from './dialect'
 import { presentationOf } from '../adapters/registry'
@@ -42,7 +42,7 @@ export function registerRunQuery(
     const matching = store.connections()
       .filter(c => presentationOf(c.adapter)?.languageId === languageId)
     if (matching.length === 0) {
-      void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in .rowboat.json`)
+      void vscode.window.showWarningMessage(`${BRAND}: no ${languageId} connections in .tuplebase.json`)
       return undefined
     }
     const available = matching.map(c => c.name)
@@ -120,9 +120,9 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
-    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
-    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
-    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
+    const tuplebaseCfg = vscode.workspace.getConfiguration('tuplebase')
+    const timeoutMs = queryTimeoutMs(tuplebaseCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(tuplebaseCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), tuplebaseCfg.get('maxRows', DEFAULT_MAX_ROWS))
     let timedOut = false
     const timeout = setTimeout(() => {
       timedOut = true
@@ -192,9 +192,9 @@ export function registerRunQuery(
     const mine = new AbortController()
     inFlight = mine
     const signal = mine.signal
-    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
-    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
-    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
+    const tuplebaseCfg = vscode.workspace.getConfiguration('tuplebase')
+    const timeoutMs = queryTimeoutMs(tuplebaseCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(tuplebaseCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), tuplebaseCfg.get('maxRows', DEFAULT_MAX_ROWS))
 
     await panel.show()
     panel.post({ type: 'batch', total: statements.length })
@@ -247,9 +247,9 @@ export function registerRunQuery(
   const loadMore = async (index: number) => {
     const ctx = pageCtx.get(index)
     if (!ctx) return
-    const rowboatCfg = vscode.workspace.getConfiguration('rowboat')
-    const timeoutMs = queryTimeoutMs(rowboatCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
-    const pageSize = resolvePageSize(rowboatCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), rowboatCfg.get('maxRows', DEFAULT_MAX_ROWS))
+    const tuplebaseCfg = vscode.workspace.getConfiguration('tuplebase')
+    const timeoutMs = queryTimeoutMs(tuplebaseCfg.get('queryTimeoutMs', DEFAULT_QUERY_TIMEOUT_MS))
+    const pageSize = resolvePageSize(tuplebaseCfg.get('resultsPageSize', DEFAULT_PAGE_SIZE), tuplebaseCfg.get('maxRows', DEFAULT_MAX_ROWS))
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     try {
@@ -265,8 +265,8 @@ export function registerRunQuery(
   }
 
   return vscode.Disposable.from(
-    vscode.commands.registerCommand('rowboat.runQuery', run),
-    vscode.commands.registerCommand('rowboat.runFile', runFile),
+    vscode.commands.registerCommand('tuplebase.runQuery', run),
+    vscode.commands.registerCommand('tuplebase.runFile', runFile),
     panel.onCancel(() => inFlight?.abort()),
     panel.onLoadMore(index => void loadMore(index)),
   )

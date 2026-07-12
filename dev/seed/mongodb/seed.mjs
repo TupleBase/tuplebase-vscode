@@ -3,7 +3,7 @@ import { MongoClient } from 'mongodb'
 
 const client = new MongoClient('mongodb://localhost:27017')
 await client.connect()
-const crew = client.db('rowboat').collection('crew')
+const crew = client.db('tuplebase').collection('crew')
 await crew.deleteMany({})
 await crew.insertMany([
   { id: 1, name: 'ada', role: 'captain' },
@@ -11,4 +11,4 @@ await crew.insertMany([
   { id: 3, name: 'hedy', role: 'engineer' },
 ])
 await client.close()
-console.log('seeded mongodb: rowboat.crew (3 docs)')
+console.log('seeded mongodb: tuplebase.crew (3 docs)')
