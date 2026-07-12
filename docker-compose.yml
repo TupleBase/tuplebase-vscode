@@ -139,6 +139,8 @@ services:
     # no healthcheck: image ships no curl/wget — the seed script retries until the port answers
   mssql:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    # image is amd64-only; run under emulation on arm64 hosts (Apple Silicon)
+    platform: linux/amd64
     profiles: ["mssql", "all"]
     ports: ["1433:1433"]
     environment:
