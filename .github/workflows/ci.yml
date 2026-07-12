@@ -1,7 +1,7 @@
 name: ci
 on:
-  push: { branches: [main] }
-  pull_request:
+  push: { branches: [main], paths-ignore: ["**.md", "LICENSE"] }
+  pull_request: { paths-ignore: ["**.md", "LICENSE"] }
 jobs:
   # No containers: type-check, bundle, unit tests (+ the file-based SQLite IT,
   # which runs without a server), and the VS Code activation smoke test.

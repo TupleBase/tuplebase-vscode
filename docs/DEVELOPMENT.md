@@ -1,88 +1,40 @@
 # Developing locally
 
-Everything you need to hack on Rowboat: set up, run the extension, start local databases, seed/reseed, reset state.
+Node runs on your machine (the F5 debug flow needs local VS Code); every database runs in docker. Prerequisites: **Node 24** (`nvm use`) and **Docker**.
 
-## Prerequisites
-
-- **Node 24** — `nvm use` (reads `.nvmrc`)
-- **Docker** — for the local database containers (SQLite is the only engine that needs none)
+## Setup & run
 
 ```bash
-nvm use
-npm install
-```
-
-## Run the extension
-
-```bash
-npm run db:postgres   # start + seed the default dev database
+nvm use && npm install
+npm run db:postgres   # dockerized postgres, seeded (password: rowboat)
 npm run watch         # esbuild watch, leave running
 ```
 
-Then in VS Code, press **F5** (Run → Start Debugging). Two launch configs (`.vscode/launch.json`):
+Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 
-- **Run Extension** — opens the dev host on `dev/playground`, whose `.rowboat.json` already points at the dockerized postgres; `scratch.sql` is ready to run with **cmd+enter**. (The dev host gets its own folder because VS Code won't re-open a folder that's already open — pointing it at this repo would silently give you an empty window.)
-- **Run Extension (empty workspace)** — opens `dev/empty-ws` (no config) to exercise the welcome view and the Create Config flow.
+- **Run Extension** — dev host opens `dev/playground`; its `.rowboat.json` is pre-wired to every engine and `scratch.sql` is ready — run with **cmd+enter**.
+- **Run Extension (empty workspace)** — dev host opens `dev/empty-ws` (no config), for the welcome view and Create Config flow.
 
-Dev loop: while `watch` runs, press **cmd+R** in the dev host to reload after a code change. Breakpoints in `src/` hit in the main window's debugger.
+**cmd+R** in the dev host reloads after a code change; breakpoints in `src/` hit in the main window. The first connect prompts for the password (`rowboat`) and stores it in the OS keychain — it won't ask again.
 
-First connection prompts for the password (`rowboat`) and stores it in the OS keychain — it won't ask again (see [Resetting state](#resetting-state)).
+## Databases
 
-## Local databases
+`npm run db:<engine>` starts + seeds one engine: `postgres`, `mysql`, `mariadb`, `sqlite` (no container — builds a demo file), `mssql`, `clickhouse`, `cassandra`, `neo4j`, `mongodb`, `elasticsearch`, `kafka`, `redis`, `dynamo`. Ports and images are in `docker-compose.yml`; seeds in `dev/seed/<engine>/`.
 
-Each engine has a compose profile + seed. **Postgres is the default dev engine** — lightest container, fastest boot, and the playground's `scratch.sql` targets it; one engine exercises the whole extension path (explorer, binding, grid, keychain). Start only what you're working on — `db:all` is heavy (SQL Server, Cassandra, Elasticsearch, Kafka) and mainly useful for the full integration suite (`RB_IT=1`, see [TESTING.md](TESTING.md)) or cross-engine work:
+**Postgres is the default dev engine** — lightest, and `scratch.sql` targets it; one engine exercises the whole extension path. `npm run db:all` starts everything (heavy — mainly for the full integration suite, `RB_IT=1`); `npm run db:down` stops all containers.
 
-```bash
-npm run db:postgres      # :5432 — the default dev database (password: rowboat)
-npm run db:mysql         # :3306
-npm run db:mariadb       # :3307 (reached via the mysql adapter)
-npm run db:sqlite        # no container — builds dev/seed/sqlite/demo.sqlite
-npm run db:mssql         # :1433 (heavy image)
-npm run db:clickhouse    # :8123
-npm run db:cassandra     # :9042 (slow JVM boot)
-npm run db:neo4j         # :7687 Bolt / :7474
-npm run db:mongodb       # :27017
-npm run db:elasticsearch # :9200 (heavy image)
-npm run db:kafka         # :9092
-npm run db:redis         # :6379
-npm run db:dynamo        # :8000 (dynamodb-local)
+## Reseed & reset
 
-npm run db:all           # everything at once (heavy — needs lots of RAM)
-npm run db:down          # stop all containers
-```
-
-All are seeded on start with the harbor demo dataset (`dev/seed/<engine>/`). The playground's `.rowboat.json` has a connection for every engine.
-
-## Seeding & reseeding
-
-Seeds run automatically when a container starts. To reseed:
-
-- **Init-hook engines (postgres, mysql, mariadb, clickhouse)** — seeds run from the image's init hook, so a reseed needs a fresh volume:
-
-  ```bash
-  docker compose --profile postgres down -v && npm run db:postgres
-  ```
-
-- **Script-seeded engines (redis, dynamo, mssql, cassandra, neo4j, mongodb, elasticsearch, kafka)** — re-run `npm run db:<engine>`; the seed script re-applies in place (the redis seed starts with `FLUSHALL`).
-
-- **High-volume seeds for paging** (additive, opt-in — run after the containers are up):
-
-  ```bash
-  npm run db:seed:big             # pg 10k rows, redis 5k keys, dynamo 2k items
-  npm run db:seed:big:postgres    # …or just one engine (:redis / :dynamo)
-  ```
-
-## Resetting state
-
-- **Database** — see reseeding above (`down -v` + restart for SQL engines).
-- **Stored password** — in the dev host, run **Rowboat: Clear Stored Credentials** from the command palette, or per-connection **Reset Credentials**. Secrets are keyed by group + connection name, so renaming a connection also triggers a fresh prompt.
-- **File→connection bindings** live in `workspaceState` and reset when you delete the dev host's workspace storage (rarely needed).
+- **postgres / mysql / mariadb / clickhouse** seed via the image's init hook — reseed needs a fresh volume: `docker compose --profile <engine> down -v && npm run db:<engine>`.
+- **All other engines** reseed in place — just re-run `npm run db:<engine>` (the redis seed starts with `FLUSHALL`).
+- **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or per-engine `db:seed:big:postgres` / `:redis` / `:dynamo`.
+- **Stored password**: run **Rowboat: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
 ## Checks & tests
 
 ```bash
 npm run check   # tsc --noEmit
-npm test        # unit + SQLite integration (vitest) — no containers needed
+npm test        # unit + SQLite integration — no containers needed
 ```
 
-Integration tests against live containers, the VS Code smoke test, and the manual-testing checklist: see [TESTING.md](TESTING.md).
+Live-container integration tests, the VS Code smoke test and the manual checklist: [TESTING.md](TESTING.md).

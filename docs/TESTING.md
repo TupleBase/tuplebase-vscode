@@ -6,7 +6,7 @@ Setup, launch configs and the per-engine `db:<engine>` container commands (start
 
 ## Manual testing (Extension Development Host)
 
-Run the extension per [DEVELOPMENT.md](DEVELOPMENT.md#run-the-extension) (`npm run watch` + **F5**), then exercise:
+Run the extension per [DEVELOPMENT.md](DEVELOPMENT.md#setup--run) (`npm run watch` + **F5**), then exercise:
 
 - **Schema explorer** — Rowboat icon in the activity bar; expand schemas and tables.
 - **Connection binding** — first run on an unbound file prompts a connection picker; the binding sticks per file.
@@ -30,4 +30,4 @@ CI (`.github/workflows/ci.yml`) runs on every push and PR as two jobs: a **unit*
 
 ## Resetting state
 
-Reseeding databases and clearing stored credentials: see [DEVELOPMENT.md](DEVELOPMENT.md#resetting-state).
+Reseeding databases and clearing stored credentials: see [DEVELOPMENT.md](DEVELOPMENT.md#reseed--reset).
