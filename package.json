@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FeliceGeracitano/tuplebase"
+    "url": "https://github.com/TupleBase/tuplebase"
   },
   "engines": {
     "vscode": "^1.90.0"
