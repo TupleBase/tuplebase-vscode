@@ -30,7 +30,7 @@ First connection prompts for the password (`rowboat`) and stores it in the OS ke
 
 ## Local databases
 
-Each engine has a compose profile + seed. Start only what you're working on:
+Each engine has a compose profile + seed. **Postgres is the default dev engine** — lightest container, fastest boot, and the playground's `scratch.sql` targets it; one engine exercises the whole extension path (explorer, binding, grid, keychain). Start only what you're working on — `db:all` is heavy (SQL Server, Cassandra, Elasticsearch, Kafka) and mainly useful for the full integration suite (`RB_IT=1`, see [TESTING.md](TESTING.md)) or cross-engine work:
 
 ```bash
 npm run db:postgres      # :5432 — the default dev database (password: rowboat)
