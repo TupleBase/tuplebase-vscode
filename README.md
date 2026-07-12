@@ -1,6 +1,6 @@
 # Rowboat 🛶
 
-Paddle through your rows. A VS Code extension for querying databases — Postgres, MySQL, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka, Redis and DynamoDB behind one extensible adapter interface. Connections live in a committable, secret-free `.rowboat.json` (passwords in the OS keychain, SSH tunnels for bastions), queries run from files into a VS Code-themed results grid, and a bundled [MCP server](docs/MCP.md) lets AI agents query the same connections — read-only by default. Only marketplace publishing remains — see the [roadmap](docs/ROADMAP.md).
+Paddle through your rows. A VS Code extension for querying databases — Postgres, MySQL, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka, Redis and DynamoDB behind one extensible adapter interface. Connections live in a committable, secret-free `.rowboat.json` (passwords in the OS keychain, SSH tunnels for bastions), queries run from files into a VS Code-themed results grid, and a bundled [MCP server](docs/MCP.md) lets AI agents query the same connections — read-only by default. Only marketplace publishing remains.
 
 ## Quick start (development)
 
@@ -23,4 +23,3 @@ Full guide — launch configs, all 13 local databases, seeding/reseeding, resett
 | [DATABASES.md](docs/DATABASES.md) | Supported engines + the add-an-adapter checklist |
 | [TESTING.md](docs/TESTING.md) | Test layers (unit / integration / VS Code smoke), CI, manual checklist |
 | [MCP.md](docs/MCP.md) | MCP server — running it, clients, allowing writes, troubleshooting |
-| [ROADMAP.md](docs/ROADMAP.md) | What's shipped, what remains |

@@ -4,7 +4,7 @@ How Rowboat is put together, and the seams you touch to **add a database type** 
 work on **connections**. Read this before changing adapters, the connection form,
 config parsing or the MCP server.
 
-Related docs: [`DATABASES.md`](DATABASES.md) (support matrix + add-adapter checklist) · [`MCP.md`](MCP.md) (agent access) · [`TESTING.md`](TESTING.md) (test layers) · [`ROADMAP.md`](ROADMAP.md).
+Related docs: [`DATABASES.md`](DATABASES.md) (support matrix + add-adapter checklist) · [`MCP.md`](MCP.md) (agent access) · [`TESTING.md`](TESTING.md) (test layers).
 
 ---
 
