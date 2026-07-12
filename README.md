@@ -23,3 +23,7 @@ Full guide — launch configs, all 13 local databases, seeding/reseeding, resett
 | [DATABASES.md](docs/DATABASES.md) | Supported engines + the add-an-adapter checklist |
 | [TESTING.md](docs/TESTING.md) | Test layers (unit / integration / VS Code smoke), CI, manual checklist |
 | [MCP.md](docs/MCP.md) | MCP server — running it, clients, allowing writes, troubleshooting |
+
+## License
+
+[MIT](LICENSE)
