@@ -29,7 +29,7 @@ const redisCli = (input) => run('docker', ['compose', 'exec', '-T', 'redis', 're
 // seed: script-seeded engines. postgres/mysql/mariadb/clickhouse seed via the image
 //   init hook instead — reseeding those needs a fresh volume (see DEVELOPMENT.md).
 const ENGINES = {
-  postgres:      { wait: false },
+  postgres:      { wait: true },
   mysql:         { wait: true },
   mariadb:       { wait: true },
   clickhouse:    { wait: true },
