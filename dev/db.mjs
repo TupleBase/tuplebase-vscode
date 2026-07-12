@@ -2,7 +2,7 @@
 // One entry point for the dev databases (wired to the npm `db:*` scripts):
 //   node dev/db.mjs up <engine|all>        start container(s), then seed where scripted
 //   node dev/db.mjs seed [engine...]       reseed running containers (default: every scripted seed)
-//   node dev/db.mjs seed big [engine...]   opt-in high-volume paging data (postgres, redis, dynamo)
+//   node dev/db.mjs seed big [engine...]   opt-in high-volume paging data (every engine)
 //   node dev/db.mjs down                   stop all containers
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -23,6 +23,7 @@ function run(cmd, args, input) {
 const compose = (...args) => run('docker', ['compose', ...args]);
 const nodeSeed = (engine, file = 'seed.mjs') => run(process.execPath, [join(seedDir, engine, file)]);
 const redisCli = (input) => run('docker', ['compose', 'exec', '-T', 'redis', 'redis-cli'], input);
+const pipeSql = (service, cli, file) => run('docker', ['compose', 'exec', '-T', service, ...cli], readFileSync(join(seedDir, service, file), 'utf8'));
 
 // wait: pass --wait to `docker compose up` (needs the service's healthcheck to go green).
 //   dynamo has no healthcheck and the elasticsearch seed retries — both skip it.
@@ -45,9 +46,19 @@ const ENGINES = {
 };
 
 const BIG = {
-  postgres: () => run('docker', ['compose', 'exec', '-T', 'postgres', 'psql', '-U', 'rowboat', '-d', 'rowboat'], readFileSync(join(seedDir, 'postgres', 'big.sql'), 'utf8')),
-  redis:    () => redisCli(Array.from({ length: 5000 }, (_, i) => `SET pagedemo:${i + 1} value-${i + 1}`).join('\n')),
-  dynamo:   () => nodeSeed('dynamo', 'big.mjs'),
+  postgres:      () => pipeSql('postgres', ['psql', '-U', 'rowboat', '-d', 'rowboat'], 'big.sql'),
+  mysql:         () => pipeSql('mysql', ['mysql', '-urowboat', '-prowboat', 'rowboat'], 'big.sql'),
+  mariadb:       () => pipeSql('mariadb', ['mariadb', '-urowboat', '-prowboat', 'rowboat'], 'big.sql'),
+  clickhouse:    () => pipeSql('clickhouse', ['clickhouse-client', '-d', 'rowboat'], 'big.sql'),
+  sqlite:        () => nodeSeed('sqlite', 'big.mjs'),
+  redis:         () => redisCli(Array.from({ length: 5000 }, (_, i) => `SET pagedemo:${i + 1} value-${i + 1}`).join('\n')),
+  dynamo:        () => nodeSeed('dynamo', 'big.mjs'),
+  mssql:         () => nodeSeed('mssql', 'big.mjs'),
+  cassandra:     () => nodeSeed('cassandra', 'big.mjs'),
+  neo4j:         () => nodeSeed('neo4j', 'big.mjs'),
+  mongodb:       () => nodeSeed('mongodb', 'big.mjs'),
+  elasticsearch: () => nodeSeed('elasticsearch', 'big.mjs'),
+  kafka:         () => nodeSeed('kafka', 'big.mjs'),
 };
 
 function fail(msg) {

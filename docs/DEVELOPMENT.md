@@ -29,7 +29,7 @@ Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 
 - **postgres / mysql / mariadb / clickhouse** seed via the image's init hook — reseed needs a fresh volume: `docker compose --profile <engine> down -v && npm run db:<engine>`.
 - **All other engines** reseed in place — `npm run db:seed -- <engine>` (or re-run `npm run db:<engine>`; the redis seed starts with `FLUSHALL`). Bare `npm run db:seed` reseeds them all.
-- **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or one engine: `npm run db:seed:big -- postgres` (`postgres` / `redis` / `dynamo`).
+- **High-volume paging data** (additive, opt-in): `npm run db:seed:big` — or one engine: `npm run db:seed:big -- postgres` (works for every engine).
 - **Stored password**: run **Rowboat: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
 ## Checks & tests
