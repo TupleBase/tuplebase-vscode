@@ -11,7 +11,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof clickhouseFactory.create>, sql: string, pageSize = 500, pageToken?: string) =>
   a.execute(sql, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('clickhouse adapter (needs `npm run db:clickhouse`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('clickhouse adapter (needs `npm run db:start -- clickhouse && npm run db:seed -- clickhouse`)', () => {
   it('connects and runs a query', async () => {
     const a = clickhouseFactory.create(cfg)
     await a.connect(cfg)

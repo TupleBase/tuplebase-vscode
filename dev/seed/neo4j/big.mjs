@@ -1,5 +1,5 @@
-// Opt-in large dataset for exercising results paging / grid volume.
-// Run with: npm run db:seed:big  (or `npm run db:seed:big -- neo4j`)
+// Large dataset for exercising results paging / grid volume.
+// Runs as the second half of the standard seed: `npm run db:seed -- neo4j`
 import neo4j from 'neo4j-driver'
 
 const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'tuplebasepass'))

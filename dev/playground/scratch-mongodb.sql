@@ -1,4 +1,4 @@
-/* MongoDB (MQL) demo (npm run db:mongodb) — bind to the local-mongodb connection.
+/* MongoDB (MQL) demo (npm run db:start -- mongodb && npm run db:seed -- mongodb) — bind to the local-mongodb connection.
    db.<collection>.<method>(...); arguments are strict JSON (double-quote keys). */
 db.crew.find({});
 

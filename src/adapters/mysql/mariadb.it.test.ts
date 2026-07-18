@@ -11,7 +11,7 @@ const cfg: ResolvedConnection = {
   secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter against MariaDB (needs `npm run db:mariadb`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter against MariaDB (needs `npm run db:start -- mariadb && npm run db:seed -- mariadb`)', () => {
   it('connects and runs a query', async () => {
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)

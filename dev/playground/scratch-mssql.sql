@@ -1,4 +1,4 @@
--- SQL Server (T-SQL) demo (npm run db:mssql) — bind to the local-mssql connection.
+-- SQL Server (T-SQL) demo (npm run db:start -- mssql && npm run db:seed -- mssql) — bind to the local-mssql connection.
 SELECT id, name, role FROM dbo.crew ORDER BY id;
 
 SELECT role, COUNT(*) AS n FROM dbo.crew GROUP BY role;

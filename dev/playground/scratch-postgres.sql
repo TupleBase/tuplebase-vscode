@@ -21,7 +21,7 @@ UPDATE crew SET role = 'first mate' WHERE name = 'linus';
 
 DELETE FROM maintenance_logs WHERE resolved_at IS NOT NULL;
 
--- Paging demo — needs the large dataset: npm run db:seed:big (10,000 rows)
+-- Paging demo — part of the standard seed (npm run db:seed) (10,000 rows)
 SELECT count(*) FROM pagination_demo;                          -- 10000
 SELECT * FROM pagination_demo ORDER BY id;                     -- full set; the grid pages it
 SELECT * FROM pagination_demo ORDER BY id LIMIT 100 OFFSET 0;  -- page 1

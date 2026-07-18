@@ -1,5 +1,5 @@
 // Seed the dev Neo4j container. The image has no initdb hook, so this runs after
-// the container is healthy (wired into `npm run db:neo4j`).
+// the container is healthy (wired into `npm run db:seed -- neo4j`).
 import neo4j from 'neo4j-driver'
 
 const driver = neo4j.driver('bolt://localhost:7687', neo4j.auth.basic('neo4j', 'tuplebasepass'))

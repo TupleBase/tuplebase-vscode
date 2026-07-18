@@ -10,7 +10,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof kafkaFactory.create>, cmd: string, pageSize = 500) =>
   a.execute(cmd, { pageSize, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('kafka adapter (needs `npm run db:kafka`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('kafka adapter (needs `npm run db:start -- kafka && npm run db:seed -- kafka`)', () => {
   it('lists topics and describes partitions', async () => {
     const a = kafkaFactory.create(cfg)
     await a.connect(cfg)

@@ -1,6 +1,6 @@
-// Opt-in large dataset for exercising results paging / grid volume.
+// Large dataset for exercising results paging / grid volume.
 // Recreates a single-partition `pagedemo` topic so offsets page linearly.
-// Run with: npm run db:seed:big  (or `npm run db:seed:big -- kafka`)
+// Runs as the second half of the standard seed: `npm run db:seed -- kafka`
 import { Kafka, logLevel } from 'kafkajs'
 
 const kafka = new Kafka({

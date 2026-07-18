@@ -11,7 +11,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof mssqlFactory.create>, sql: string, pageSize = 500) =>
   a.execute(sql, { pageSize, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('mssql adapter (needs `npm run db:mssql`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mssql adapter (needs `npm run db:start -- mssql && npm run db:seed -- mssql`)', () => {
   it('connects and runs a query', async () => {
     const a = mssqlFactory.create(cfg)
     await a.connect(cfg)

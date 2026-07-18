@@ -10,7 +10,7 @@ const cfg: ResolvedConnection = {
 
 const opts = () => ({ pageSize: 500, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('redis adapter (needs `npm run db:redis`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('redis adapter (needs `npm run db:start -- redis && npm run db:seed -- redis`)', () => {
   it('validates config', () => {
     expect(redisFactory.validate({ adapter: 'redis' })).toContain('host is required')
     expect(redisFactory.validate({ adapter: 'redis', host: 'x' })).toEqual([])

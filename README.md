@@ -6,11 +6,11 @@ One workspace for every database. TupleBase is a VS Code extension for querying 
 
 ```bash
 nvm use && npm install
-npm run db:postgres      # dockerized postgres, seeded (password: tuplebase)
+npm run db:start -- postgres && npm run db:seed -- postgres   # dockerized postgres, seeded (password: tuplebase)
 npm run watch            # esbuild watch
 ```
 
-Press **F5** in VS Code → the Extension Development Host opens `dev/playground` with `scratch.sql` pointed at the docker postgres; run a query with **cmd+enter**.
+Press **F5** in VS Code → the Extension Development Host opens `dev/playground` with `scratch-postgres.sql` pointed at the docker postgres; run a query with **cmd+enter**.
 
 Full guide — launch configs, all 13 local databases, seeding/reseeding, resetting state: **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 

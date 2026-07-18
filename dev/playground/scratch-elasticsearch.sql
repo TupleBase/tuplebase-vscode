@@ -1,4 +1,4 @@
-/* Elasticsearch demo (npm run db:elasticsearch) — bind to the local-elasticsearch
+/* Elasticsearch demo (npm run db:start -- elasticsearch && npm run db:seed -- elasticsearch) — bind to the local-elasticsearch
    connection. <METHOD> <path> [json body], Kibana-console style; end each with `;`. */
 GET /crew/_search {"query": {"match_all": {}}};
 

@@ -10,7 +10,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof mongodbFactory.create>, cmd: string, pageSize = 500, pageToken?: string) =>
   a.execute(cmd, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('mongodb adapter (needs `npm run db:mongodb`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mongodb adapter (needs `npm run db:start -- mongodb && npm run db:seed -- mongodb`)', () => {
   it('runs find, count and distinct', async () => {
     const a = mongodbFactory.create(cfg)
     await a.connect(cfg)

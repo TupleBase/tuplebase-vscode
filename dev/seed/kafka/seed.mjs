@@ -1,4 +1,4 @@
-// Seed the dev Kafka broker (wired into `npm run db:kafka`). Waits for the broker,
+// Seed the dev Kafka broker (wired into `npm run db:seed -- kafka`). Waits for the broker,
 // then (re)creates a few topics and produces messages. Re-running resets the topics.
 import { Kafka, logLevel } from 'kafkajs'
 

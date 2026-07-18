@@ -1,5 +1,5 @@
-// Opt-in large dataset for exercising results paging / grid volume.
-// Run with: npm run db:seed:big  (or `npm run db:seed:big -- mongodb`)
+// Large dataset for exercising results paging / grid volume.
+// Runs as the second half of the standard seed: `npm run db:seed -- mongodb`
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient('mongodb://localhost:27017')

@@ -1,5 +1,5 @@
 // Seed the dev Elasticsearch container. No initdb hook + no healthcheck, so this
-// waits for the HTTP port, then (re)creates the index (wired into `npm run db:elasticsearch`).
+// waits for the HTTP port, then (re)creates the index (wired into `npm run db:seed -- elasticsearch`).
 import { Client } from '@elastic/elasticsearch'
 
 const client = new Client({ node: 'http://localhost:9200' })

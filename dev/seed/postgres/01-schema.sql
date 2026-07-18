@@ -1,3 +1,7 @@
+-- Seed for the dev Postgres container — piped in by dev/db.mjs (up / seed).
+-- Idempotent: drops and recreates, so the same file reseeds a running container.
+DROP TABLE IF EXISTS maintenance_logs, cargo_manifests, voyage_crew, voyages, boats, crew, ports CASCADE;
+
 CREATE TABLE ports (
   id serial PRIMARY KEY,
   code text NOT NULL UNIQUE,

@@ -1,4 +1,7 @@
--- Seed for the dev MySQL container (mounted at /docker-entrypoint-initdb.d).
+-- Seed for the dev MySQL container — piped in by dev/db.mjs (up / seed).
+-- Idempotent: drops and recreates, so the same file reseeds a running container.
+drop table if exists crew;
+
 create table crew (
   id int primary key,
   name varchar(50) not null,

@@ -8,7 +8,7 @@ const cfg: ResolvedConnection = {
   secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter (needs `npm run db:mysql`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('mysql adapter (needs `npm run db:start -- mysql && npm run db:seed -- mysql`)', () => {
   it('connects and runs a query', async () => {
     const a = mysqlFactory.create(cfg)
     await a.connect(cfg)

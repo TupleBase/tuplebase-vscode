@@ -10,7 +10,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof elasticsearchFactory.create>, req: string, pageSize = 500, pageToken?: string) =>
   a.execute(req, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('elasticsearch adapter (needs `npm run db:elasticsearch`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('elasticsearch adapter (needs `npm run db:start -- elasticsearch && npm run db:seed -- elasticsearch`)', () => {
   it('searches and flattens hits into rows', async () => {
     const a = elasticsearchFactory.create(cfg)
     await a.connect(cfg)

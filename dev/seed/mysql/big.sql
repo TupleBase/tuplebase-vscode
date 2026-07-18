@@ -1,5 +1,5 @@
--- Opt-in large dataset for exercising results paging / grid volume.
--- Run with: npm run db:seed:big  (or `npm run db:seed:big -- mysql`)
+-- Large dataset for exercising results paging / grid volume.
+-- Runs as the second half of the standard seed: `npm run db:seed -- mysql`
 SET SESSION cte_max_recursion_depth = 10000;
 
 DROP TABLE IF EXISTS pagination_demo;

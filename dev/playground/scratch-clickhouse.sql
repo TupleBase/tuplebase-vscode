@@ -1,4 +1,4 @@
--- ClickHouse demo (npm run db:clickhouse) — bind to the local-clickhouse connection.
+-- ClickHouse demo (npm run db:start -- clickhouse && npm run db:seed -- clickhouse) — bind to the local-clickhouse connection.
 SELECT id, name, role FROM crew ORDER BY id;
 
 SELECT role, count() AS n FROM crew GROUP BY role ORDER BY n DESC;

@@ -1,6 +1,6 @@
 {
   // TupleBase dev config — safe to commit: secrets are never stored here.
-  // Start databases with: npm run db:postgres + db:redis + db:dynamo (pg password: tuplebase)
+  // Start databases with: npm run db:start -- <engine> && npm run db:seed -- <engine>  (postgres, redis, dynamo) (pg password: tuplebase)
   "version": 1,
   "groups": {
     "local": {

@@ -1,4 +1,4 @@
--- Cassandra (CQL) demo (npm run db:cassandra) — bind to the local-cassandra connection
+-- Cassandra (CQL) demo (npm run db:start -- cassandra && npm run db:seed -- cassandra) — bind to the local-cassandra connection
 -- (keyspace tuplebase). Results page with the driver's native pageState token.
 SELECT id, name, role FROM crew;
 

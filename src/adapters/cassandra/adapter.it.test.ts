@@ -11,7 +11,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof cassandraFactory.create>, cql: string, pageSize = 500, pageToken?: string) =>
   a.execute(cql, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('cassandra adapter (needs `npm run db:cassandra`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('cassandra adapter (needs `npm run db:start -- cassandra && npm run db:seed -- cassandra`)', () => {
   it('connects and runs a query', async () => {
     const a = cassandraFactory.create(cfg)
     await a.connect(cfg)

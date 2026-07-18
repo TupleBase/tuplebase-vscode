@@ -1,4 +1,4 @@
-# Kafka demo (npm run db:kafka) — bind to the local-kafka connection.
+# Kafka demo (npm run db:start -- kafka && npm run db:seed -- kafka) — bind to the local-kafka connection.
 # Commands are line-based: cmd+enter runs the line under the cursor.
 # NOTE: topics/describe/consume is a TupleBase command syntax, not an official
 # Kafka query language — Kafka has none (this mirrors the CLI verbs).

@@ -1,4 +1,4 @@
-/* Neo4j (Cypher) demo (npm run db:neo4j) — bind to the local-neo4j connection. */
+/* Neo4j (Cypher) demo (npm run db:start -- neo4j && npm run db:seed -- neo4j) — bind to the local-neo4j connection. */
 MATCH (c:Crew) RETURN c.id AS id, c.name AS name, c.role AS role ORDER BY c.id;
 
 MATCH (c:Crew) WHERE c.role = 'captain' RETURN c;

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // One entry point for the dev databases (wired to the npm `db:*` scripts):
-//   node dev/db.mjs up <engine|all>        start container(s), then seed where scripted
-//   node dev/db.mjs seed [engine...]       reseed running containers (default: every scripted seed)
-//   node dev/db.mjs seed big [engine...]   opt-in high-volume paging data (every engine)
+//   node dev/db.mjs start <engine|all>     start container(s) — never touches existing data
+//   node dev/db.mjs seed [engine...]       (re)seed running containers, incl. the high-volume
+//                                          paging data (default: every engine)
 //   node dev/db.mjs down                   stop all containers
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,13 +27,13 @@ const pipeSql = (service, cli, file) => run('docker', ['compose', 'exec', '-T', 
 
 // wait: pass --wait to `docker compose up` (needs the service's healthcheck to go green).
 //   dynamo has no healthcheck and the elasticsearch seed retries — both skip it.
-// seed: script-seeded engines. postgres/mysql/mariadb/clickhouse seed via the image
-//   init hook instead — reseeding those needs a fresh volume (see DEVELOPMENT.md).
+// seed: every engine reseeds in place against the running container (seed files
+//   drop and recreate); sqlite has no container — its seed builds the demo file.
 const ENGINES = {
-  postgres:      { wait: true },
-  mysql:         { wait: true },
-  mariadb:       { wait: true },
-  clickhouse:    { wait: true },
+  postgres:      { wait: true,  seed: () => pipeSql('postgres', ['psql', '-U', 'tuplebase', '-d', 'tuplebase'], '01-schema.sql') },
+  mysql:         { wait: true,  seed: () => pipeSql('mysql', ['mysql', '-utuplebase', '-ptuplebase', 'tuplebase'], '01-schema.sql') },
+  mariadb:       { wait: true,  seed: () => pipeSql('mariadb', ['mariadb', '-utuplebase', '-ptuplebase', 'tuplebase'], '01-schema.sql') },
+  clickhouse:    { wait: true,  seed: () => pipeSql('clickhouse', ['clickhouse-client', '-d', 'tuplebase'], '01-schema.sql') },
   sqlite:        { container: false, seed: () => nodeSeed('sqlite') },
   redis:         { wait: true,  seed: () => redisCli(readFileSync(join(seedDir, 'redis', 'seed.redis'), 'utf8').split('\n').filter((l) => !l.startsWith('#')).join('\n')) },
   dynamo:        { wait: false, seed: () => nodeSeed('dynamo') },
@@ -45,6 +45,8 @@ const ENGINES = {
   kafka:         { wait: true,  seed: () => nodeSeed('kafka') },
 };
 
+// High-volume paging datasets (dev/seed/<engine>/big.*) — run as the second
+// half of every seed, right after the engine's base seed.
 const BIG = {
   postgres:      () => pipeSql('postgres', ['psql', '-U', 'tuplebase', '-d', 'tuplebase'], 'big.sql'),
   mysql:         () => pipeSql('mysql', ['mysql', '-utuplebase', '-ptuplebase', 'tuplebase'], 'big.sql'),
@@ -66,35 +68,34 @@ function fail(msg) {
   process.exit(1);
 }
 
-function seed(names, big) {
-  const table = big
-    ? BIG
-    : Object.fromEntries(Object.entries(ENGINES).filter(([, e]) => e.seed).map(([n, e]) => [n, e.seed]));
-  const targets = names.length ? names : Object.keys(table);
+function seed(names) {
+  const targets = names.length ? names : Object.keys(ENGINES);
   for (const name of targets) {
-    if (!table[name]) {
-      if (!big && ENGINES[name]) fail(`${name} seeds via the image init hook — reseed with a fresh volume (see docs/DEVELOPMENT.md)`);
-      fail(`unknown ${big ? 'big ' : ''}seed "${name}" (known: ${Object.keys(table).join(', ')})`);
-    }
-    console.log(`— seed ${name}${big ? ' (big)' : ''}`);
-    table[name]();
+    if (!ENGINES[name]) fail(`unknown seed "${name}" (known: ${Object.keys(ENGINES).join(', ')})`);
+    console.log(`— seed ${name}`);
+    ENGINES[name].seed();
+    BIG[name]();
   }
 }
+
+// sqlite has no container — "starting" it just means the demo file exists.
+const ensureSqlite = () => {
+  if (!existsSync(join(seedDir, 'sqlite', 'demo.sqlite'))) seed(['sqlite']);
+};
 
 const [cmd, ...rest] = process.argv.slice(2);
 if (cmd === 'down') {
   compose('--profile', 'all', 'down');
-} else if (cmd === 'up' && rest[0] === 'all') {
+} else if (cmd === 'start' && rest[0] === 'all') {
   compose('--profile', 'all', 'up', '-d', '--wait');
-  seed([], false);
-} else if (cmd === 'up' && ENGINES[rest[0]]) {
+  ensureSqlite();
+} else if (cmd === 'start' && ENGINES[rest[0]]) {
   const [name] = rest;
   const engine = ENGINES[name];
   if (engine.container !== false) compose('--profile', name, 'up', '-d', ...(engine.wait ? ['--wait'] : []));
-  if (engine.seed) seed([name], false);
+  else ensureSqlite();
 } else if (cmd === 'seed') {
-  const big = rest[0] === 'big';
-  seed(big ? rest.slice(1) : rest, big);
+  seed(rest);
 } else {
-  fail(`usage: node dev/db.mjs up <engine|all> | seed [big] [engine...] | down\nengines: ${Object.keys(ENGINES).join(', ')}`);
+  fail(`usage: node dev/db.mjs start <engine|all> | seed [engine...] | down\nengines: ${Object.keys(ENGINES).join(', ')}`);
 }

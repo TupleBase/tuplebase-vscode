@@ -8,7 +8,7 @@ const cfg: ResolvedConnection = {
   secrets: { password: 'tuplebase' },
 }
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('postgres adapter (needs `npm run db:postgres`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('postgres adapter (needs `npm run db:start -- postgres && npm run db:seed -- postgres`)', () => {
   it('validates config', () => {
     expect(postgresFactory.validate({ adapter: 'postgres' })).toContain('host is required')
     expect(postgresFactory.validate({ adapter: 'postgres', host: 'x', database: 'y', user: 'z' })).toEqual([])

@@ -1,4 +1,4 @@
--- SQLite demo (npm run db:sqlite builds demo.sqlite) — cmd+enter runs one statement
+-- SQLite demo (npm run db:seed -- sqlite builds demo.sqlite) — cmd+enter runs one statement
 SELECT c.name, c.role, p.code AS home_port
 FROM crew AS c
 JOIN ports AS p ON p.id = c.home_port_id

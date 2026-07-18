@@ -1,5 +1,5 @@
-// Opt-in large dataset for exercising results paging / grid volume.
-// Run with: npm run db:seed:big  (or `npm run db:seed:big -- mssql`)
+// Large dataset for exercising results paging / grid volume.
+// Runs as the second half of the standard seed: `npm run db:seed -- mssql`
 import mssql from 'mssql'
 
 const base = {

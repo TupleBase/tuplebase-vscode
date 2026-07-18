@@ -1,5 +1,5 @@
 // Build the dev SQLite demo file from seed.sql using sql.js — no sqlite3 CLI
-// needed. Run via `npm run db:sqlite`; writes dev/seed/sqlite/demo.sqlite.
+// needed. Run via `npm run db:seed -- sqlite`; writes dev/seed/sqlite/demo.sqlite.
 import initSqlJs from 'sql.js/dist/sql-asm.js'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

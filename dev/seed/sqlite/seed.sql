@@ -1,4 +1,4 @@
--- Seed for the dev SQLite demo file. Built into demo.sqlite by `npm run db:sqlite`
+-- Seed for the dev SQLite demo file. Built into demo.sqlite by `npm run db:seed -- sqlite`
 -- (dev/seed/sqlite/seed.mjs runs it through sql.js — no sqlite3 CLI required).
 create table ports (
   id integer primary key,

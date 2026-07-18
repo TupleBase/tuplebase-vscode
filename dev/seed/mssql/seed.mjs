@@ -1,5 +1,5 @@
 // Seed the dev SQL Server container. The mssql image has no initdb hook, so this
-// runs after the container is healthy (wired into `npm run db:mssql`).
+// runs after the container is healthy (wired into `npm run db:seed -- mssql`).
 import mssql from 'mssql'
 
 const base = {

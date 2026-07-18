@@ -1,5 +1,5 @@
 // Seed the dev Cassandra container. The image has no initdb hook, so this runs
-// after the container is healthy (wired into `npm run db:cassandra`).
+// after the container is healthy (wired into `npm run db:seed -- cassandra`).
 import cassandra from 'cassandra-driver'
 
 const client = new cassandra.Client({

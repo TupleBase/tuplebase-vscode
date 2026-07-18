@@ -1,4 +1,4 @@
-// Seed the dev MongoDB container (wired into `npm run db:mongodb`).
+// Seed the dev MongoDB container (wired into `npm run db:seed -- mongodb`).
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient('mongodb://localhost:27017')

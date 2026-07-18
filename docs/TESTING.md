@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-Setup, launch configs and the per-engine `db:<engine>` container commands (start, seed, reseed) live in [DEVELOPMENT.md](DEVELOPMENT.md). Start the engines the tests you're running need — or `npm run db:all` for everything.
+Setup, launch configs and the `db:start` / `db:seed` container commands live in [DEVELOPMENT.md](DEVELOPMENT.md). Start the engines the tests you're running need — or `npm run db:start -- all && npm run db:seed` for everything.
 
 ## Manual testing (Extension Development Host)
 
@@ -21,7 +21,7 @@ Three layers:
 
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
-TUPLEBASE_IT=1 npx vitest run   # unit + integration — needs each db:<engine> up (postgres, mysql, mariadb, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamo). `npm run db:all` starts them all.
+TUPLEBASE_IT=1 npx vitest run   # unit + integration — needs each engine up (postgres, mysql, mariadb, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamo). `npm run db:start -- all && npm run db:seed` starts and seeds them all.
 npm run test:vscode      # extension-host smoke test — downloads VS Code, launches the
                          # extension inside it, runs @vscode/test suite
 ```

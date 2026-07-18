@@ -11,7 +11,7 @@ const cfg: ResolvedConnection = {
 const run = (a: ReturnType<typeof neo4jFactory.create>, cypher: string, pageSize = 500, pageToken?: string) =>
   a.execute(cypher, { pageSize, pageToken, signal: new AbortController().signal })
 
-describe.skipIf(!process.env.TUPLEBASE_IT)('neo4j adapter (needs `npm run db:neo4j`)', () => {
+describe.skipIf(!process.env.TUPLEBASE_IT)('neo4j adapter (needs `npm run db:start -- neo4j && npm run db:seed -- neo4j`)', () => {
   it('connects and runs a query', async () => {
     const a = neo4jFactory.create(cfg)
     await a.connect(cfg)

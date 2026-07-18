@@ -7,8 +7,6 @@ services:
       POSTGRES_USER: tuplebase
       POSTGRES_PASSWORD: tuplebase
       POSTGRES_DB: tuplebase
-    volumes:
-      - ./dev/seed/postgres:/docker-entrypoint-initdb.d
     healthcheck:
       # TCP (127.0.0.1, not the socket): the entrypoint's temporary init server
       # listens on the socket only, so this stays red until the final server is up.
@@ -25,8 +23,6 @@ services:
       MYSQL_DATABASE: tuplebase
       MYSQL_USER: tuplebase
       MYSQL_PASSWORD: tuplebase
-    volumes:
-      - ./dev/seed/mysql:/docker-entrypoint-initdb.d
     healthcheck:
       # query over TCP (127.0.0.1, not the socket) as the real user — this only
       # passes once the final networked server is up, not the temporary init
@@ -45,8 +41,6 @@ services:
       MARIADB_DATABASE: tuplebase
       MARIADB_USER: tuplebase
       MARIADB_PASSWORD: tuplebase
-    volumes:
-      - ./dev/seed/mariadb:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 2s
@@ -161,8 +155,6 @@ services:
       CLICKHOUSE_DB: tuplebase
     ulimits:
       nofile: { soft: 262144, hard: 262144 }
-    volumes:
-      - ./dev/seed/clickhouse:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
       interval: 2s

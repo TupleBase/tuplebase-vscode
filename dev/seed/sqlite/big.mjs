@@ -1,6 +1,6 @@
-// Opt-in large dataset for exercising results paging / grid volume.
+// Large dataset for exercising results paging / grid volume.
 // Rewrites dev/seed/sqlite/demo.sqlite with a pagination_demo table added.
-// Run with: npm run db:seed:big  (or `npm run db:seed:big -- sqlite`)
+// Runs as the second half of the standard seed: `npm run db:seed -- sqlite`
 import initSqlJs from 'sql.js/dist/sql-asm.js'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

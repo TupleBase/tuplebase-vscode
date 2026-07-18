@@ -15,7 +15,7 @@ HSET boat:1 status maintenance
 EXPIRE crew:1:status 3600
 DEL greeting
 
-# Paging demo — needs the large dataset: npm run db:seed:big (5,000 pagedemo:* keys)
+# Paging demo — part of the standard seed (npm run db:seed) (5,000 pagedemo:* keys)
 DBSIZE
 SCAN 0 MATCH pagedemo:* COUNT 100
 GET pagedemo:1

@@ -1,4 +1,4 @@
--- MySQL / MariaDB demo (npm run db:mysql / db:mariadb) — cmd+enter runs one statement.
+-- MySQL / MariaDB demo (npm run db:start -- mysql && npm run db:seed -- mysql (same for mariadb)) — cmd+enter runs one statement.
 -- Bind this file to the local-mysql (or local-mariadb) connection.
 SELECT id, name, role FROM crew ORDER BY id;
 
