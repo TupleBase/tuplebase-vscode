@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { buildJsonSchema } from './jsonSchema'
-import { adapterIds, presentations } from './registry'
+import { allPresentations } from './registry'
+
+const allIds = allPresentations().map(p => p.id)
 
 type Any = Record<string, any>
 
@@ -10,8 +12,8 @@ describe('buildJsonSchema', () => {
   const branchFor = (id: string) => branches.find(b => b.if.properties.adapter.const === id)!.then
 
   it('lists every registered adapter in the connection enum, in registry order', () => {
-    expect(schema.definitions.connection.properties.adapter.enum).toEqual(adapterIds)
-    expect(branches.map(b => b.if.properties.adapter.const)).toEqual(adapterIds)
+    expect(schema.definitions.connection.properties.adapter.enum).toEqual(allIds)
+    expect(branches.map(b => b.if.properties.adapter.const)).toEqual(allIds)
   })
 
   it('requires version and groups at the top level', () => {
@@ -20,7 +22,7 @@ describe('buildJsonSchema', () => {
   })
 
   it('gives each adapter branch its required fields and a readonly toggle, sealed to known keys', () => {
-    for (const p of presentations()) {
+    for (const p of allPresentations()) {
       const then = branchFor(p.id)
       expect(then.additionalProperties).toBe(false)
       expect(then.required).toEqual(p.fields.filter(f => f.required).map(f => f.key))

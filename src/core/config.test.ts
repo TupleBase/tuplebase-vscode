@@ -68,10 +68,14 @@ describe('parseConfig (groups model)', () => {
     expect(config!.connections['dup'].host).toBe('first')
   })
 
-  it('rejects unknown adapter', () => {
-    const { errors } = parseConfig(base({ dev: { c: { adapter: 'oracle' } } }))
-    expect(errors[0].message).toMatch(/unknown adapter/i)
-    expect(errors[0].path).toBe('groups.dev.c.adapter')
+  it('skips connections whose adapter is unknown or not enabled, without errors', () => {
+    const { config, errors } = parseConfig(base({ dev: {
+      c: { adapter: 'oracle' },
+      d: { adapter: 'redis', host: 'localhost' },
+      e: { adapter: 'postgres', host: 'h' },
+    } }))
+    expect(errors).toEqual([])
+    expect(Object.keys(config!.connections)).toEqual(['e'])
   })
 
   it('rejects and strips password-like fields', () => {
@@ -110,14 +114,15 @@ describe('parseConfig ssh tunnels', () => {
   })
 
   it('allows password auth without a private key', () => {
-    const { config, errors } = parseConfig(withSsh('redis', { host: 'b', user: 'u', password: true }, { host: 'r' }))
+    const { config, errors } = parseConfig(withSsh('postgres', { host: 'b', user: 'u', password: true }, { host: 'r' }))
     expect(errors).toEqual([])
     expect(config!.connections['c'].ssh).toEqual({ host: 'b', user: 'u', password: true })
   })
 
-  it('rejects ssh on an adapter with no host/port (dynamodb)', () => {
-    const { errors } = parseConfig(withSsh('dynamodb', { host: 'b', user: 'u', privateKey: 'k' }, { region: 'eu-west-1' }))
-    expect(errors.some(e => /not supported for adapter "dynamodb"/.test(e.message))).toBe(true)
+  it('skips a not-enabled adapter before ssh validation (dynamodb)', () => {
+    const { config, errors } = parseConfig(withSsh('dynamodb', { host: 'b', user: 'u', privateKey: 'k' }, { region: 'eu-west-1' }))
+    expect(errors).toEqual([])
+    expect(config!.connections['c']).toBeUndefined()
   })
 
   it('requires host and user', () => {

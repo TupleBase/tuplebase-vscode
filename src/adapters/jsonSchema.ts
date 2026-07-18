@@ -2,7 +2,7 @@
 // database's config validation comes from its field list rather than a
 // hand-edited schema. Run `npm run gen:schema` after changing any adapter fields.
 import type { AdapterPresentation, Field } from './types'
-import { presentations } from './registry'
+import { allPresentations } from './registry'
 
 type JsonSchema = Record<string, unknown>
 
@@ -62,7 +62,7 @@ function branchFor(p: AdapterPresentation): JsonSchema {
   }
 }
 
-export function buildJsonSchema(adapters: AdapterPresentation[] = presentations()): JsonSchema {
+export function buildJsonSchema(adapters: AdapterPresentation[] = allPresentations()): JsonSchema {
   return {
     $schema: 'http://json-schema.org/draft-07/schema#',
     title: 'TupleBase configuration',

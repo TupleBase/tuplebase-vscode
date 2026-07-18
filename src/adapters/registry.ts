@@ -26,6 +26,16 @@ import { presentation as dynamodb } from './dynamodb/presentation'
 // all read from here.
 const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamodb]
 
+// ── Gradual rollout ──────────────────────────────────────────────────────────
+// Adapters enabled in this release. Rollout is per-version: move an id into
+// this list when its adapter is ready to ship. The rest stay registered but
+// invisible — the list-shaped exports below return only enabled adapters, so
+// the connection form, completion and the MCP server gate automatically, and
+// the config loader skips entries referencing anything else. Lookups
+// (adapterById, presentationOf) stay full: they only resolve ids that already
+// passed the gate.
+const ENABLED_ADAPTER_IDS = ['postgres']
+
 interface AdapterChunk { factory: AdapterFactory; completion?: CompletionContribution }
 
 // Load an adapter's built chunk. It lives next to the running bundle
@@ -45,20 +55,24 @@ function toModule(presentation: AdapterPresentation): AdapterModule {
   }
 }
 
-export const ADAPTERS: AdapterModule[] = PRESENTATIONS.map(toModule)
+const ALL_MODULES: AdapterModule[] = PRESENTATIONS.map(toModule)
+
+export const ADAPTERS: AdapterModule[] = ALL_MODULES.filter(m => ENABLED_ADAPTER_IDS.includes(m.presentation.id))
 
 export const adapterById: ReadonlyMap<string, AdapterModule> =
-  new Map(ADAPTERS.map(m => [m.presentation.id, m]))
+  new Map(ALL_MODULES.map(m => [m.presentation.id, m]))
 
-export const adapterIds: string[] = PRESENTATIONS.map(p => p.id)
+export const adapterIds: string[] = ADAPTERS.map(m => m.presentation.id)
 
-export const presentations = (): AdapterPresentation[] => PRESENTATIONS
+export const presentations = (): AdapterPresentation[] => ADAPTERS.map(m => m.presentation)
+
+export const allPresentations = (): AdapterPresentation[] => PRESENTATIONS
 
 export const presentationOf = (id: string): AdapterPresentation | undefined =>
   adapterById.get(id)?.presentation
 
-// Load every adapter's factory (used by the standalone MCP server, which resolves
-// connections on demand in a dedicated process).
+// Load every enabled adapter's factory (used by the standalone MCP server, which
+// resolves connections on demand in a dedicated process).
 export async function loadFactories(): Promise<Map<string, AdapterFactory>> {
   const entries = await Promise.all(
     ADAPTERS.map(async m => [m.presentation.id, await m.loadFactory()] as const),

@@ -55,6 +55,17 @@ src/adapters/<id>/
 - **Factories and completion are lazy.** `presentation.ts` never imports the driver. The real code lives in `adapter.ts` / `completion.ts`, bundled by esbuild into a separate chunk at `dist/adapters/<id>/index.js`. `registry.ts` loads that chunk **by path** (`__dirname`-anchored) only when a connection to that adapter is first opened.
 - **Result:** the core `extension.js` bundle carries no `pg` / `@redis/client` / `@aws-sdk`. Adding the 50th adapter does not slow activation — its chunk only loads if you connect to it.
 
+### Gradual rollout — `ENABLED_ADAPTER_IDS`
+
+`ENABLED_ADAPTER_IDS` in `registry.ts` lists the adapters enabled in this release;
+rollout is per-version — move an id in when its adapter ships. Everything else stays
+registered but invisible: the list-shaped exports (`ADAPTERS`, `adapterIds`,
+`presentations()`, `loadFactories()`) return only enabled adapters, so the
+New-Connection picker, completion and the MCP server gate automatically, and the
+config loader silently skips any connection whose adapter isn't enabled (disabled
+or unknown — no error). The lookups (`adapterById`, `presentationOf`) and the
+generated JSON schema still cover every registered adapter.
+
 The types (`src/adapters/types.ts`):
 
 ```ts
@@ -78,13 +89,13 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
    - `completion.ts` (optional) — export a `CompletionContribution` with `provide(ctx)` returning `CompletionResult[]`. `ctx` gives you the text, cursor, `connected` flag and a `search(kind, prefix)` bound to the live adapter.
    - `index.ts` — `export { <id>Factory as factory } from './adapter'` and `export { <id>Completion as completion } from './completion'`.
    - `<id>.svg` + `<id>-connected.svg` — 16×16 marks.
-2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. That's the one line.
+2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. Add its id to `ENABLED_ADAPTER_IDS` when it's ready to ship — until then it stays registered but invisible.
 3. **Regenerate the JSON schema** — `npm run gen:schema` rebuilds `schemas/tuplebase.schema.json` from the presentations' `fields`. Never hand-edit that file.
 4. **Add the driver dependency** to `package.json`. esbuild bundles it into the adapter's chunk (mark any optional native `.node` bindings `external` in `esbuild.mjs`).
 5. **Test it** — unit tests next to the code (`adapter.test.ts`, `completion.test.ts`) and a live-container integration test (`adapter.it.test.ts`, gated by `TUPLEBASE_IT=1`), plus a compose service + seed under `dev/`.
 6. **Move its row** from Candidates to Shipped in `DATABASES.md`.
 
-Nothing else changes — config validation (`KNOWN_ADAPTERS` = registry ids), the connection form, tree icons, completion registration and the connection manager all derive from the registry.
+Nothing else changes — config filtering (enabled registry ids), the connection form, tree icons, completion registration and the connection manager all derive from the registry.
 
 ---
 

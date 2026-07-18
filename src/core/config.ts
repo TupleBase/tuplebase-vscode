@@ -3,8 +3,6 @@ import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
 import type { ConnectionConfig, SshConfig } from '../adapters/types'
 import { adapterIds, adapterById } from '../adapters/registry'
 
-export const KNOWN_ADAPTERS = adapterIds
-
 const SSH_KEYS = new Set(['host', 'port', 'user', 'privateKey', 'passphrase', 'password'])
 
 // Validate + interpolate a connection's optional `ssh` bastion block. Paths and
@@ -142,15 +140,14 @@ export function parseConfig(
         continue
       }
       const conn = { ...(connRaw as Record<string, unknown>) }
+      // Not an enabled adapter (disabled for this release, or unknown): skip the
+      // entry entirely — configs written for other versions load without errors.
+      if (typeof conn.adapter !== 'string' || !adapterIds.includes(conn.adapter)) continue
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
           errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — ${BRAND} keeps secrets out of config (prompted and stored on your machine)` })
           delete conn[field]
         }
-      }
-      if (typeof conn.adapter !== 'string' || !KNOWN_ADAPTERS.includes(conn.adapter)) {
-        errors.push({ path: `${path}.adapter`, message: `unknown adapter "${String(conn.adapter)}" (known: ${KNOWN_ADAPTERS.join(', ')})` })
-        continue
       }
       const connReadonly = typeof conn.readonly === 'boolean' ? conn.readonly : undefined
       delete conn.readonly
