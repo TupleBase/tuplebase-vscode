@@ -73,6 +73,8 @@ describe('parseConfig (groups model)', () => {
       c: { adapter: 'oracle' },
       d: { adapter: 'redis', host: 'localhost' },
       e: { adapter: 'postgres', host: 'h' },
+      f: {},
+      g: { adapter: 123 },
     } }))
     expect(errors).toEqual([])
     expect(Object.keys(config!.connections)).toEqual(['e'])
