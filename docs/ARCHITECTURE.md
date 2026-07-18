@@ -89,7 +89,7 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
    - `completion.ts` (optional) — export a `CompletionContribution` with `provide(ctx)` returning `CompletionResult[]`. `ctx` gives you the text, cursor, `connected` flag and a `search(kind, prefix)` bound to the live adapter.
    - `index.ts` — `export { <id>Factory as factory } from './adapter'` and `export { <id>Completion as completion } from './completion'`.
    - `<id>.svg` + `<id>-connected.svg` — 16×16 marks.
-2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. Add its id to `ENABLED_ADAPTER_IDS` when it's ready to ship — until then it stays registered but invisible.
+2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. Add its id to `ENABLED_ADAPTER_IDS` when it's ready to ship — until then it stays registered but invisible. While developing, add the id locally so the dev host shows it.
 3. **Regenerate the JSON schema** — `npm run gen:schema` rebuilds `schemas/tuplebase.schema.json` from the presentations' `fields`. Never hand-edit that file.
 4. **Add the driver dependency** to `package.json`. esbuild bundles it into the adapter's chunk (mark any optional native `.node` bindings `external` in `esbuild.mjs`).
 5. **Test it** — unit tests next to the code (`adapter.test.ts`, `completion.test.ts`) and a live-container integration test (`adapter.it.test.ts`, gated by `TUPLEBASE_IT=1`), plus a compose service + seed under `dev/`.
