@@ -91,7 +91,7 @@ jobs:
             npx vsce package --out "$FILENAME"
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tuplebase-${{ steps.release.outputs.version }}
           path: ${{ steps.release.outputs.filename }}
@@ -109,7 +109,7 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: tuplebase-${{ needs.package.outputs.version }}
       - name: Publish tested VSIX
@@ -129,7 +129,7 @@ jobs:
       - uses: actions/setup-node@v5
         with: { node-version-file: .nvmrc, cache: npm }
       - run: npm ci
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: tuplebase-${{ needs.package.outputs.version }}
       - name: Publish tested VSIX
@@ -146,7 +146,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: tuplebase-${{ needs.package.outputs.version }}
       - name: Create release and attach VSIX
