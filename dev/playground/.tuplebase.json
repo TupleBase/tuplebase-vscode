@@ -82,12 +82,6 @@
         "adapter": "kafka",
         "host": "localhost",
         "port": 9092
-      },
-      "Test": {
-        "adapter": "dynamodb",
-        "region": "local",
-        "profile": "local",
-        "endpoint": "localhost:8000"
       }
     }
   }
