@@ -1,0 +1,488 @@
+{
+  "name": "tuplebase",
+  "displayName": "TupleBase",
+  "description": "Explore schemas, run queries, inspect results, and connect AI agents to databases from VS Code.",
+  "version": "0.1.0",
+  "publisher": "tuplebase",
+  "license": "MIT",
+  "icon": "media/marketplace-icon-256.png",
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TupleBase/tuplebase-vscode"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Data Science",
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "postgres",
+    "postgresql",
+    "sql",
+    "database",
+    "database-client",
+    "query",
+    "schema",
+    "mcp",
+    "model-context-protocol",
+    "ai-agents",
+    "ssh"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "workspaceContains:**/.tuplebase.json"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "jsonc",
+        "filenames": [
+          ".tuplebase.json"
+        ]
+      },
+      {
+        "id": "redis",
+        "aliases": [
+          "Redis"
+        ],
+        "extensions": [
+          ".redis"
+        ],
+        "configuration": "./language-configuration-redis.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "redis",
+        "scopeName": "source.redis",
+        "path": "./syntaxes/redis.tmLanguage.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": ".tuplebase.json",
+        "url": "./schemas/tuplebase.schema.json"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tuplebase",
+          "title": "TupleBase",
+          "icon": "media/tuplebase.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "tuplebase-panel",
+          "title": "TupleBase Results",
+          "icon": "media/tuplebase.svg"
+        }
+      ]
+    },
+    "views": {
+      "tuplebase": [
+        {
+          "id": "tuplebase.explorer",
+          "name": "Explorer",
+          "icon": "media/tuplebase.svg"
+        },
+        {
+          "id": "tuplebase.history",
+          "name": "History",
+          "icon": "media/tuplebase.svg"
+        }
+      ],
+      "tuplebase-panel": [
+        {
+          "id": "tuplebase.results",
+          "type": "webview",
+          "name": "Results"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "tuplebase.explorer",
+        "contents": "No .tuplebase.json found in this workspace.\n[Create Config](command:tuplebase.createConfig)"
+      }
+    ],
+    "commands": [
+      {
+        "command": "tuplebase.runQuery",
+        "title": "Run Query (statement at cursor or selection)",
+        "category": "TupleBase",
+        "icon": "$(play)"
+      },
+      {
+        "command": "tuplebase.runFile",
+        "title": "Run All Statements (whole file or selection)",
+        "category": "TupleBase",
+        "icon": "$(run-all)"
+      },
+      {
+        "command": "tuplebase.addGroup",
+        "title": "New Group",
+        "category": "TupleBase",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "tuplebase.addConnection",
+        "title": "New Connection",
+        "category": "TupleBase",
+        "icon": "$(add)"
+      },
+      {
+        "command": "tuplebase.renameGroup",
+        "title": "Rename Group",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.deleteGroup",
+        "title": "Delete Group",
+        "category": "TupleBase",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tuplebase.editConnection",
+        "title": "Edit Connection",
+        "category": "TupleBase",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "tuplebase.removeConnection",
+        "title": "Remove Connection",
+        "category": "TupleBase",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "tuplebase.newQuery",
+        "title": "New Query Scratch (pick engine)",
+        "category": "TupleBase",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tuplebase.refreshExplorer",
+        "title": "Refresh Explorer",
+        "category": "TupleBase",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tuplebase.clearCredentials",
+        "title": "Clear Stored Credentials",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.resetCredentials",
+        "title": "Reset Credentials (re-enter password)",
+        "category": "TupleBase",
+        "icon": "$(key)"
+      },
+      {
+        "command": "tuplebase.createConfig",
+        "title": "Create Config File",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.showMcpConfig",
+        "title": "Show MCP Server Config",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.connect",
+        "title": "Connect",
+        "category": "TupleBase",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "tuplebase.disconnect",
+        "title": "Disconnect",
+        "category": "TupleBase",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "tuplebase.newQueryOnConnection",
+        "title": "New Query on This Connection",
+        "category": "TupleBase",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "tuplebase.selectConnectionForFile",
+        "title": "Select Connection for Current File",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.history.rerun",
+        "title": "Rerun From History",
+        "category": "TupleBase"
+      },
+      {
+        "command": "tuplebase.history.clear",
+        "title": "Clear Query History",
+        "category": "TupleBase",
+        "icon": "$(clear-all)"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "tuplebase.runQuery",
+          "when": "resourceLangId == sql || resourceLangId == redis",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tuplebase.runFile",
+          "when": "resourceLangId == sql || resourceLangId == redis",
+          "group": "navigation@2"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tuplebase.addGroup",
+          "when": "view == tuplebase.explorer",
+          "group": "navigation@2"
+        },
+        {
+          "command": "tuplebase.refreshExplorer",
+          "when": "view == tuplebase.explorer",
+          "group": "navigation@3"
+        },
+        {
+          "command": "tuplebase.history.clear",
+          "when": "view == tuplebase.history",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
+          "group": "inline@1"
+        },
+        {
+          "command": "tuplebase.addConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
+          "group": "1_modify@1"
+        },
+        {
+          "command": "tuplebase.renameGroup",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
+          "group": "1_modify@2"
+        },
+        {
+          "command": "tuplebase.deleteGroup",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.group",
+          "group": "1_modify@3"
+        },
+        {
+          "command": "tuplebase.editConnection",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
+          "group": "1_modify@8"
+        },
+        {
+          "command": "tuplebase.removeConnection",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
+          "group": "1_modify@9"
+        },
+        {
+          "command": "tuplebase.resetCredentials",
+          "when": "view == tuplebase.explorer && (viewItem == tuplebase.connection.connected || viewItem == tuplebase.connection.disconnected)",
+          "group": "1_modify@10"
+        },
+        {
+          "command": "tuplebase.connect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected",
+          "group": "inline@1"
+        },
+        {
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
+          "group": "inline@1"
+        },
+        {
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
+          "group": "0_open@1"
+        },
+        {
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected",
+          "group": "0_open@1"
+        },
+        {
+          "command": "tuplebase.disconnect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected",
+          "group": "inline@2"
+        },
+        {
+          "command": "tuplebase.connect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.disconnected"
+        },
+        {
+          "command": "tuplebase.disconnect",
+          "when": "view == tuplebase.explorer && viewItem == tuplebase.connection.connected"
+        },
+        {
+          "command": "tuplebase.history.rerun",
+          "when": "view == tuplebase.history"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tuplebase.selectConnectionForFile",
+          "when": "editorLangId == sql || editorLangId == redis"
+        },
+        {
+          "command": "tuplebase.connect",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.disconnect",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.resetCredentials",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.newQueryOnConnection",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.deleteGroup",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.editConnection",
+          "when": "false"
+        },
+        {
+          "command": "tuplebase.removeConnection",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "tuplebase.runQuery",
+        "key": "ctrl+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
+      },
+      {
+        "command": "tuplebase.runFile",
+        "key": "ctrl+shift+enter",
+        "mac": "cmd+shift+enter",
+        "when": "editorTextFocus && (resourceLangId == sql || resourceLangId == redis)"
+      }
+    ],
+    "configurationDefaults": {
+      "workbench.hover.delay": 200
+    },
+    "configuration": {
+      "title": "TupleBase",
+      "properties": {
+        "tuplebase.queryTimeoutMs": {
+          "type": "number",
+          "default": 30000,
+          "minimum": 1,
+          "description": "Maximum time in milliseconds for a query before TupleBase cancels it."
+        },
+        "tuplebase.resultsPageSize": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "description": "How many rows a query fetches per run (capped by tuplebase.maxRows)."
+        },
+        "tuplebase.maxRows": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 1,
+          "description": "Hard upper bound on rows fetched in a single run."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run gen:schema && npm run gen:notices && node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "gen:schema": "node scripts/gen-schema.mjs",
+    "gen:notices": "node scripts/gen-third-party-notices.mjs",
+    "package:prerelease": "npm run build && vsce package --pre-release",
+    "package:release": "npm run build && vsce package",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "db:start": "node dev/db.mjs start",
+    "db:seed": "node dev/db.mjs seed",
+    "db:down": "node dev/db.mjs down",
+    "test:vscode": "npm run build && vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.13.3",
+    "@types/pg": "^8.20.0",
+    "@types/ssh2": "^1.15.5",
+    "@types/tabulator-tables": "^6.3.6",
+    "@types/vscode": "^1.90.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "^0.28.1",
+    "ovsx": "1.0.2",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1090.0",
+    "@aws-sdk/credential-providers": "^3.1090.0",
+    "@aws-sdk/lib-dynamodb": "^3.1090.0",
+    "@clickhouse/client": "^1.23.1",
+    "@elastic/elasticsearch": "^8.19.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@redis/client": "^6.1.0",
+    "@types/mssql": "^12.3.0",
+    "@types/sql.js": "^1.4.11",
+    "cassandra-driver": "^4.9.0",
+    "jsonc-parser": "^3.3.1",
+    "kafkajs": "^2.2.4",
+    "mongodb": "^7.5.0",
+    "mssql": "^12.7.0",
+    "mysql2": "^3.23.0",
+    "neo4j-driver": "^6.2.0",
+    "pg": "^8.22.0",
+    "sql.js": "^1.14.1",
+    "ssh2": "^1.17.0",
+    "tabulator-tables": "^6.5.2",
+    "zod": "^4.4.3"
+  },
+  "overrides": {
+    "cassandra-driver": {
+      "adm-zip": "0.6.0"
+    },
+    "diff": "9.0.0",
+    "serialize-javascript": "7.0.7"
+  },
+  "allowScripts": {
+    "cpu-features@0.0.10": true,
+    "esbuild@0.24.2": true,
+    "esbuild@0.21.5": true,
+    "fsevents@2.3.3": true,
+    "ssh2@1.17.0": true
+  }
+}

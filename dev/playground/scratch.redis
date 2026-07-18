@@ -1,0 +1,22 @@
+# TupleBase scratch — put the cursor on a line and press cmd+enter
+GET crew:1:name
+HGETALL boat:1
+LRANGE queue:departures 0 -1
+SMEMBERS crew:active
+ZRANGE leaderboard:distance 0 -1 WITHSCORES
+XRANGE events:voyages - +
+SET greeting "hello from tuplebase"
+GET greeting
+SCAN 0 COUNT 100
+
+# Mutations — blocked on a read-only connection
+SET config:harbor:motto "steady oars"
+HSET boat:1 status maintenance
+EXPIRE crew:1:status 3600
+DEL greeting
+
+# Paging demo — part of the standard seed (npm run db:seed) (5,000 pagedemo:* keys)
+DBSIZE
+SCAN 0 MATCH pagedemo:* COUNT 100
+GET pagedemo:1
+MGET pagedemo:1 pagedemo:2 pagedemo:3

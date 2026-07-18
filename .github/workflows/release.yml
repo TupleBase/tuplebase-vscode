@@ -1,0 +1,165 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Package channel
+        type: choice
+        options: [prerelease, stable]
+        default: prerelease
+      publish:
+        description: Publish to the registries (otherwise only build the VSIX)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: test and package
+    runs-on: ubuntu-latest
+    outputs:
+      filename: ${{ steps.release.outputs.filename }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+
+      - name: Resolve release metadata
+        id: release
+        env:
+          MANUAL_CHANNEL: ${{ inputs.channel }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+
+          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            expected_tag="v${version}"
+            if [[ "$GITHUB_REF_NAME" != "$expected_tag" ]]; then
+              echo "Tag $GITHUB_REF_NAME does not match package.json version $version" >&2
+              exit 1
+            fi
+
+            minor="$(node -p "require('./package.json').version.split('.')[1]")"
+            if (( minor % 2 == 1 )); then
+              prerelease=true
+            else
+              prerelease=false
+            fi
+          elif [[ "$MANUAL_CHANNEL" == "prerelease" ]]; then
+            prerelease=true
+          else
+            prerelease=false
+          fi
+
+          if [[ "$prerelease" == "true" ]]; then
+            filename="tuplebase-${version}-pre-release.vsix"
+          else
+            filename="tuplebase-${version}.vsix"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "filename=$filename" >> "$GITHUB_OUTPUT"
+
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - run: npm audit --omit=dev --audit-level=high
+      - run: xvfb-run -a npm run test:vscode
+
+      - name: Package VSIX
+        env:
+          FILENAME: ${{ steps.release.outputs.filename }}
+          PRERELEASE: ${{ steps.release.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          if [[ "$PRERELEASE" == "true" ]]; then
+            npx vsce package --pre-release --out "$FILENAME"
+          else
+            npx vsce package --out "$FILENAME"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tuplebase-${{ steps.release.outputs.version }}
+          path: ${{ steps.release.outputs.filename }}
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-marketplace:
+    name: publish to VS Code Marketplace
+    needs: package
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: tuplebase-${{ needs.package.outputs.version }}
+      - name: Publish tested VSIX
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSIX: ${{ needs.package.outputs.filename }}
+        run: npx vsce publish --packagePath "$VSIX" --skip-duplicate
+
+  publish-open-vsx:
+    name: publish to Open VSX
+    needs: package
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: tuplebase-${{ needs.package.outputs.version }}
+      - name: Publish tested VSIX
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+          VSIX: ${{ needs.package.outputs.filename }}
+        run: npx ovsx publish "$VSIX" --skip-duplicate
+
+  github-release:
+    name: create GitHub release
+    needs: [package, publish-marketplace, publish-open-vsx]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tuplebase-${{ needs.package.outputs.version }}
+      - name: Create release and attach VSIX
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.package.outputs.prerelease }}
+          VSIX: ${{ needs.package.outputs.filename }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber --repo "$GITHUB_REPOSITORY"
+          elif [[ "$PRERELEASE" == "true" ]]; then
+            gh release create "$GITHUB_REF_NAME" "$VSIX" --verify-tag --generate-notes --prerelease --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$GITHUB_REF_NAME" "$VSIX" --verify-tag --generate-notes --repo "$GITHUB_REPOSITORY"
+          fi

@@ -1,0 +1,919 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TupleBase configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "groups"
+  ],
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Config schema version (must be 1)"
+    },
+    "groups": {
+      "type": "object",
+      "description": "Named groups, each a folder of named connections",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "readonly": {
+            "type": "boolean",
+            "description": "Default: block write statements on connections in this group"
+          }
+        },
+        "patternProperties": {
+          "^(?!readonly$).*": {
+            "$ref": "#/definitions/connection"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "connection": {
+      "type": "object",
+      "required": [
+        "adapter"
+      ],
+      "properties": {
+        "adapter": {
+          "enum": [
+            "postgres",
+            "mysql",
+            "sqlite",
+            "mssql",
+            "clickhouse",
+            "cassandra",
+            "neo4j",
+            "mongodb",
+            "elasticsearch",
+            "kafka",
+            "redis",
+            "dynamodb"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "postgres"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 5432
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "sslmode": {
+                "enum": [
+                  "disable",
+                  "require",
+                  "verify-ca",
+                  "verify-full"
+                ],
+                "description": "TLS mode (libpq semantics): require encrypts without certificate checks, verify-ca checks the CA but not the hostname, verify-full checks both"
+              },
+              "sslrootcert": {
+                "type": "string",
+                "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database",
+              "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "mysql"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 3306
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database",
+              "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "sqlite"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path to the SQLite database file — absolute, or relative to the .tuplebase.json location; ${env:VAR} is interpolated."
+              }
+            },
+            "required": [
+              "path"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "mssql"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 1433
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "encrypt": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use TLS for the connection (the server certificate is trusted without CA validation)."
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database",
+              "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "clickhouse"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 8123
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database",
+              "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "cassandra"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 9042
+              },
+              "datacenter": {
+                "type": "string"
+              },
+              "keyspace": {
+                "type": "string",
+                "description": "Default keyspace for unqualified queries (optional)."
+              },
+              "user": {
+                "type": "string",
+                "description": "Only used when Password auth is enabled."
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "datacenter"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "neo4j"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 7687
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "user"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "mongodb"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 27017
+              },
+              "database": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string",
+                "description": "Only used when Password auth is enabled."
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host",
+              "database"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "elasticsearch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 9200
+              },
+              "tls": {
+                "type": "boolean",
+                "default": false,
+                "description": "Use TLS (the server certificate is not verified)."
+              },
+              "user": {
+                "type": "string",
+                "description": "Only used when Password auth is enabled."
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "kafka"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 9092
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "redis"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "number",
+                "default": 6379
+              },
+              "db": {
+                "type": "number",
+                "default": 0
+              },
+              "tls": {
+                "type": "boolean",
+                "default": false
+              },
+              "username": {
+                "type": "string"
+              },
+              "auth": {
+                "type": "boolean",
+                "default": false,
+                "description": "Prompt for a password on first connect (stored in the OS keychain, never in this file)"
+              },
+              "promptPassword": {
+                "type": "boolean",
+                "description": "Prompt for the password every connect instead of storing it in the keychain"
+              },
+              "ssh": {
+                "type": "object",
+                "description": "Tunnel this connection through an SSH bastion / jump host",
+                "required": [
+                  "host",
+                  "user"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "description": "Bastion hostname"
+                  },
+                  "port": {
+                    "type": "number",
+                    "default": 22
+                  },
+                  "user": {
+                    "type": "string",
+                    "description": "SSH username"
+                  },
+                  "privateKey": {
+                    "type": "string",
+                    "description": "Path to the private key file (use ${env:VAR} for machine-specific paths)"
+                  },
+                  "passphrase": {
+                    "type": "boolean",
+                    "description": "Prompt for the private key passphrase (stored in the OS keychain)"
+                  },
+                  "password": {
+                    "type": "boolean",
+                    "description": "Prompt for an SSH password (stored in the OS keychain)"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "host"
+            ],
+            "additionalProperties": false
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "adapter": {
+                "const": "dynamodb"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "adapter": true,
+              "readonly": {
+                "type": "boolean",
+                "description": "Block write statements on this connection (overrides the group default)"
+              },
+              "region": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Custom endpoint, e.g. http://localhost:8000 for dynamodb-local"
+              }
+            },
+            "required": [
+              "region"
+            ],
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  }
+}

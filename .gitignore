@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.vsix
+.serena/
+.vscode-test/
+dev/empty-ws/
+dev/seed/sqlite/*.sqlite
+.claude/

@@ -1,0 +1,42 @@
+# Harbor operations data for the dev Redis. The seed covers strings, hashes,
+# lists, sets, sorted sets, streams, and several key namespaces for explorer
+# and completion testing.
+FLUSHALL
+
+SET crew:1:name ada
+SET crew:1:role captain
+SET crew:1:status active
+SET crew:2:name linus
+SET crew:2:role rower
+SET crew:2:status active
+SET crew:3:name grace
+SET crew:3:role navigator
+SET crew:3:status active
+SET crew:4:name margaret
+SET crew:4:role engineer
+SET crew:4:status active
+SET crew:5:name donald
+SET crew:5:role deckhand
+SET crew:5:status shore-leave
+
+HSET boat:1 name "TupleBase One" registration TB-001 oars 2 capacity 6 status active home_port LIS
+HSET boat:2 name "TupleBase Two" registration TB-002 oars 4 capacity 8 status active home_port OPO
+HSET boat:3 name "Tide Turner" registration TB-003 oars 4 capacity 10 status maintenance home_port VGO
+HSET port:LIS name Lisbon country Portugal latitude 38.72230 longitude -9.13930
+HSET port:OPO name Porto country Portugal latitude 41.15790 longitude -8.62910
+HSET port:VGO name Vigo country Spain latitude 42.24060 longitude -8.72070
+
+RPUSH queue:departures voyage:103 voyage:104 voyage:106
+LPUSH queue:maintenance boat:3 boat:2
+SADD crew:active 1 2 3 4
+SADD crew:shore-leave 5
+ZADD leaderboard:distance 178.4 crew:1 489.0 crew:2 412.8 crew:3 76.2 crew:4
+ZADD metrics:port-visits 12 port:LIS 9 port:OPO 7 port:VGO
+
+XADD events:voyages * type departed voyage_id 103 boat_id 1 destination BOD
+XADD events:voyages * type scheduled voyage_id 104 boat_id 4 destination REK
+XADD events:maintenance * type opened boat_id 3 category rigging
+
+SET stats:voyages:total 6
+SET stats:crew:active 4
+SET config:harbor:timezone Europe/Lisbon

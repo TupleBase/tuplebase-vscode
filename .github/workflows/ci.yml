@@ -1,0 +1,49 @@
+name: ci
+on:
+  push: { branches: [main], paths-ignore: ["**.md", "LICENSE"] }
+  pull_request: { paths-ignore: ["**.md", "LICENSE"] }
+jobs:
+  # No containers: type-check, bundle, unit tests (+ the file-based SQLite IT,
+  # which runs without a server), and the VS Code activation smoke test.
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - run: xvfb-run -a npm run test:vscode
+
+  # Live-container integration, one engine per job — the heavy images (SQL Server,
+  # Cassandra, Elasticsearch, …) can't all co-reside on a single runner, so each
+  # boots only its own container and runs only that adapter's IT.
+  integration:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { engine: postgres,      db: postgres,      tests: src/adapters/postgres }
+          - { engine: mysql,         db: mysql,         tests: src/adapters/mysql/adapter.it.test.ts src/adapters/mysql/adapter.test.ts }
+          - { engine: mariadb,       db: mariadb,       tests: src/adapters/mysql/mariadb.it.test.ts }
+          - { engine: redis,         db: redis,         tests: src/adapters/redis }
+          - { engine: dynamodb,      db: dynamo,        tests: src/adapters/dynamodb }
+          - { engine: mssql,         db: mssql,         tests: src/adapters/mssql }
+          - { engine: clickhouse,    db: clickhouse,    tests: src/adapters/clickhouse }
+          - { engine: cassandra,     db: cassandra,     tests: src/adapters/cassandra }
+          - { engine: neo4j,         db: neo4j,         tests: src/adapters/neo4j }
+          - { engine: mongodb,       db: mongodb,       tests: src/adapters/mongodb }
+          - { engine: elasticsearch, db: elasticsearch, tests: src/adapters/elasticsearch }
+          - { engine: kafka,         db: kafka,         tests: src/adapters/kafka }
+    name: integration (${{ matrix.engine }})
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run db:start -- ${{ matrix.db }}
+      - run: npm run db:seed -- ${{ matrix.db }}
+      - run: TUPLEBASE_IT=1 npx vitest run ${{ matrix.tests }}

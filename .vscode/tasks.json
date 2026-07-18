@@ -1,0 +1,185 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "db: all (start + seed everything)",
+      "type": "shell",
+      "command": "npm run db:start -- all && npm run db:seed",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start all",
+      "type": "shell",
+      "command": "npm run db:start -- all",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed all",
+      "type": "npm",
+      "script": "db:seed",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: down (stop all containers)",
+      "type": "npm",
+      "script": "db:down",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start postgres",
+      "type": "shell",
+      "command": "npm run db:start -- postgres",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed postgres",
+      "type": "shell",
+      "command": "npm run db:seed -- postgres",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start mysql",
+      "type": "shell",
+      "command": "npm run db:start -- mysql",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed mysql",
+      "type": "shell",
+      "command": "npm run db:seed -- mysql",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start mariadb",
+      "type": "shell",
+      "command": "npm run db:start -- mariadb",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed mariadb",
+      "type": "shell",
+      "command": "npm run db:seed -- mariadb",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start sqlite (build demo file if missing)",
+      "type": "shell",
+      "command": "npm run db:start -- sqlite",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed sqlite",
+      "type": "shell",
+      "command": "npm run db:seed -- sqlite",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start mssql",
+      "type": "shell",
+      "command": "npm run db:start -- mssql",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed mssql",
+      "type": "shell",
+      "command": "npm run db:seed -- mssql",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start clickhouse",
+      "type": "shell",
+      "command": "npm run db:start -- clickhouse",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed clickhouse",
+      "type": "shell",
+      "command": "npm run db:seed -- clickhouse",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start cassandra",
+      "type": "shell",
+      "command": "npm run db:start -- cassandra",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed cassandra",
+      "type": "shell",
+      "command": "npm run db:seed -- cassandra",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start neo4j",
+      "type": "shell",
+      "command": "npm run db:start -- neo4j",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed neo4j",
+      "type": "shell",
+      "command": "npm run db:seed -- neo4j",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start mongodb",
+      "type": "shell",
+      "command": "npm run db:start -- mongodb",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed mongodb",
+      "type": "shell",
+      "command": "npm run db:seed -- mongodb",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start elasticsearch",
+      "type": "shell",
+      "command": "npm run db:start -- elasticsearch",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed elasticsearch",
+      "type": "shell",
+      "command": "npm run db:seed -- elasticsearch",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start kafka",
+      "type": "shell",
+      "command": "npm run db:start -- kafka",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed kafka",
+      "type": "shell",
+      "command": "npm run db:seed -- kafka",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start redis",
+      "type": "shell",
+      "command": "npm run db:start -- redis",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed redis",
+      "type": "shell",
+      "command": "npm run db:seed -- redis",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: start dynamo",
+      "type": "shell",
+      "command": "npm run db:start -- dynamo",
+      "problemMatcher": []
+    },
+    {
+      "label": "db: seed dynamo",
+      "type": "shell",
+      "command": "npm run db:seed -- dynamo",
+      "problemMatcher": []
+    }
+  ]
+}
