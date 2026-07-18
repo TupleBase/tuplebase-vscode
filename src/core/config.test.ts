@@ -80,6 +80,21 @@ describe('parseConfig (groups model)', () => {
     expect(Object.keys(config!.connections)).toEqual(['e'])
   })
 
+  it('does not flag secret fields on skipped entries', () => {
+    const { config, errors } = parseConfig(base({ dev: { c: { adapter: 'mysql', password: 'x' } } }))
+    expect(errors).toEqual([])
+    expect(config!.connections).toEqual({})
+  })
+
+  it('does not flag a duplicate whose first occurrence was skipped', () => {
+    const { config, errors } = parseConfig(base({
+      g1: { dup: { adapter: 'redis', host: 'first' } },
+      g2: { dup: { adapter: 'postgres', host: 'second' } },
+    }))
+    expect(errors).toEqual([])
+    expect(config!.connections['dup'].adapter).toBe('postgres')
+  })
+
   it('rejects and strips password-like fields', () => {
     const { config, errors } = parseConfig(base({ dev: { c: { adapter: 'postgres', password: 'x' } } }))
     expect(errors[0].message).toMatch(/secret/i)

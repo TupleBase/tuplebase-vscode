@@ -142,6 +142,7 @@ export function parseConfig(
       const conn = { ...(connRaw as Record<string, unknown>) }
       // Not an enabled adapter (disabled for this release, or unknown): skip the
       // entry entirely — configs written for other versions load without errors.
+      // Skipped entries get no diagnostics at all — not even the secret-field scrub.
       if (typeof conn.adapter !== 'string' || !adapterIds.includes(conn.adapter)) continue
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
