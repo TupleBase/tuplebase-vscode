@@ -10,6 +10,8 @@ TupleBase keeps connection configuration in a committable `.tuplebase.json` whil
 
 > TupleBase `0.1.0` is a pre-release. PostgreSQL is the engine enabled in this first public version.
 
+[Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) · [Install from Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase)
+
 <img src="media/tuplebase-overview.png" alt="TupleBase in VS Code with a PostgreSQL schema, SQL editor, query history, and results grid">
 
 ## Features
