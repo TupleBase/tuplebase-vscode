@@ -4,6 +4,8 @@ Which databases TupleBase speaks, and which are candidates. Each database is a s
 
 ## Shipped
 
+Shipped adapters are enabled gradually per release via `ENABLED_ADAPTER_IDS` in `src/adapters/registry.ts` — currently only `postgres`. The rest stay registered but invisible (not offered in the form, skipped in configs) until their id is flipped on. See the "Gradual rollout" section in [ARCHITECTURE.md](ARCHITECTURE.md).
+
 | Database | `adapter` | Query surface | Notes |
 |---|---|---|---|
 | PostgreSQL | `postgres` | SQL | TLS (`sslmode` + CA cert), password in OS keychain |

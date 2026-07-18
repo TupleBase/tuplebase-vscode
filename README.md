@@ -1,6 +1,6 @@
 # TupleBase
 
-One workspace for every database. TupleBase is a VS Code extension for querying Postgres, MySQL, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka, Redis and DynamoDB behind one extensible adapter interface. Connections live in a committable, secret-free `.tuplebase.json` (passwords in the OS keychain, SSH tunnels for bastions), queries run from files into a VS Code-themed results grid, and a bundled [MCP server](docs/MCP.md) lets AI agents query the same connections — read-only by default. Only marketplace publishing remains.
+One workspace for every database. TupleBase is a VS Code extension for querying Postgres, MySQL, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch, Kafka, Redis and DynamoDB behind one extensible adapter interface. Engines are enabled gradually release by release — currently Postgres, with the rest behind a static rollout flag. Connections live in a committable, secret-free `.tuplebase.json` (passwords in the OS keychain, SSH tunnels for bastions), queries run from files into a VS Code-themed results grid, and a bundled [MCP server](docs/MCP.md) lets AI agents query the same connections — read-only by default. Only marketplace publishing remains.
 
 ## Quick start (development)
 
