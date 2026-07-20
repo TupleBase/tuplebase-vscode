@@ -6,6 +6,8 @@ import { getFileConnection, setFileConnection } from '../core/fileConn'
 import { splitAll } from '../core/statements'
 import { fileStatementSyntax } from '../core/dialect'
 import { presentationOf } from '../adapters/registry'
+import { adapterIcon } from '../core/adapterCatalog'
+import type { ConnectionConfig } from '../adapters/types'
 
 const emitter = new vscode.EventEmitter<void>()
 
@@ -46,10 +48,29 @@ export function buildQueryCodeLenses(
   return lenses
 }
 
+// QuickPick rows for the file-connection picker: bundled adapter logo when the
+// build shipped one, themed codicon otherwise.
+export function connectionPickItems(
+  conns: ConnectionConfig[],
+  extensionUri: vscode.Uri,
+): vscode.QuickPickItem[] {
+  return conns.map(c => {
+    const iconFile = presentationOf(c.adapter)?.iconFile
+    return {
+      label: c.name,
+      description: c.group,
+      iconPath: iconFile
+        ? vscode.Uri.joinPath(extensionUri, 'dist', 'adapters', c.adapter, iconFile)
+        : new vscode.ThemeIcon(adapterIcon(c.adapter)),
+    }
+  })
+}
+
 export function registerQueryCodeLens(
   manager: ConnectionManager,
   store: ConfigStore,
   workspaceState: vscode.Memento,
+  extensionUri: vscode.Uri,
 ): vscode.Disposable {
   const provider: vscode.CodeLensProvider = {
     onDidChangeCodeLenses: emitter.event,
@@ -71,7 +92,7 @@ export function registerQueryCodeLens(
         return
       }
       const picked = await vscode.window.showQuickPick(
-        matching.map(c => ({ label: c.name, description: c.group })),
+        connectionPickItems(matching, extensionUri),
         { placeHolder: 'Run this file against which connection?' },
       )
       if (!picked) return

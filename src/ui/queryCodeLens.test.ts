@@ -23,12 +23,20 @@ vi.mock('vscode', () => ({
   window: {},
   workspace: {},
   Disposable: { from: (...items: unknown[]) => ({ dispose() {}, items }) },
+  Uri: {
+    joinPath: (base: { path: string }, ...parts: string[]) => ({
+      path: [base.path, ...parts].join('/'),
+    }),
+  },
+  ThemeIcon: class {
+    constructor(public id: string) {}
+  },
 }))
 
 import type { Memento, TextDocument } from 'vscode'
 import type { ConnectionManager } from '../core/connections'
 import type { ConfigStore } from '../core/configStore'
-import { buildQueryCodeLenses } from './queryCodeLens'
+import { buildQueryCodeLenses, connectionPickItems } from './queryCodeLens'
 
 // real positionAt semantics — the anchor bug (lens above the previous
 // statement's line) is invisible with a stub that always returns line 0
@@ -109,5 +117,25 @@ describe('buildQueryCodeLenses', () => {
     expect(lenses).toHaveLength(4)
     expect(lenses[2].command?.arguments?.[0]).toMatchObject({ offset: text.indexOf('SET b 1') })
     expect(lenses[2].range.start.line).toBe(1)
+  })
+})
+
+describe('connectionPickItems', () => {
+  const extensionUri = { path: '/ext' } as never
+
+  it('uses the bundled adapter svg as iconPath', () => {
+    const conns = [{ name: 'local-pg', group: 'dev', adapter: 'postgres' }] as never[]
+    const [item] = connectionPickItems(conns, extensionUri) as unknown as [
+      { label: string; description: string; iconPath: { path: string } },
+    ]
+    expect(item.label).toBe('local-pg')
+    expect(item.description).toBe('dev')
+    expect(item.iconPath.path).toBe('/ext/dist/adapters/postgres/postgres.svg')
+  })
+
+  it('falls back to the generic codicon for unknown adapters', () => {
+    const conns = [{ name: 'x', group: 'g', adapter: 'nope' }] as never[]
+    const [item] = connectionPickItems(conns, extensionUri) as unknown as [{ iconPath: { id: string } }]
+    expect(item.iconPath.id).toBe('database')
   })
 })

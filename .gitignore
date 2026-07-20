@@ -6,4 +6,4 @@ dist/
 dev/empty-ws/
 dev/seed/sqlite/*.sqlite
 .claude/
-docs/superpowers/plans/
+docs/superpowers/

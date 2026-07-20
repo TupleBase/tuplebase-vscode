@@ -6,7 +6,11 @@ const app = document.getElementById('app')!
 
 // The host injects the adapter catalog (labels, cards, form fields) so this
 // browser bundle never imports adapter runtime code.
-type Init = { adapters: AdapterPresentation[] } & (
+// Matches PickerAdapter in ui/connFormPanel.ts — declared locally so the
+// browser bundle never imports host code.
+type PickerAdapter = AdapterPresentation & { iconUri?: string }
+
+type Init = { adapters: PickerAdapter[] } & (
   | { mode: 'new' }
   | { mode: 'edit'; group: string; adapter: string; name: string; values: Record<string, unknown> }
 )
@@ -46,7 +50,14 @@ function renderPick() {
   for (const a of init.adapters) {
     const card = el('button', 'card')
     card.type = 'button'
-    card.appendChild(el('span', 'card-icon', a.emoji))
+    if (a.iconUri) {
+      const img = el('img', 'card-icon')
+      img.src = a.iconUri
+      img.alt = ''
+      card.appendChild(img)
+    } else {
+      card.appendChild(el('span', 'card-icon', a.emoji))
+    }
     card.appendChild(el('span', 'card-label', a.label))
     card.appendChild(el('span', 'card-blurb', a.blurb))
     card.addEventListener('click', () => {

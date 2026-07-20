@@ -5,9 +5,29 @@ import { buildConnection, validate, withReadonly } from '../webview/connFormSpec
 import { adapterById, presentations } from '../adapters/registry'
 import { ConfigStore } from '../core/configStore'
 import { SecretVault } from '../core/secrets'
-import type { ConnectionConfig } from '../adapters/types'
+import type { AdapterPresentation, ConnectionConfig } from '../adapters/types'
 
 const formFields = (adapter: string) => withReadonly(adapterById.get(adapter)?.presentation.fields ?? [])
+
+// Init-payload adapters: presentation + a webview-resolvable logo URI. The SVGs
+// live in dist/adapters/<id>/ (shipped by the build's copyAssets step).
+export type PickerAdapter = AdapterPresentation & { iconUri?: string }
+
+export function pickerAdapters(
+  webview: Pick<vscode.Webview, 'asWebviewUri'>,
+  extensionUri: vscode.Uri,
+): PickerAdapter[] {
+  return presentations().map(p =>
+    p.iconFile
+      ? {
+          ...p,
+          iconUri: webview
+            .asWebviewUri(vscode.Uri.joinPath(extensionUri, 'dist', 'adapters', p.id, p.iconFile))
+            .toString(),
+        }
+      : p,
+  )
+}
 
 // Default bucket for a connection created from the toolbar (no group chosen).
 export const UNGROUPED_GROUP = 'Ungrouped'
@@ -35,17 +55,24 @@ export function registerNewConnectionForm(
       void vscode.window.showWarningMessage(`${BRAND}: no .tuplebase.json — run "TupleBase: Create Config File" first`)
       return
     }
-    const init = edit
-      ? { mode: 'edit', group, adapter: edit.conn.adapter, name: edit.conn.name, values: edit.conn, adapters: presentations() }
-      : { mode: 'new', group, adapters: presentations() }
     const originalName = edit?.conn.name
 
     const panel = vscode.window.createWebviewPanel(
       'tuplebase.newConnection',
       edit ? `Edit connection · ${edit.conn.name}` : `New connection · ${group}`,
       vscode.ViewColumn.Active,
-      { enableScripts: true, localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'dist', 'webview')] },
+      {
+        enableScripts: true,
+        localResourceRoots: [
+          vscode.Uri.joinPath(extensionUri, 'dist', 'webview'),
+          vscode.Uri.joinPath(extensionUri, 'dist', 'adapters'),
+        ],
+      },
     )
+    const adapters = pickerAdapters(panel.webview, extensionUri)
+    const init = edit
+      ? { mode: 'edit', group, adapter: edit.conn.adapter, name: edit.conn.name, values: edit.conn, adapters }
+      : { mode: 'new', group, adapters }
     panel.webview.html = renderHtml(panel.webview, extensionUri, init)
 
     const sub = panel.webview.onDidReceiveMessage(async (msg: Incoming) => {
@@ -104,7 +131,7 @@ function renderHtml(webview: vscode.Webview, extensionUri: vscode.Uri, init: unk
   const base = vscode.Uri.joinPath(extensionUri, 'dist', 'webview')
   const js = webview.asWebviewUri(vscode.Uri.joinPath(base, 'connForm.js'))
   const css = webview.asWebviewUri(vscode.Uri.joinPath(base, 'connForm.css'))
-  const csp = `default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; font-src ${webview.cspSource};`
+  const csp = `default-src 'none'; style-src ${webview.cspSource}; script-src ${webview.cspSource}; font-src ${webview.cspSource}; img-src ${webview.cspSource};`
   return `<!DOCTYPE html>
 <html>
 <head>
