@@ -7,6 +7,11 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- MySQL connections — schema tree, SQL completion, paginated queries, password in OS keychain.
+- MariaDB as its own connection type (`adapter: "mariadb"`), backed by the same wire-compatible MySQL driver.
+
 ## [0.1.0] - 2026-07-18 (pre-release)
 
 ### Added
