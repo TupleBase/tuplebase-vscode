@@ -450,7 +450,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1090.0",
-    "@aws-sdk/credential-providers": "^3.1090.0",
+    "@aws-sdk/credential-providers": "^3.1091.0",
     "@aws-sdk/lib-dynamodb": "^3.1090.0",
     "@clickhouse/client": "^1.23.1",
     "@elastic/elasticsearch": "^8.19.2",
