@@ -435,7 +435,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.1.1",
     "@types/pg": "^8.20.0",
     "@types/ssh2": "^1.15.5",
     "@types/tabulator-tables": "^6.3.6",
