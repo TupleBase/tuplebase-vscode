@@ -80,4 +80,4 @@ TupleBase does not collect telemetry or send usage data to TupleBase. It connect
 
 ## License
 
-[MIT](LICENSE). Third-party components and their licenses are listed in [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES).
+[MIT](LICENSE). Third-party components and their licenses are listed in [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES). Database logos come from [devicon](https://github.com/devicons/devicon) (MIT); database names and logos are trademarks of their respective owners and are used to indicate compatibility.

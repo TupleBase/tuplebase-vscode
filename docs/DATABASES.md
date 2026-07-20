@@ -40,7 +40,7 @@ Adapters are self-contained: create the folder, then register it in one line.
 1. Create `src/adapters/<db>/` with:
    - `adapter.ts` — `Adapter` + `AdapterFactory` (model on `postgres/adapter.ts`); set `languageId` and `statementSyntax`.
    - `completion.ts` — a `CompletionContribution` (optional).
-   - `<db>.svg` (+ `<db>-connected.svg`) — the tree icon.
+   - `<db>.svg` (+ `<db>-connected.svg`) — the tree/picker icon: the [devicon](https://github.com/devicons/devicon) `original` SVG, and a variant with the green status dot appended (copy the circle element from any existing `-connected.svg`).
    - `index.ts` — the `AdapterDescriptor` tying presentation (label/emoji/blurb/icon/fields), factory and completion together.
 2. Add the descriptor to the `ADAPTERS` array in `src/adapters/registry.ts` — the one line. Config validation, the connection form, tree icons, completion and the connection manager all read from the registry.
 3. Regenerate the JSON schema from the descriptors: `npm run gen:schema`.
