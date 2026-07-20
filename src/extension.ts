@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerNewQuery(),
     registerNewQueryOnConnection(context.workspaceState),
     registerUntitledBindingCleanup(context.workspaceState),
-    registerQueryCodeLens(manager, store, context.workspaceState),
+    registerQueryCodeLens(manager, store, context.workspaceState, context.extensionUri),
     vscode.commands.registerCommand('tuplebase.addGroup', async () => {
       const uri = store.configUri
       if (!uri) {
