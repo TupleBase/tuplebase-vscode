@@ -21,7 +21,7 @@ Adapters roll out gradually per release. **Preview** engines are enabled today; 
 | Redis | Coming soon | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | Coming soon | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
 | CockroachDB | Coming soon | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
-| MariaDB | Coming soon | `mysql` | SQL | speaks the MySQL wire protocol — use the `mysql` adapter (verified: schema tree + queries work) |
+| MariaDB | Coming soon | `mariadb` | SQL | own picker entry; speaks the MySQL wire protocol — same driver as `mysql` (verified: schema tree + queries work) |
 
 ## Candidates — not scheduled
 
