@@ -7,6 +7,7 @@ import { parseConfig, type TupleBaseConfig } from '../core/config'
 import { loadFactories } from '../adapters/registry'
 import { envSecretSource } from './secrets'
 import { McpService } from './service'
+import { version } from '../../package.json'
 
 // stdout is the MCP transport — everything else goes to stderr
 const log = (msg: string) => process.stderr.write(`[tuplebase-mcp] ${msg}\n`)
@@ -39,7 +40,7 @@ async function main() {
   const { config, baseDir } = loadConfig()
   const service = new McpService(config, await loadFactories(), envSecretSource(), { allowWrites, maxRows, baseDir })
 
-  const server = new McpServer({ name: 'tuplebase', version: '0.1.1' })
+  const server = new McpServer({ name: 'tuplebase', version })
 
   server.registerTool('list_connections', {
     title: 'List connections',
