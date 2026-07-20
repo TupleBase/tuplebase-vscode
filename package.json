@@ -435,7 +435,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.13.3",
+    "@types/node": "^26.1.1",
     "@types/pg": "^8.20.0",
     "@types/ssh2": "^1.15.5",
     "@types/tabulator-tables": "^6.3.6",
@@ -449,11 +449,11 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1090.0",
+    "@aws-sdk/client-dynamodb": "^3.1091.0",
     "@aws-sdk/credential-providers": "^3.1091.0",
-    "@aws-sdk/lib-dynamodb": "^3.1090.0",
+    "@aws-sdk/lib-dynamodb": "^3.1091.0",
     "@clickhouse/client": "^1.23.1",
-    "@elastic/elasticsearch": "^8.19.2",
+    "@elastic/elasticsearch": "^9.4.2",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@redis/client": "^6.1.0",
     "@types/mssql": "^12.3.0",
@@ -463,7 +463,7 @@
     "kafkajs": "^2.2.4",
     "mongodb": "^7.5.0",
     "mssql": "^12.7.0",
-    "mysql2": "^3.23.0",
+    "mysql2": "^3.23.1",
     "neo4j-driver": "^6.2.0",
     "pg": "^8.22.0",
     "sql.js": "^1.14.1",
