@@ -1,4 +1,4 @@
-<img src="media/tuplebase-wordmark-ink-680.png" alt="TupleBase" width="340">
+<img src="media/tuplebase-wordmark-github.svg" alt="TupleBase" width="340">
 
 <br>
 
