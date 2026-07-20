@@ -52,6 +52,7 @@ h1 {
   outline-offset: 2px;
 }
 .card-icon { font-size: 26px; line-height: 1; }
+img.card-icon { width: 32px; height: 32px; object-fit: contain; }
 .card-label { font-weight: 600; font-size: 1.05em; }
 .card-blurb { color: var(--vscode-descriptionForeground); font-size: 0.9em; }
 
