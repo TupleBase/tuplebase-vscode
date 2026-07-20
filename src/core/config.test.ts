@@ -81,7 +81,7 @@ describe('parseConfig (groups model)', () => {
   })
 
   it('does not flag secret fields on skipped entries', () => {
-    const { config, errors } = parseConfig(base({ dev: { c: { adapter: 'mysql', password: 'x' } } }))
+    const { config, errors } = parseConfig(base({ dev: { c: { adapter: 'mssql', password: 'x' } } }))
     expect(errors).toEqual([])
     expect(config!.connections).toEqual({})
   })

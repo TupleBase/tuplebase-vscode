@@ -35,7 +35,7 @@ const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, mariadb, sqlite, 
 // the config loader skips entries referencing anything else. Lookups
 // (adapterById, presentationOf) stay full: they only resolve ids that already
 // passed the gate.
-const ENABLED_ADAPTER_IDS = ['postgres']
+const ENABLED_ADAPTER_IDS = ['postgres', 'mysql', 'mariadb']
 
 interface AdapterChunk { factory: AdapterFactory; completion?: CompletionContribution }
 

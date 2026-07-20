@@ -3,9 +3,9 @@ import { ADAPTERS, adapterById, adapterIds, allPresentations, presentations } fr
 
 describe('adapter rollout gating', () => {
   it('enabled views expose only rolled-out adapters', () => {
-    expect(adapterIds).toEqual(['postgres'])
-    expect(ADAPTERS.map(m => m.presentation.id)).toEqual(['postgres'])
-    expect(presentations().map(p => p.id)).toEqual(['postgres'])
+    expect(adapterIds).toEqual(['postgres', 'mysql', 'mariadb'])
+    expect(ADAPTERS.map(m => m.presentation.id)).toEqual(['postgres', 'mysql', 'mariadb'])
+    expect(presentations().map(p => p.id)).toEqual(['postgres', 'mysql', 'mariadb'])
   })
 
   it('the full presentation list keeps every registered adapter, in registry order', () => {
