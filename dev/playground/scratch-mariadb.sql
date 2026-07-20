@@ -1,5 +1,5 @@
--- MySQL demo (npm run db:start -- mysql && npm run db:seed -- mysql) — cmd+enter runs one statement.
--- Bind this file to the local-mysql connection.
+-- MariaDB demo (npm run db:start -- mariadb && npm run db:seed -- mariadb) — cmd+enter runs one statement.
+-- Bind this file to the local-mariadb connection.
 SELECT id, name, role FROM crew ORDER BY id;
 
 SELECT name, JSON_EXTRACT(meta, '$.rank') AS `rank`
