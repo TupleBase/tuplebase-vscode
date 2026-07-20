@@ -2,7 +2,7 @@
   "name": "tuplebase",
   "displayName": "TupleBase",
   "description": "Explore schemas, run queries, inspect results, and connect AI agents to databases from VS Code.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "tuplebase",
   "license": "MIT",
   "icon": "media/marketplace-icon-256.png",

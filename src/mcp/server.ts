@@ -39,7 +39,7 @@ async function main() {
   const { config, baseDir } = loadConfig()
   const service = new McpService(config, await loadFactories(), envSecretSource(), { allowWrites, maxRows, baseDir })
 
-  const server = new McpServer({ name: 'tuplebase', version: '0.1.0' })
+  const server = new McpServer({ name: 'tuplebase', version: '0.1.1' })
 
   server.registerTool('list_connections', {
     title: 'List connections',
