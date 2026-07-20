@@ -24,8 +24,8 @@ supports codicon syntax only, and an icon font is out of scope.
   build changes — the esbuild `copyAssets` step already ships
   `src/adapters/<id>/*.svg` to `dist/adapters/<id>/`.
 - **Keep the `-connected.svg` convention.** Connected variant = same devicon
-  plus a green status dot (`#2ea043`) at bottom-right, ~28px radius on the
-  128×128 devicon canvas.
+  plus a green status dot (`#3fb950`, matching the placeholder convention) at
+  bottom-right, 20px radius on the 128×128 devicon canvas.
 - **Fallback chain unchanged:** bundled SVG → codicon (`presentation.codicon`,
   then generic `database`). If devicon lacks an engine, its placeholder SVG
   stays until a logo is sourced.
