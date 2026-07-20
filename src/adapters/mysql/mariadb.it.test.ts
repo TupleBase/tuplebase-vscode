@@ -3,10 +3,11 @@ import { mysqlFactory } from './adapter'
 import type { ResolvedConnection } from '../types'
 
 // MariaDB speaks the MySQL wire protocol, so TupleBase reaches it through the
-// `mysql` adapter (no separate adapter — the CockroachDB-via-postgres pattern).
-// This test proves the mysql adapter drives a real MariaDB container end to end.
+// mysql driver behind its own `mariadb` alias entry (its chunk re-exports the
+// mysql factory). This test proves that adapter surface drives a real MariaDB
+// container end to end.
 const cfg: ResolvedConnection = {
-  group: 'test', name: 'it', adapter: 'mysql', readonly: false,
+  group: 'test', name: 'it', adapter: 'mariadb', readonly: false,
   host: 'localhost', port: 3307, database: 'tuplebase', user: 'tuplebase',
   secrets: { password: 'tuplebase' },
 }
