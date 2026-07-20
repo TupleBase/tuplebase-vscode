@@ -29,7 +29,7 @@
         "user": "tuplebase"
       },
       "local-mariadb": {
-        "adapter": "mysql",
+        "adapter": "mariadb",
         "host": "localhost",
         "port": 3307,
         "database": "tuplebase",

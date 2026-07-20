@@ -13,7 +13,7 @@ npm run watch         # esbuild watch, leave running
 
 Press **F5** in VS Code (two configs in `.vscode/launch.json`):
 
-- **Run Extension** — dev host opens `dev/playground`; its `.tuplebase.json` is pre-wired to every engine and `scratch-postgres.sql` is ready — run with **cmd+enter**. Note: only adapters listed in `ENABLED_ADAPTER_IDS` (`src/adapters/registry.ts`) appear in the dev host — currently just `postgres`; the other connections are silently skipped. To develop or exercise another engine, temporarily add its id to that list locally.
+- **Run Extension** — dev host opens `dev/playground`; its `.tuplebase.json` is pre-wired to every engine and `scratch-postgres.sql` is ready — run with **cmd+enter**. Note: only adapters listed in `ENABLED_ADAPTER_IDS` (`src/adapters/registry.ts`) appear in the dev host — currently `postgres`, `mysql` and `mariadb`; the other connections are silently skipped. To develop or exercise another engine, temporarily add its id to that list locally.
 - **Run Extension (empty workspace)** — dev host opens `dev/empty-ws` (no config), for the welcome view and Create Config flow.
 
 **cmd+R** in the dev host reloads after a code change; breakpoints in `src/` hit in the main window. The first connect prompts for the password (`tuplebase`) and stores it in the OS keychain — it won't ask again.

@@ -56,9 +56,9 @@ Passwords and private keys do not belong in this file. TupleBase stores credenti
 
 ## Supported engines
 
-**Available in `0.1.0`:** PostgreSQL.
+**Available in `0.1.0`:** PostgreSQL. **Coming in the next release:** MySQL and MariaDB.
 
-Adapters for MySQL and MariaDB, SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch and OpenSearch, Kafka, Redis, and DynamoDB are in development. See the [database support matrix](docs/DATABASES.md) for their current status.
+Adapters for SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch and OpenSearch, Kafka, Redis, and DynamoDB are in development. See the [database support matrix](docs/DATABASES.md) for their current status.
 
 ## MCP for AI agents
 

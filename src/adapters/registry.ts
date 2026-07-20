@@ -5,6 +5,7 @@ import type {
 } from './types'
 import { presentation as postgres } from './postgres/presentation'
 import { presentation as mysql } from './mysql/presentation'
+import { presentation as mariadb } from './mariadb/presentation'
 import { presentation as sqlite } from './sqlite/presentation'
 import { presentation as mssql } from './mssql/presentation'
 import { presentation as clickhouse } from './clickhouse/presentation'
@@ -24,7 +25,7 @@ import { presentation as dynamodb } from './dynamodb/presentation'
 // first time one of its connections is opened. Config validation, the JSON
 // schema, the connection form, tree icons, completion and the connection manager
 // all read from here.
-const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamodb]
+const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, mariadb, sqlite, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamodb]
 
 // ── Gradual rollout ──────────────────────────────────────────────────────────
 // Adapters enabled in this release. Rollout is per-version: move an id into
@@ -34,7 +35,7 @@ const PRESENTATIONS: AdapterPresentation[] = [postgres, mysql, sqlite, mssql, cl
 // the config loader skips entries referencing anything else. Lookups
 // (adapterById, presentationOf) stay full: they only resolve ids that already
 // passed the gate.
-const ENABLED_ADAPTER_IDS = ['postgres']
+const ENABLED_ADAPTER_IDS = ['postgres', 'mysql', 'mariadb']
 
 interface AdapterChunk { factory: AdapterFactory; completion?: CompletionContribution }
 

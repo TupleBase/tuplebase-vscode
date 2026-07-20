@@ -9,7 +9,8 @@ Adapters roll out gradually per release. **Preview** engines are enabled today; 
 | Database | Status | `adapter` | Query surface | Notes |
 |---|---|---|---|---|
 | PostgreSQL | Preview | `postgres` | SQL | TLS (`sslmode` + CA cert), password in OS keychain |
-| MySQL | Coming soon | `mysql` | SQL | schemas → tables → columns tree, JSON columns, password in OS keychain |
+| MySQL | Preview | `mysql` | SQL | schemas → tables → columns tree, JSON columns, password in OS keychain |
+| MariaDB | Preview | `mariadb` | SQL | own picker entry; speaks the MySQL wire protocol — same driver as `mysql` (verified: schema tree + queries work) |
 | SQLite | Coming soon | `sqlite` | SQL | file-based (`path`), no server/password; pure-JS driver (sql.js), writes persist to the file |
 | SQL Server | Coming soon | `mssql` | T-SQL | `mssql` (tedious) driver; `information_schema` schema tree, optional `encrypt` (server cert trusted) |
 | ClickHouse | Coming soon | `clickhouse` | SQL | analytics; HTTP driver (`@clickhouse/client`), `database`/`user` + optional `auth`, `system.*` schema tree |
@@ -21,7 +22,6 @@ Adapters roll out gradually per release. **Preview** engines are enabled today; 
 | Redis | Coming soon | `redis` | commands (`.redis`, one per line) | key-namespace tree, optional `auth` |
 | DynamoDB | Coming soon | `dynamodb` | PartiQL | AWS credential chain (profile/SSO/env), dynamodb-local `endpoint` |
 | CockroachDB | Coming soon | `postgres` | SQL | speaks the Postgres wire protocol — use the `postgres` adapter (verified: schema tree + queries work) |
-| MariaDB | Coming soon | `mysql` | SQL | speaks the MySQL wire protocol — use the `mysql` adapter (verified: schema tree + queries work) |
 
 ## Candidates — not scheduled
 

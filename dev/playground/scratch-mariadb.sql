@@ -1,5 +1,5 @@
--- MySQL demo (npm run db:start -- mysql && npm run db:seed -- mysql) — cmd+enter runs one statement.
--- Bind this file to the local-mysql connection.
+-- MariaDB demo (npm run db:start -- mariadb && npm run db:seed -- mariadb) — cmd+enter runs one statement.
+-- Bind this file to the local-mariadb connection.
 SELECT id, name, role FROM crew ORDER BY id;
 
 SELECT name, JSON_EXTRACT(meta, '$.rank') AS `rank`
@@ -10,7 +10,7 @@ UPDATE crew SET role = 'first mate' WHERE name = 'grace';
 
 INSERT INTO crew (id, name, role, meta) VALUES (4, 'lin', 'cook', '{"rank": 4}');
 
--- Paging demo — part of the standard seed (npm run db:seed -- mysql) (10,000 rows)
+-- Paging demo — part of the standard seed (npm run db:seed -- mariadb) (10,000 rows)
 SELECT count(*) FROM pagination_demo;                           -- 10000
 SELECT * FROM pagination_demo ORDER BY id;                      -- full set; the grid pages it
 SELECT * FROM pagination_demo ORDER BY id LIMIT 100 OFFSET 0;   -- page 1
