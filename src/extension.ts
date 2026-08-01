@@ -16,6 +16,7 @@ import { registerQueryCodeLens } from './ui/queryCodeLens'
 import { addGroup } from './core/configWriter'
 import { registerNewConnectionForm } from './ui/connFormPanel'
 import { registerExplorerCommands } from './ui/explorerCommands'
+import { registerTableFilterCommands } from './ui/tableFilterCommands'
 import { registerMcpConfig } from './ui/mcpConfig'
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -37,6 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSchemaTree(manager, store, filters, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store, vault),
     registerExplorerCommands(store),
+    registerTableFilterCommands(manager, store, filters),
     registerMcpConfig(context.extensionUri, store, vault),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {
       history?.append(entry)

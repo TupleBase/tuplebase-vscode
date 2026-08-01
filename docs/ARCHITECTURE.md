@@ -145,7 +145,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 ```
 
 - **2-stage form**: pick a DB-type card → per-adapter fields (from `presentation.fields`) → optional credentials section (password + prompt-every-connect toggle).
-- **Explorer** (`src/ui/schemaTree.ts`): group-first tree; per-adapter icons; drag a connection between groups; context menus + toolbar wired to `configWriter`.
+- **Explorer** (`src/ui/schemaTree.ts`): group-first tree; per-adapter icons; drag a connection between groups; context menus + toolbar wired to `configWriter`. A per-node table filter (`src/core/tableFilter.ts`, `src/ui/tableFilterCommands.ts`) hides tables from the tree only — it never affects queries, completion or MCP. It attaches to the node named by the adapter's `tableParent` and persists in `workspaceState`.
 - **Tree glyphs**: connection rows use the per-adapter SVG; schema/table/column rows use `tb-*` ids from the bundled icon font (`src/ui/icons/*.svg` → `dist/icons/tuplebase.woff`, declared in `contributes.icons`). Being `ThemeIcon`s rather than SVG paths, they follow the editor theme and accept a `ThemeColor` — which is how a `pk` column renders as a tinted key. Codepoints are pinned in `scripts/gen-icons.mjs` and mirrored in `package.json`; change one and you must change the other.
 - **configWriter** (`src/core/configWriter.ts`): all edits are jsonc `modify`/`applyEdits`, so comments and formatting survive. `addConnection` auto-creates a missing group (used by the toolbar's default "Ungrouped" bucket).
 
