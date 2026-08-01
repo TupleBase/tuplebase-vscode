@@ -6,7 +6,7 @@ import { BRAND } from '../core/product'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
-import { adapterById, presentationOf } from '../adapters/registry'
+import { presentationOf } from '../adapters/registry'
 import { TableFilterStore } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
@@ -79,7 +79,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   // A bundled adapter SVG (green-dot variant when connected) if one exists and we
   // know where dist/ lives; otherwise the themed codicon (green tint = connected).
   private connectionIcon(adapter: string, connected: boolean): vscode.ThemeIcon | vscode.Uri {
-    const iconFile = adapterById.get(adapter)?.presentation.iconFile
+    const iconFile = presentationOf(adapter)?.iconFile
     if (iconFile && this.extensionUri) {
       const file = connected ? iconFile.replace(/\.svg$/, '-connected.svg') : iconFile
       return vscode.Uri.joinPath(this.extensionUri, 'dist', 'adapters', adapter, file)
