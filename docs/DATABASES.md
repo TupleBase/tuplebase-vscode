@@ -38,6 +38,7 @@ Add a row when a database is requested; graduate it to **Supported engines** whe
 Adapters are self-contained: create the folder, then register it in one line.
 
 1. Create `src/adapters/<db>/` with:
+   - `presentation.ts` — eager UI metadata. Set `tableParent`: `'schema'` if the tree puts tables under a schema node, `'connection'` if they sit directly under the connection, omit if the engine has no tables. The Explorer's table filter attaches to that node.
    - `adapter.ts` — `Adapter` + `AdapterFactory` (model on `postgres/adapter.ts`); set `languageId` and `statementSyntax`.
    - `completion.ts` — a `CompletionContribution` (optional).
    - `<db>.svg` (+ `<db>-connected.svg`) — the tree/picker icon: the [devicon](https://github.com/devicons/devicon) `original` SVG, and a variant with the green status dot appended (copy the circle element from any existing `-connected.svg`).

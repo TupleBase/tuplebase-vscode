@@ -13,6 +13,7 @@ export const presentation: AdapterPresentation = {
   passwordSecret: true,
   // write ⇔ the db.coll.<method> is not a read method
   writeRule: { mode: 'methodNotIn', keywords: ['find', 'findone', 'aggregate', 'count', 'countdocuments', 'distinct'] },
+  tableParent: 'connection',
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 27017 },

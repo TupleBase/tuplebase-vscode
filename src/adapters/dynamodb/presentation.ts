@@ -11,6 +11,7 @@ export const presentation: AdapterPresentation = {
   statementSyntax: 'partiql',
   completionTriggers: ['.', ' ', '"'],
   writeRule: { mode: 'firstKeywordIn', keywords: ['INSERT', 'UPDATE', 'DELETE'] },
+  tableParent: 'connection',
   fields: [
     { key: 'region', label: 'Region', kind: 'text', required: true },
     { key: 'profile', label: 'AWS profile', kind: 'text' },

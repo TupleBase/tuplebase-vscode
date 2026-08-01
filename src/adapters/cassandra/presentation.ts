@@ -13,6 +13,7 @@ export const presentation: AdapterPresentation = {
   completionTriggers: ['.', ' ', '"'],
   passwordSecret: true,
   writeRule: { mode: 'firstKeywordIn', keywords: SQL_WRITE_KEYWORDS },
+  tableParent: 'schema',
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 9042 },

@@ -12,6 +12,7 @@ export const presentation: AdapterPresentation = {
   completionTriggers: [' '],
   // write ⇔ the command is not one of the read/browse commands
   writeRule: { mode: 'firstKeywordNotIn', keywords: ['TOPICS', 'DESCRIBE', 'CONSUME', 'TAIL', 'LIST'] },
+  tableParent: 'connection',
   fields: [
     { key: 'host', label: 'Broker host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Broker port', kind: 'number', default: 9092 },

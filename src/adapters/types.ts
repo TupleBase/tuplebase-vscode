@@ -127,6 +127,11 @@ export interface AdapterPresentation {
   completionTriggers?: string[]   // trigger chars for completion (eager — the provider loads lazily)
   passwordSecret?: boolean        // uses a password secret — the form offers a credentials section
   writeRule?: WriteRule           // read-only guard classification (omit → treated conservatively as write)
+  // Which tree node's direct children are tables — the node the Explorer's table
+  // filter attaches to. 'schema' for engines with a schema level (postgres,
+  // mysql); 'connection' for flat engines whose tables hang straight off the
+  // connection (sqlite, mongodb, kafka). Omit for engines with no tables (redis).
+  tableParent?: 'schema' | 'connection'
   fields: Field[]
 }
 
