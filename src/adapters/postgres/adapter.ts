@@ -149,13 +149,22 @@ class PostgresAdapter implements Adapter {
     }
     if (node.kind === 'table') {
       const [schema, table] = parsePgNodeId(node.id)
+      // left join against the table's primary-key constraint so PK columns can be
+      // badged; a table without one simply yields null for every row
       const r = await pool.query(
-        `select column_name, data_type from information_schema.columns
-         where table_schema = $1 and table_name = $2 order by ordinal_position`, [schema, table]
+        `select c.column_name, c.data_type, k.constraint_name is not null as pk
+         from information_schema.columns c
+         left join information_schema.table_constraints t
+           on t.table_schema = c.table_schema and t.table_name = c.table_name
+          and t.constraint_type = 'PRIMARY KEY'
+         left join information_schema.key_column_usage k
+           on k.constraint_name = t.constraint_name and k.constraint_schema = t.constraint_schema
+          and k.column_name = c.column_name
+         where c.table_schema = $1 and c.table_name = $2 order by c.ordinal_position`, [schema, table]
       )
       return r.rows.map(row => ({
         id: pgNodeId(schema, table, row.column_name), label: row.column_name,
-        kind: 'column', hasChildren: false, detail: row.data_type,
+        kind: 'column', hasChildren: false, detail: row.data_type, pk: Boolean(row.pk),
       }))
     }
     return []

@@ -138,7 +138,9 @@ class DynamoDBAdapter implements Adapter {
     return table
   }
 
-  private keyNodes(parentId: string, keys: KeySchemaElement[], defs: AttributeDefinition[]): TreeNode[] {
+  // pk marks the base table's key schema, which is Dynamo's primary key; a GSI's
+  // key schema is an index key and is deliberately left unmarked
+  private keyNodes(parentId: string, keys: KeySchemaElement[], defs: AttributeDefinition[], pk: boolean): TreeNode[] {
     return keys.map(k => ({
       id: `${parentId}.${k.AttributeName}`,
       label: String(k.AttributeName),
@@ -146,6 +148,7 @@ class DynamoDBAdapter implements Adapter {
       hasChildren: false,
       detail: `${k.KeyType === 'HASH' ? 'partition' : 'sort'} key (${
         defs.find(d => d.AttributeName === k.AttributeName)?.AttributeType ?? '?'})`,
+      pk,
     }))
   }
 
@@ -158,7 +161,7 @@ class DynamoDBAdapter implements Adapter {
     }
     if (node.kind === 'table') {
       const table = await this.describe(node.id.slice(TABLE_PREFIX.length))
-      const out = this.keyNodes(node.id, table.KeySchema ?? [], table.AttributeDefinitions ?? [])
+      const out = this.keyNodes(node.id, table.KeySchema ?? [], table.AttributeDefinitions ?? [], true)
       out.push(...(table.GlobalSecondaryIndexes ?? []).map(gsi => ({
         id: `${node.id}${GSI_MARK}${gsi.IndexName}`,
         label: String(gsi.IndexName),
@@ -172,7 +175,7 @@ class DynamoDBAdapter implements Adapter {
       const [tableName, gsiName] = node.id.slice(TABLE_PREFIX.length).split(GSI_MARK)
       const table = await this.describe(tableName)
       const gsi = (table.GlobalSecondaryIndexes ?? []).find(g => g.IndexName === gsiName)
-      return gsi ? this.keyNodes(node.id, gsi.KeySchema ?? [], table.AttributeDefinitions ?? []) : []
+      return gsi ? this.keyNodes(node.id, gsi.KeySchema ?? [], table.AttributeDefinitions ?? [], false) : []
     }
     return []
   }

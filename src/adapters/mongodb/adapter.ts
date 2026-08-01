@@ -159,6 +159,8 @@ class MongoAdapter implements Adapter {
       return Object.keys(sample).map(field => ({
         id: mgNodeId(name, field), label: field, kind: 'column', hasChildren: false,
         detail: sample[field] === null ? 'null' : Array.isArray(sample[field]) ? 'array' : typeof sample[field],
+        // _id is the only field Mongo guarantees and indexes as the primary key
+        pk: field === '_id',
       }))
     }
     return []

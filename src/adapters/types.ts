@@ -51,6 +51,9 @@ export interface TreeNode {
   kind: string
   hasChildren: boolean
   detail?: string
+  // column nodes only — set when the column participates in the table's primary
+  // key. Engines without a primary key concept (Kafka, Neo4j, ES) never set it.
+  pk?: boolean
 }
 
 export interface ExecuteOptions {

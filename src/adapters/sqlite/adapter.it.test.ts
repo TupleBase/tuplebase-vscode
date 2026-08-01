@@ -81,6 +81,8 @@ describe('sqlite adapter', () => {
     expect(tables.every(t => t.kind === 'table')).toBe(true)
     const cols = await a.getChildren(tables.find(t => t.label === 'crew')!)
     expect(cols.map(c => c.label)).toEqual(['id', 'name', 'role', 'meta'])
+    // crew was created with `id integer primary key`, so only id is flagged
+    expect(cols.filter(c => c.pk).map(c => c.label)).toEqual(['id'])
     expect((await a.searchItems('table', 'cr')).map(t => t.name)).toContain('crew')
     expect((await a.searchItems('column', 'na')).some(c => c.name === 'name' && c.parent === 'crew')).toBe(true)
     await a.dispose()

@@ -90,7 +90,7 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
 
 1. **Create `src/adapters/<id>/`** with the four files above.
    - `presentation.ts` — model on `postgres/presentation.ts`. Set `id`, `label`, `emoji`, `blurb`, `codicon`, `iconFile`, `languageId` (`'sql'` / `'redis'` / a new grammar), `statementSyntax` (`'sql'` / `'partiql'` / `'redis'`), `completionTriggers`, `passwordSecret` (if it takes a password), and `fields` (the connection-form fields — these also generate the JSON schema).
-   - `adapter.ts` — implement `Adapter` (`connect`, `testConnection`, `execute`, `getChildren`, `searchItems`, `dispose`) and export an `AdapterFactory` (`id`, `validate`, `requiredSecrets`, `create`). Load the driver with `await import('driver')` **inside** a method, never at module top level, so it stays out of the chunk's load cost until used.
+   - `adapter.ts` — implement `Adapter` (`connect`, `testConnection`, `execute`, `getChildren`, `searchItems`, `dispose`) and export an `AdapterFactory` (`id`, `validate`, `requiredSecrets`, `create`). Load the driver with `await import('driver')` **inside** a method, never at module top level, so it stays out of the chunk's load cost until used. Set `pk: true` on the column nodes that form the table's primary key if the engine has one; leave it unset otherwise (Kafka, Neo4j and Elasticsearch do).
    - `completion.ts` (optional) — export a `CompletionContribution` with `provide(ctx)` returning `CompletionResult[]`. `ctx` gives you the text, cursor, `connected` flag and a `search(kind, prefix)` bound to the live adapter.
    - `index.ts` — `export { <id>Factory as factory } from './adapter'` and `export { <id>Completion as completion } from './completion'`.
    - `<id>.svg` + `<id>-connected.svg` — 16×16 marks.
@@ -146,6 +146,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 
 - **2-stage form**: pick a DB-type card → per-adapter fields (from `presentation.fields`) → optional credentials section (password + prompt-every-connect toggle).
 - **Explorer** (`src/ui/schemaTree.ts`): group-first tree; per-adapter icons; drag a connection between groups; context menus + toolbar wired to `configWriter`.
+- **Tree glyphs**: connection rows use the per-adapter SVG; schema/table/column rows use `tb-*` ids from the bundled icon font (`src/ui/icons/*.svg` → `dist/icons/tuplebase.woff`, declared in `contributes.icons`). Being `ThemeIcon`s rather than SVG paths, they follow the editor theme and accept a `ThemeColor` — which is how a `pk` column renders as a tinted key. Codepoints are pinned in `scripts/gen-icons.mjs` and mirrored in `package.json`; change one and you must change the other.
 - **configWriter** (`src/core/configWriter.ts`): all edits are jsonc `modify`/`applyEdits`, so comments and formatting survive. `addConnection` auto-creates a missing group (used by the toolbar's default "Ungrouped" bucket).
 
 ---
@@ -167,8 +168,9 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 | `dist/adapters/<id>/index.js` | per-adapter chunk (factory + completion + driver), loaded by the extension |
 | `dist/mcp/server.js` + `dist/mcp/adapters/<id>/` | the standalone MCP server + its adapter chunks |
 | `dist/test/*.js` | the VS Code smoke test |
+| `dist/icons/tuplebase.woff` | the tree glyph font, compiled from `src/ui/icons/*.svg` |
 
-`npm run build` runs `gen:schema` then esbuild. `tsconfig.json` uses **bundler** module resolution (matches esbuild; allows extensionless dynamic imports). See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `TUPLEBASE_IT=1 npx vitest run`, `npm run test:vscode`).
+`npm run build` runs `gen:schema`, `gen:icons`, then esbuild. `tsconfig.json` uses **bundler** module resolution (matches esbuild; allows extensionless dynamic imports). See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `TUPLEBASE_IT=1 npx vitest run`, `npm run test:vscode`).
 
 ---
 

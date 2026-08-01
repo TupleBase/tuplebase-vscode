@@ -124,6 +124,39 @@ describe('SchemaTreeProvider with a live adapter', () => {
   })
 })
 
+describe('SchemaTreeProvider db node icons', () => {
+  const iconFor = (node: TreeNode) =>
+    makeProvider(true).getTreeItem({ type: 'dbnode', connName: 'db1', node }) as {
+      iconPath?: { id: string; color?: { id: string } }
+    }
+
+  it('uses the bundled font glyphs for schema, table and column', () => {
+    expect(iconFor({ id: 's', label: 'public', kind: 'schema', hasChildren: true }).iconPath?.id).toBe('tb-schema')
+    expect(iconFor({ id: 't', label: 'users', kind: 'table', hasChildren: true }).iconPath?.id).toBe('tb-table')
+    expect(iconFor({ id: 'c', label: 'email', kind: 'column', hasChildren: false }).iconPath?.id).toBe('tb-field')
+  })
+
+  it('badges a primary-key column with the tinted key glyph', () => {
+    const item = iconFor({ id: 'c', label: 'id', kind: 'column', hasChildren: false, pk: true })
+    expect(item.iconPath?.id).toBe('tb-pk')
+    expect(item.iconPath?.color?.id).toBe('charts.yellow')
+  })
+
+  it('badges a flagged key node too, so Dynamo base-table keys read as primary', () => {
+    expect(iconFor({ id: 'k', label: 'pk', kind: 'key', hasChildren: false, pk: true }).iconPath?.id).toBe('tb-pk')
+  })
+
+  it('leaves unflagged key nodes on the plain key codicon', () => {
+    const item = iconFor({ id: 'k', label: 'session:1', kind: 'key', hasChildren: false })
+    expect(item.iconPath?.id).toBe('key')
+    expect(item.iconPath?.color).toBeUndefined()
+  })
+
+  it('falls back for an unknown kind', () => {
+    expect(iconFor({ id: 'x', label: '?', kind: 'wat', hasChildren: false }).iconPath?.id).toBe('circle-outline')
+  })
+})
+
 describe('SchemaTreeProvider group hierarchy', () => {
   it('roots at groups, not connections', async () => {
     const provider = makeProvider(false)

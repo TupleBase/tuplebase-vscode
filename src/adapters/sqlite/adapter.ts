@@ -144,10 +144,12 @@ class SQLiteAdapter implements Adapter {
     }
     if (node.kind === 'table') {
       const [table] = parseSqNodeId(node.id)
-      const r = this.query('select name, type from pragma_table_info(?)', [table])
+      // pragma pk is the 1-based position within the primary key, 0 when not part of it
+      const r = this.query('select name, type, pk from pragma_table_info(?)', [table])
       return r.map(row => ({
         id: sqNodeId(table, String(row.name)), label: String(row.name),
         kind: 'column', hasChildren: false, detail: row.type ? String(row.type) : undefined,
+        pk: Number(row.pk) > 0,
       }))
     }
     return []

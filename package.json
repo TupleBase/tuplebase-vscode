@@ -40,6 +40,36 @@
     "workspaceContains:**/.tuplebase.json"
   ],
   "contributes": {
+    "icons": {
+      "tb-schema": {
+        "description": "Schema, database or keyspace",
+        "default": {
+          "fontPath": "./dist/icons/tuplebase.woff",
+          "fontCharacter": "\\E001"
+        }
+      },
+      "tb-table": {
+        "description": "Table, collection, index or topic",
+        "default": {
+          "fontPath": "./dist/icons/tuplebase.woff",
+          "fontCharacter": "\\E002"
+        }
+      },
+      "tb-field": {
+        "description": "Column or field",
+        "default": {
+          "fontPath": "./dist/icons/tuplebase.woff",
+          "fontCharacter": "\\E003"
+        }
+      },
+      "tb-pk": {
+        "description": "Primary key column",
+        "default": {
+          "fontPath": "./dist/icons/tuplebase.woff",
+          "fontCharacter": "\\E004"
+        }
+      }
+    },
     "languages": [
       {
         "id": "jsonc",
@@ -420,9 +450,10 @@
     }
   },
   "scripts": {
-    "build": "npm run gen:schema && npm run gen:notices && node esbuild.mjs",
-    "watch": "node esbuild.mjs --watch",
+    "build": "npm run gen:schema && npm run gen:icons && npm run gen:notices && node esbuild.mjs",
+    "watch": "npm run gen:icons && node esbuild.mjs --watch",
     "gen:schema": "node scripts/gen-schema.mjs",
+    "gen:icons": "node scripts/gen-icons.mjs",
     "gen:notices": "node scripts/gen-third-party-notices.mjs",
     "package:prerelease": "npm run build && vsce package --pre-release",
     "package:release": "npm run build && vsce package",
@@ -444,6 +475,7 @@
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "3.9.2",
     "esbuild": "^0.28.1",
+    "fantasticon": "^4.1.0",
     "ovsx": "1.0.2",
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
@@ -480,9 +512,10 @@
   },
   "allowScripts": {
     "cpu-features@0.0.10": true,
-    "esbuild@0.24.2": true,
-    "esbuild@0.21.5": true,
     "fsevents@2.3.3": true,
-    "ssh2@1.17.0": true
+    "ssh2@1.17.0": true,
+    "@vscode/vsce-sign@2.0.9": true,
+    "esbuild@0.28.1": true,
+    "keytar@7.9.0": true
   }
 }

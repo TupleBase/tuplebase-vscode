@@ -112,12 +112,15 @@ class CassandraAdapter implements Adapter {
     }
     if (node.kind === 'table') {
       const [ks, table] = parseCsNodeId(node.id)
+      // partition_key and clustering columns together form the CQL primary key
       const r = await this.rows(
-        'select column_name, type from system_schema.columns where keyspace_name = ? and table_name = ?', [ks, table],
+        'select column_name, type, kind from system_schema.columns where keyspace_name = ? and table_name = ?',
+        [ks, table],
       )
       return r.map(row => ({
         id: csNodeId(ks, table, String(row.column_name)), label: String(row.column_name),
         kind: 'column', hasChildren: false, detail: row.type ? String(row.type) : undefined,
+        pk: row.kind === 'partition_key' || row.kind === 'clustering',
       }))
     }
     return []

@@ -118,11 +118,14 @@ class MySQLAdapter implements Adapter {
     }
     if (node.kind === 'table') {
       const [schema, table] = parseMyNodeId(node.id)
-      const r = await this.rows<RowDataPacket & { name: string; type: string }>(
-        `select column_name as name, data_type as type from information_schema.columns
+      const r = await this.rows<RowDataPacket & { name: string; type: string; ckey: string }>(
+        `select column_name as name, data_type as type, column_key as ckey from information_schema.columns
          where table_schema = ? and table_name = ? order by ordinal_position`, [schema, table],
       )
-      return r.map(row => ({ id: myNodeId(schema, table, row.name), label: row.name, kind: 'column', hasChildren: false, detail: row.type }))
+      return r.map(row => ({
+        id: myNodeId(schema, table, row.name), label: row.name, kind: 'column',
+        hasChildren: false, detail: row.type, pk: row.ckey === 'PRI',
+      }))
     }
     return []
   }

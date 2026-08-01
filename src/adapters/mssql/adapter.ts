@@ -116,12 +116,20 @@ class MSSQLAdapter implements Adapter {
     if (node.kind === 'table') {
       const [schema, table] = parseMsNodeId(node.id)
       const r = await this.rows(
-        `select column_name, data_type from information_schema.columns
-         where table_schema = @s and table_name = @t order by ordinal_position`, { s: schema, t: table },
+        `select c.column_name, c.data_type, iif(k.column_name is null, 0, 1) as pk
+         from information_schema.columns c
+         left join information_schema.table_constraints t
+           on t.table_schema = c.table_schema and t.table_name = c.table_name
+          and t.constraint_type = 'PRIMARY KEY'
+         left join information_schema.key_column_usage k
+           on k.constraint_name = t.constraint_name and k.column_name = c.column_name
+         where c.table_schema = @s and c.table_name = @t order by c.ordinal_position`,
+        { s: schema, t: table },
       )
       return r.map(row => ({
         id: msNodeId(schema, table, String(row.column_name)), label: String(row.column_name),
         kind: 'column', hasChildren: false, detail: row.data_type ? String(row.data_type) : undefined,
+        pk: Number(row.pk) === 1,
       }))
     }
     return []

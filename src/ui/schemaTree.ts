@@ -15,15 +15,25 @@ export type ExplorerNode =
   | { type: 'connection'; conn: ConnectionConfig }
   | { type: 'dbnode'; connName: string; node: TreeNode }
 
+// tb-* ids come from the bundled icon font declared in contributes.icons; the
+// rest are stock codicons. Both are ThemeIcons, so both follow the editor theme.
 const KIND_ICONS: Record<string, string> = {
-  schema: 'symbol-namespace',
-  table: 'table',
-  column: 'symbol-field',
-  namespace: 'folder',
+  schema: 'tb-schema',
+  table: 'tb-table',
+  column: 'tb-field',
+  namespace: 'symbol-namespace',
   key: 'key',
   index: 'list-tree',
   info: 'info',
   connect: 'plug',
+}
+
+// A primary-key column gets its own glyph, tinted so it stands out in a long
+// column list. Applies to any node kind an adapter flagged — Dynamo marks its
+// base-table key nodes, which are kind 'key' rather than 'column'.
+function nodeIcon(node: TreeNode): vscode.ThemeIcon {
+  if (node.pk) return new vscode.ThemeIcon('tb-pk', new vscode.ThemeColor('charts.yellow'))
+  return new vscode.ThemeIcon(KIND_ICONS[node.kind] ?? 'circle-outline')
 }
 
 export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode> {
@@ -74,7 +84,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       el.node.hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None
     )
     item.description = el.node.detail
-    item.iconPath = new vscode.ThemeIcon(KIND_ICONS[el.node.kind] ?? 'circle-outline')
+    item.iconPath = nodeIcon(el.node)
     item.contextValue = `tuplebase.${el.node.kind}`
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
     if (el.node.kind === 'connect') {
