@@ -236,7 +236,7 @@ describe('SchemaTreeProvider table filter', () => {
   })
 
   it('applies a schema-level filter under its own parent id', async () => {
-    const { provider, filters } = withFilter()
+    const { provider, filters } = withFilter(MIXED)
     await filters.set('db1', 'pg:public', { include: ['orders'], total: 2 })
     const schemaEl: ExplorerNode = {
       type: 'dbnode',
