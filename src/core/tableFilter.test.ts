@@ -75,4 +75,18 @@ describe('TableFilterStore', () => {
     await store.clear('db1', 'pg:public')
     expect(fired).toBe(2)
   })
+
+  // Accepting the picker unchanged clears a filter that was never set. Firing
+  // there would refresh the tree — re-querying every expanded node — for nothing.
+  it('clearing an absent filter neither writes nor fires', async () => {
+    const state = fakeMemento()
+    const store = new TableFilterStore(state as never)
+    let fired = 0
+    store.onDidChange(() => {
+      fired++
+    })
+    await store.clear('db1', 'pg:public')
+    expect(fired).toBe(0)
+    expect(state.keys()).toEqual([])
+  })
 })

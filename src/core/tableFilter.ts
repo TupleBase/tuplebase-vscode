@@ -1,4 +1,11 @@
 import * as vscode from 'vscode'
+import type { TreeNode } from '../adapters/types'
+
+// What the filter acts on. The tree asks the negated form (keep everything that
+// is not a filtered-out table) and the picker asks the positive form (offer
+// these), so the two must agree — hence one definition rather than a `=== 'table'`
+// and a `!== 'table'` drifting apart in separate files.
+export const isTableNode = (node: TreeNode): boolean => node.kind === 'table'
 
 export interface TableFilter {
   include: string[]   // TreeNode labels kept visible, matched exactly and case-sensitively
@@ -29,8 +36,14 @@ export class TableFilterStore {
   }
 
   async clear(connName: string, parentId: string): Promise<void> {
-    const next = { ...this.all() }
-    delete next[keyFor(connName, parentId)]
+    const key = keyFor(connName, parentId)
+    const current = this.all()
+    // Accepting the picker unchanged clears an absent filter — the common
+    // gesture. Writing then would persist an identical map and fire a tree
+    // refresh, which re-queries every expanded node, for no change at all.
+    if (!(key in current)) return
+    const next = { ...current }
+    delete next[key]
     await this.write(next)
   }
 

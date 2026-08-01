@@ -7,7 +7,7 @@ import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
 import { presentationOf } from '../adapters/registry'
-import { TableFilterStore } from '../core/tableFilter'
+import { TableFilterStore, isTableNode } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
 
@@ -151,7 +151,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     const filter = this.filters.get(connName, parentId)
     if (!filter) return nodes
     const include = new Set(filter.include)
-    return nodes.filter(n => n.kind !== 'table' || include.has(n.label))
+    return nodes.filter(n => !isTableNode(n) || include.has(n.label))
   }
 
   async getChildren(el?: ExplorerNode): Promise<ExplorerNode[]> {

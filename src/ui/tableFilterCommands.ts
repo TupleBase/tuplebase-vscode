@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { ConnectionManager } from '../core/connections'
 import { ConfigStore } from '../core/configStore'
-import { TableFilterStore } from '../core/tableFilter'
+import { TableFilterStore, isTableNode } from '../core/tableFilter'
 import { BRAND } from '../core/product'
 import { errorMessage } from '../core/errors'
 import { filterTarget, type ExplorerNode } from './schemaTree'
@@ -24,7 +24,7 @@ export function registerTableFilterCommands(
       let tables: string[]
       try {
         const children = await adapter.getChildren(target.parentNode)
-        tables = children.filter(n => n.kind === 'table').map(n => n.label)
+        tables = children.filter(isTableNode).map(n => n.label)
       } catch (e) {
         void vscode.window.showErrorMessage(`${BRAND}: ${errorMessage(e)}`)
         return
