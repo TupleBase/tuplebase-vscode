@@ -77,6 +77,12 @@ function makeProvider(
 
 const connEl: ExplorerNode = { type: 'connection', conn: CONN }
 
+// a live provider plus the filter store it reads, so a test can set a filter
+const withFilter = (children?: TreeNode[]) => {
+  const filters = newFilters()
+  return { filters, provider: makeProvider(true, undefined, { children, filters }) }
+}
+
 describe('SchemaTreeProvider without a live adapter', () => {
   it('shows a connect placeholder instead of connecting', async () => {
     const provider = makeProvider(false)
@@ -208,11 +214,6 @@ describe('SchemaTreeProvider table filter', () => {
   const labels = (nodes: ExplorerNode[]) =>
     nodes.map(n => (n.type === 'dbnode' ? n.node.label : n.type))
 
-  const withFilter = () => {
-    const filters = newFilters()
-    return { filters, provider: makeProvider(true, undefined, { children: MIXED, filters }) }
-  }
-
   it('passes every child through when no filter is stored', async () => {
     const provider = makeProvider(true, undefined, { children: MIXED })
     expect(labels(await provider.getChildren(connEl))).toEqual([
@@ -221,7 +222,7 @@ describe('SchemaTreeProvider table filter', () => {
   })
 
   it('drops tables that are not included', async () => {
-    const { provider, filters } = withFilter()
+    const { provider, filters } = withFilter(MIXED)
     await filters.set('db1', '', { include: ['orders'], total: 2 })
     const shown = labels(await provider.getChildren(connEl))
     expect(shown).toContain('orders')
@@ -229,7 +230,7 @@ describe('SchemaTreeProvider table filter', () => {
   })
 
   it('never hides a non-table sibling', async () => {
-    const { provider, filters } = withFilter()
+    const { provider, filters } = withFilter(MIXED)
     await filters.set('db1', '', { include: [], total: 2 })
     expect(labels(await provider.getChildren(connEl))).toEqual(['public', 'showing first 100 keys'])
   })
@@ -253,11 +254,6 @@ describe('SchemaTreeProvider filter indicator', () => {
     type: 'dbnode',
     connName: 'db1',
     node: { id: 'pg:public', label: 'public', kind: 'schema', hasChildren: true },
-  }
-
-  const withFilter = () => {
-    const filters = newFilters()
-    return { filters, provider: makeProvider(true, undefined, { filters }) }
   }
 
   it('marks an unfiltered schema as filterable', () => {

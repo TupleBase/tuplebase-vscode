@@ -14,7 +14,7 @@ vi.mock('vscode', () => ({
   },
 }))
 
-import { TableFilterStore, ownsTableFilter } from './tableFilter'
+import { TableFilterStore } from './tableFilter'
 
 function fakeMemento() {
   const data = new Map<string, unknown>()
@@ -74,22 +74,5 @@ describe('TableFilterStore', () => {
     await store.set('db1', 'pg:public', { include: ['orders'], total: 500 })
     await store.clear('db1', 'pg:public')
     expect(fired).toBe(2)
-  })
-})
-
-describe('ownsTableFilter', () => {
-  it('matches the connection node for flat engines', () => {
-    expect(ownsTableFilter('connection', 'connection')).toBe(true)
-    expect(ownsTableFilter('connection', 'schema')).toBe(false)
-  })
-
-  it('matches the schema node for schema-level engines', () => {
-    expect(ownsTableFilter('schema', 'schema')).toBe(true)
-    expect(ownsTableFilter('schema', 'connection')).toBe(false)
-  })
-
-  it('matches nothing for an engine with no tables', () => {
-    expect(ownsTableFilter(undefined, 'connection')).toBe(false)
-    expect(ownsTableFilter(undefined, 'namespace')).toBe(false)
   })
 })

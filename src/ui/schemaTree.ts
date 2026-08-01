@@ -7,7 +7,7 @@ import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
 import { adapterById, presentationOf } from '../adapters/registry'
-import { TableFilterStore, ownsTableFilter } from '../core/tableFilter'
+import { TableFilterStore } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
 
@@ -35,6 +35,30 @@ const KIND_ICONS: Record<string, string> = {
 function nodeIcon(node: TreeNode): vscode.ThemeIcon {
   if (node.pk) return new vscode.ThemeIcon('tb-pk', new vscode.ThemeColor('charts.yellow'))
   return new vscode.ThemeIcon(KIND_ICONS[node.kind] ?? 'circle-outline')
+}
+
+// The node a table filter attaches to — the connection for flat engines, the
+// schema node for engines with a schema level; undefined when this node owns no
+// filter. One rule, shared by the tree (which draws the state) and the filter
+// commands (which edit it), so the two can never disagree.
+export interface FilterTarget {
+  connName: string
+  parentNode: TreeNode | null  // null = the connection root
+  parentId: string             // '' for a connection node — it has no TreeNode id
+  label: string
+}
+
+export function filterTarget(el: ExplorerNode | undefined, store: ConfigStore): FilterTarget | undefined {
+  if (el?.type === 'connection') {
+    if (presentationOf(el.conn.adapter)?.tableParent !== 'connection') return undefined
+    return { connName: el.conn.name, parentNode: null, parentId: '', label: el.conn.name }
+  }
+  if (el?.type === 'dbnode') {
+    const adapterId = store.connection(el.connName)?.adapter
+    if (!adapterId || presentationOf(adapterId)?.tableParent !== el.node.kind) return undefined
+    return { connName: el.connName, parentNode: el.node, parentId: el.node.id, label: el.node.label }
+  }
+  return undefined
 }
 
 export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode> {
@@ -66,11 +90,10 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   // Stamp the filter state onto the node that owns it: a `.filterable` /
   // `.filtered` contextValue suffix (what the menus key off) and an "N of M"
   // count. Nodes that don't own a filter are left untouched.
-  private markFilterState(
-    item: vscode.TreeItem, adapterId: string, nodeKind: string, connName: string, parentId: string,
-  ) {
-    if (!ownsTableFilter(presentationOf(adapterId)?.tableParent, nodeKind)) return
-    const filter = this.filters.get(connName, parentId)
+  private markFilterState(item: vscode.TreeItem, el: ExplorerNode) {
+    const target = filterTarget(el, this.store)
+    if (!target) return
+    const filter = this.filters.get(target.connName, target.parentId)
     if (!filter) {
       item.contextValue = `${item.contextValue}.filterable`
       return
@@ -96,7 +119,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       item.iconPath = this.connectionIcon(el.conn.adapter, connected)
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
       item.contextValue = connected ? 'tuplebase.connection.connected' : 'tuplebase.connection.disconnected'
-      if (connected) this.markFilterState(item, el.conn.adapter, 'connection', el.conn.name, '')
+      if (connected) this.markFilterState(item, el)
       return item
     }
     const item = new vscode.TreeItem(
@@ -107,8 +130,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.iconPath = nodeIcon(el.node)
     item.contextValue = `tuplebase.${el.node.kind}`
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
-    const adapterId = this.store.connection(el.connName)?.adapter
-    if (adapterId) this.markFilterState(item, adapterId, el.node.kind, el.connName, el.node.id)
+    this.markFilterState(item, el)
     if (el.node.kind === 'connect') {
       item.tooltip = `Connect to ${el.connName}`
       const conn = this.store.connection(el.connName)

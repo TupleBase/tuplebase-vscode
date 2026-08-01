@@ -11,12 +11,6 @@ const STATE_KEY = 'tuplebase.tableFilters'
 // a safe separator for the composite key.
 const keyFor = (connName: string, parentId: string) => `${connName}\0${parentId}`
 
-// A node owns the table filter when its kind matches the adapter's `tableParent`
-// — 'connection' for flat engines, 'schema' for engines with a schema level.
-// That naming is the whole rule; there is nothing else to special-case.
-export const ownsTableFilter = (tableParent: string | undefined, nodeKind: string): boolean =>
-  tableParent !== undefined && nodeKind === tableParent
-
 // Per-workspace record of which tables the Explorer shows. View-only: queries,
 // completion and the MCP server always see the full catalog. The connection node
 // has no TreeNode id, so connection-level filters key on parentId ''.
