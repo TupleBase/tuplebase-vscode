@@ -31,13 +31,32 @@ import type { Adapter, ConnectionConfig, TreeNode } from '../adapters/types'
 import type { ConnectionManager } from '../core/connections'
 import type { ConfigStore } from '../core/configStore'
 import { SchemaTreeProvider, type ExplorerNode } from './schemaTree'
+import { TableFilterStore } from '../core/tableFilter'
 
 const CONN: ConnectionConfig = { group: 'dev', name: 'db1', adapter: 'postgres', readonly: false }
 
-function makeProvider(live: boolean, extensionUri?: { path: string }) {
+function fakeMemento() {
+  const data = new Map<string, unknown>()
+  return {
+    get: (key: string) => data.get(key),
+    update: async (key: string, value: unknown) => {
+      data.set(key, value)
+    },
+    keys: () => [...data.keys()],
+  }
+}
+
+const newFilters = () => new TableFilterStore(fakeMemento() as never)
+
+function makeProvider(
+  live: boolean,
+  extensionUri?: { path: string },
+  opts: { children?: TreeNode[]; conn?: ConnectionConfig; filters?: TableFilterStore } = {},
+) {
   const table: TreeNode = { id: 't1', label: 'users', kind: 'table', hasChildren: true }
   const adapter = {
-    getChildren: async (node: TreeNode | null) => (node === null ? [table] : []),
+    // default behaviour is unchanged: root lists one table, deeper nodes are empty
+    getChildren: async (node: TreeNode | null) => opts.children ?? (node === null ? [table] : []),
   } as unknown as Adapter
   const manager = {
     isConnected: () => live,
@@ -46,13 +65,14 @@ function makeProvider(live: boolean, extensionUri?: { path: string }) {
       throw new Error('tree must never connect')
     },
   } as unknown as ConnectionManager
+  const conn = opts.conn ?? CONN
   const store = {
     groupNames: () => ['local'],
-    connectionsByGroup: (g: string) => (g === 'local' ? [CONN] : []),
-    connections: () => [CONN],
-    connection: (name: string) => (name === 'db1' ? CONN : undefined),
+    connectionsByGroup: (g: string) => (g === 'local' ? [conn] : []),
+    connections: () => [conn],
+    connection: (name: string) => (name === conn.name ? conn : undefined),
   } as unknown as ConfigStore
-  return new SchemaTreeProvider(manager, store, extensionUri as never)
+  return new SchemaTreeProvider(manager, store, opts.filters ?? newFilters(), extensionUri as never)
 }
 
 const connEl: ExplorerNode = { type: 'connection', conn: CONN }
@@ -174,5 +194,56 @@ describe('SchemaTreeProvider group hierarchy', () => {
     expect(item.label).toBe('local')
     expect(item.contextValue).toBe('tuplebase.group')
     expect(item.iconPath?.id).toBe('folder')
+  })
+})
+
+describe('SchemaTreeProvider table filter', () => {
+  const MIXED: TreeNode[] = [
+    { id: 'pg:public', label: 'public', kind: 'schema', hasChildren: true },
+    { id: 't1', label: 'orders', kind: 'table', hasChildren: true },
+    { id: 't2', label: 'audit_2019', kind: 'table', hasChildren: true },
+    { id: 'i1', label: 'showing first 100 keys', kind: 'info', hasChildren: false },
+  ]
+
+  const labels = (nodes: ExplorerNode[]) =>
+    nodes.map(n => (n.type === 'dbnode' ? n.node.label : n.type))
+
+  const withFilter = () => {
+    const filters = newFilters()
+    return { filters, provider: makeProvider(true, undefined, { children: MIXED, filters }) }
+  }
+
+  it('passes every child through when no filter is stored', async () => {
+    const provider = makeProvider(true, undefined, { children: MIXED })
+    expect(labels(await provider.getChildren(connEl))).toEqual([
+      'public', 'orders', 'audit_2019', 'showing first 100 keys',
+    ])
+  })
+
+  it('drops tables that are not included', async () => {
+    const { provider, filters } = withFilter()
+    await filters.set('db1', '', { include: ['orders'], total: 2 })
+    const shown = labels(await provider.getChildren(connEl))
+    expect(shown).toContain('orders')
+    expect(shown).not.toContain('audit_2019')
+  })
+
+  it('never hides a non-table sibling', async () => {
+    const { provider, filters } = withFilter()
+    await filters.set('db1', '', { include: [], total: 2 })
+    expect(labels(await provider.getChildren(connEl))).toEqual(['public', 'showing first 100 keys'])
+  })
+
+  it('applies a schema-level filter under its own parent id', async () => {
+    const { provider, filters } = withFilter()
+    await filters.set('db1', 'pg:public', { include: ['orders'], total: 2 })
+    const schemaEl: ExplorerNode = {
+      type: 'dbnode',
+      connName: 'db1',
+      node: { id: 'pg:public', label: 'public', kind: 'schema', hasChildren: true },
+    }
+    expect(labels(await provider.getChildren(schemaEl))).not.toContain('audit_2019')
+    // the connection level has no filter of its own, so it is untouched
+    expect(labels(await provider.getChildren(connEl))).toContain('audit_2019')
   })
 })

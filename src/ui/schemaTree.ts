@@ -7,6 +7,7 @@ import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
 import { adapterById } from '../adapters/registry'
+import { TableFilterStore } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
 
@@ -43,6 +44,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   constructor(
     private manager: ConnectionManager,
     private store: ConfigStore,
+    private filters: TableFilterStore,
     private extensionUri?: vscode.Uri,
   ) {}
 
@@ -101,6 +103,15 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     return item
   }
 
+  // Table filters are view-only and never hide a non-table sibling — the redis
+  // "capped" info row, or any future view/index node that shares the level.
+  private visible(connName: string, parentId: string, nodes: TreeNode[]): TreeNode[] {
+    const filter = this.filters.get(connName, parentId)
+    if (!filter) return nodes
+    const include = new Set(filter.include)
+    return nodes.filter(n => n.kind !== 'table' || include.has(n.label))
+  }
+
   async getChildren(el?: ExplorerNode): Promise<ExplorerNode[]> {
     try {
       if (!el) {
@@ -121,12 +132,14 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
           }]
         }
         const children = await adapter.getChildren(null)
-        return children.map(node => ({ type: 'dbnode' as const, connName: el.conn.name, node }))
+        return this.visible(el.conn.name, '', children)
+          .map(node => ({ type: 'dbnode' as const, connName: el.conn.name, node }))
       }
       const adapter = this.manager.liveAdapter(el.connName)
       if (!adapter) return []
       const children = await adapter.getChildren(el.node)
-      return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
+      return this.visible(el.connName, el.node.id, children)
+        .map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
       void vscode.window.showErrorMessage(`${BRAND}: ${errorMessage(e)}`)
       return []
@@ -173,9 +186,10 @@ function connectionDragAndDrop(store: ConfigStore): vscode.TreeDragAndDropContro
 export function registerSchemaTree(
   manager: ConnectionManager,
   store: ConfigStore,
+  filters: TableFilterStore,
   extensionUri?: vscode.Uri,
 ): vscode.Disposable {
-  const provider = new SchemaTreeProvider(manager, store, extensionUri)
+  const provider = new SchemaTreeProvider(manager, store, filters, extensionUri)
   const view = vscode.window.createTreeView('tuplebase.explorer', {
     treeDataProvider: provider,
     dragAndDropController: connectionDragAndDrop(store),
@@ -184,6 +198,7 @@ export function registerSchemaTree(
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeConnections(() => provider.refresh()),
+    filters.onDidChange(() => provider.refresh()),
     // Refresh re-checks the live connections first: a server that died mid-session
     // would otherwise keep its connected dot until some operation failed.
     vscode.commands.registerCommand('tuplebase.refreshExplorer', async () => {

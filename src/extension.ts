@@ -3,6 +3,7 @@ import { BRAND, CONFIG_FILENAME } from './core/product'
 import { ConfigStore } from './core/configStore'
 import { SecretVault } from './core/secrets'
 import { ConnectionManager } from './core/connections'
+import { TableFilterStore } from './core/tableFilter'
 import { registerSchemaTree } from './ui/schemaTree'
 import { ResultsPanel } from './ui/resultsPanel'
 import { registerRunQuery } from './core/runQuery'
@@ -22,6 +23,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const store = new ConfigStore(diagnostics)
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault)
+  const filters = new TableFilterStore(context.workspaceState)
   const panel = ResultsPanel.register(context)
   // storageUri is undefined without a workspace — no place for history, skip it
   const history = context.storageUri ? new HistoryStore(context.storageUri.fsPath) : undefined
@@ -31,7 +33,8 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnostics,
     store,
     manager,
-    registerSchemaTree(manager, store, context.extensionUri),
+    filters,
+    registerSchemaTree(manager, store, filters, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store, vault),
     registerExplorerCommands(store),
     registerMcpConfig(context.extensionUri, store, vault),
