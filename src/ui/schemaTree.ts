@@ -174,7 +174,12 @@ export function registerSchemaTree(
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeConnections(() => provider.refresh()),
-    vscode.commands.registerCommand('tuplebase.refreshExplorer', () => provider.refresh()),
+    // Refresh re-checks the live connections first: a server that died mid-session
+    // would otherwise keep its connected dot until some operation failed.
+    vscode.commands.registerCommand('tuplebase.refreshExplorer', async () => {
+      await manager.verifyLive()
+      provider.refresh()
+    }),
     vscode.commands.registerCommand('tuplebase.connect', async (el?: ExplorerNode) => {
       if (el?.type !== 'connection') return
       try {

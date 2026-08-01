@@ -8,9 +8,16 @@ import { ConfigStore } from './configStore'
 import { SecretVault } from './secrets'
 import { openTunnel, type Tunnel, type TunnelSecrets } from './sshTunnel'
 
+// Everything an open connection owns. `cfg` is what the adapter was opened with
+// (secrets already resolved), so it can be re-tested without prompting again.
+interface LiveConnection {
+  adapter: Adapter
+  cfg: ResolvedConnection
+  tunnel?: Tunnel   // SSH bastion backing it, when the config asks for one
+}
+
 export class ConnectionManager implements vscode.Disposable {
-  private readonly live = new Map<string, Adapter>()   // key: connection name (globally unique)
-  private readonly tunnels = new Map<string, Tunnel>() // SSH tunnel backing a live connection, same key
+  private readonly live = new Map<string, LiveConnection>()   // key: connection name (globally unique)
   private readonly pending = new Map<string, Promise<Adapter>>()
   private readonly factoryCache = new Map<string, AdapterFactory>()   // lazily loaded, once per adapter type
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
@@ -95,7 +102,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   // live-only lookup for completion providers — never connects, never prompts
   liveAdapter(connName: string): Adapter | undefined {
-    return this.live.get(connName)
+    return this.live.get(connName)?.adapter
   }
 
   isConnected(connName: string): boolean {
@@ -106,7 +113,7 @@ export class ConnectionManager implements vscode.Disposable {
     const cfg = this.findConfig(connName)
     const key = cfg.name
     const existing = this.live.get(key)
-    if (existing) return existing
+    if (existing) return existing.adapter
     const inFlight = this.pending.get(key)
     if (inFlight) return inFlight
     const myEpoch = this.epoch
@@ -129,8 +136,7 @@ export class ConnectionManager implements vscode.Disposable {
         await tunnel?.close().catch(() => {})
         throw new Error('Connection cancelled — disposed while connecting')
       }
-      this.live.set(key, adapter)
-      if (tunnel) this.tunnels.set(key, tunnel)
+      this.live.set(key, { adapter, cfg: effective, ...(tunnel ? { tunnel } : {}) })
       this.connEmitter.fire()
       return adapter
     })()
@@ -142,16 +148,40 @@ export class ConnectionManager implements vscode.Disposable {
     }
   }
 
-  private async closeTunnel(key: string): Promise<void> {
-    await this.tunnels.get(key)?.close().catch(() => {})
-    this.tunnels.delete(key)
+  // Close a connection's adapter and tunnel. Shutdown paths call it directly;
+  // drop() also forgets the entry. Neither fires — callers decide when to notify.
+  private async close(conn: LiveConnection): Promise<void> {
+    await conn.adapter.dispose().catch(() => {})
+    await conn.tunnel?.close().catch(() => {})
+  }
+
+  private async drop(key: string): Promise<boolean> {
+    const conn = this.live.get(key)
+    if (!conn) return false
+    await this.close(conn)
+    return this.live.delete(key)
   }
 
   async disconnect(connName: string): Promise<void> {
-    const adapter = this.live.get(connName)
-    if (adapter) await adapter.dispose().catch(() => {})
-    await this.closeTunnel(connName)
-    if (this.live.delete(connName)) this.connEmitter.fire()
+    if (await this.drop(connName)) this.connEmitter.fire()
+  }
+
+  // Prove the live connections are actually live. Nothing else notices when a
+  // server goes away mid-session — the adapter object survives, so the explorer
+  // keeps showing a connected dot until an operation happens to fail. The
+  // explorer refresh calls this so a dead connection is dropped (and redrawn as
+  // disconnected) instead of lying. Re-uses the config it was opened with, so
+  // no secret is prompted again.
+  async verifyLive(): Promise<void> {
+    const checks = [...this.live].map(async ([key, conn]) => {
+      try {
+        await conn.adapter.testConnection(conn.cfg)
+        return false
+      } catch {
+        return this.drop(key)
+      }
+    })
+    if ((await Promise.all(checks)).some(Boolean)) this.connEmitter.fire()
   }
 
   // Drop this connection's stored secrets (a bad saved password, say) without
@@ -163,9 +193,7 @@ export class ConnectionManager implements vscode.Disposable {
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
-    await this.live.get(cfg.name)?.dispose()
-    await this.closeTunnel(cfg.name)
-    if (this.live.delete(cfg.name)) this.connEmitter.fire()
+    if (await this.drop(cfg.name)) this.connEmitter.fire()
     await this.vault.deleteConnection(cfg.name)
     return this.getAdapter(connName)
   }
@@ -173,10 +201,8 @@ export class ConnectionManager implements vscode.Disposable {
   async disposeAll() {
     this.epoch++
     const hadLive = this.live.size > 0
-    for (const a of this.live.values()) await a.dispose().catch(() => {})
-    for (const t of this.tunnels.values()) await t.close().catch(() => {})
+    for (const conn of this.live.values()) await this.close(conn)
     this.live.clear()
-    this.tunnels.clear()
     if (hadLive) this.connEmitter.fire()
   }
 

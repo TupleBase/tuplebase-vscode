@@ -20,13 +20,19 @@ import { ConnectionManager } from './connections'
 import type { ConfigStore } from './configStore'
 import type { SecretVault } from './secrets'
 
-function makeManager(opts: { connect?: () => Promise<void>; requiredSecrets?: string[] } = {}) {
+function makeManager(
+  opts: { connect?: () => Promise<void>; testConnection?: () => Promise<void>; requiredSecrets?: string[] } = {},
+) {
   const connects: string[] = []
   const disposed: string[] = []
+  const pinged: string[] = []
   const makeAdapter = (name: string): Adapter => ({
     id: 'fake',
     connect: opts.connect ?? (async () => {}),
-    testConnection: async () => {},
+    testConnection: async () => {
+      pinged.push(name)
+      await opts.testConnection?.()
+    },
     execute: async () => ({ columns: [], rows: [], rowCount: 0, elapsedMs: 0, warnings: [] }),
     getChildren: async () => [],
     searchItems: async () => [],
@@ -63,7 +69,7 @@ function makeManager(opts: { connect?: () => Promise<void>; requiredSecrets?: st
     deleteConnection: async (name: string) => { deleted.push(name) },
   } as unknown as SecretVault
   const manager = new ConnectionManager(store, vault, modules)
-  return { manager, connects, disposed, deleted, stored }
+  return { manager, connects, disposed, deleted, stored, pinged }
 }
 
 describe('ConnectionManager connection state', () => {
@@ -169,6 +175,57 @@ describe('ConnectionManager connection state', () => {
     await expect(manager.reconnectWithFreshSecret('db1')).rejects.toThrow('nope')
     expect(manager.isConnected('db1')).toBe(false)
     expect(fired).toHaveLength(1)
+  })
+
+  it('verifyLive keeps a connection whose round-trip succeeds', async () => {
+    const { manager, pinged } = makeManager()
+    await manager.getAdapter('db1')
+    const fired: number[] = []
+    manager.onDidChangeConnections(() => fired.push(1))
+    await manager.verifyLive()
+    expect(pinged).toEqual(['db1'])
+    expect(manager.isConnected('db1')).toBe(true)
+    expect(fired).toHaveLength(0)
+  })
+
+  it('verifyLive drops a connection whose server went away', async () => {
+    const { manager, disposed } = makeManager({
+      testConnection: async () => {
+        throw new Error('Connection lost: The server closed the connection.')
+      },
+    })
+    await manager.getAdapter('db1')
+    const fired: number[] = []
+    manager.onDidChangeConnections(() => fired.push(1))
+    await manager.verifyLive()
+    expect(manager.isConnected('db1')).toBe(false)
+    expect(disposed).toEqual(['db1'])
+    expect(fired).toHaveLength(1)
+  })
+
+  it('verifyLive re-prompts nothing and is a no-op with nothing live', async () => {
+    const { manager, pinged } = makeManager({ requiredSecrets: ['password'] })
+    const fired: number[] = []
+    manager.onDidChangeConnections(() => fired.push(1))
+    await manager.verifyLive()
+    expect(pinged).toEqual([])
+    expect(fired).toHaveLength(0)
+  })
+
+  it('a dropped connection reconnects on the next getAdapter', async () => {
+    let alive = false
+    const { manager, connects } = makeManager({
+      testConnection: async () => {
+        if (!alive) throw new Error('gone')
+      },
+    })
+    await manager.getAdapter('db1')
+    await manager.verifyLive()
+    expect(manager.isConnected('db1')).toBe(false)
+    alive = true
+    await manager.getAdapter('db1')
+    expect(manager.isConnected('db1')).toBe(true)
+    expect(connects).toEqual(['db1', 'db1'])
   })
 
   it('a connect still pending when disposeAll runs does not resurrect', async () => {

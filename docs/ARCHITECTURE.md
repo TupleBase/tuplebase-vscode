@@ -28,7 +28,7 @@ extension (tree, form, run flow, completion, MCP) is generic and reads from it.
 
 - `.tuplebase.json` — the user's config: version, groups, connections. Secret-free and committable. Parsed by `src/core/config.ts`.
 - **ConfigStore** (`src/core/configStore.ts`) — loads/watches the file, exposes connections/groups, publishes changes.
-- **ConnectionManager** (`src/core/connections.ts`) — resolves secrets, opens SSH tunnels, creates + caches live adapters.
+- **ConnectionManager** (`src/core/connections.ts`) — resolves secrets, opens SSH tunnels, creates + caches live adapters. `verifyLive()` re-tests each cached adapter (with the config it was opened with, so no re-prompt) and drops the dead ones; the explorer refresh calls it so a server that died mid-session loses its connected dot.
 - **Adapter** (`src/adapters/<db>/adapter.ts`) — talks to one database: connect, execute, browse schema, search for completion.
 
 ---
