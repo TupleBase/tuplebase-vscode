@@ -81,7 +81,7 @@ services:
       timeout: 3s
       retries: 30
   elasticsearch:
-    image: elasticsearch:8.15.0
+    image: elasticsearch:9.4.4
     profiles: ["elasticsearch", "all"]
     ports: ["9200:9200"]
     environment:
