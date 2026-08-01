@@ -28,6 +28,8 @@ npm run test:vscode      # extension-host smoke test — downloads VS Code, laun
 
 CI (`.github/workflows/ci.yml`) runs on every push and PR as two jobs: a **unit** job (check + build + `npm test` + VS Code smoke, no containers) and an **integration** matrix — one job per engine, each booting only its own container and running that adapter's IT. The heavy images (SQL Server, Cassandra, Elasticsearch, …) can't all co-reside on a single runner, so they're split per job rather than run together.
 
+That matrix is generated, not hand-listed: a small `matrix` job runs `.github/scripts/integration-matrix.mjs`, which filters the engine table against `ENABLED_ADAPTER_IDS` in `src/adapters/registry.ts`. Disabled adapters ship to nobody, so their containers never boot in CI. Enabling an adapter there turns its integration job on automatically — keep the script's engine table in sync when adding an adapter (an enabled id with no entry fails the job).
+
 ## Release workflow
 
 `.github/workflows/release.yml` tests and packages one VSIX, then publishes that exact artifact independently to the VS Code Marketplace and Open VSX. A successful tagged release also creates a GitHub release with the VSIX attached.

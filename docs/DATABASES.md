@@ -44,5 +44,5 @@ Adapters are self-contained: create the folder, then register it in one line.
    - `index.ts` — the `AdapterDescriptor` tying presentation (label/emoji/blurb/icon/fields), factory and completion together.
 2. Add the descriptor to the `ADAPTERS` array in `src/adapters/registry.ts` — the one line. Config validation, the connection form, tree icons, completion and the connection manager all read from the registry.
 3. Regenerate the JSON schema from the descriptors: `npm run gen:schema`.
-4. Cover it: unit + live-container integration tests, plus a compose service and seed under `dev/`.
+4. Cover it: unit + live-container integration tests, plus a compose service and seed under `dev/`. Add its row to the engine table in `.github/scripts/integration-matrix.mjs` so the CI job exists once the adapter is enabled.
 5. Move its row from **Candidates** to **Supported engines** above.

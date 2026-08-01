@@ -17,27 +17,29 @@ jobs:
       - run: npm test
       - run: xvfb-run -a npm run test:vscode
 
+  # Which engines get an integration job — only the adapters this release ships
+  # (ENABLED_ADAPTER_IDS in src/adapters/registry.ts). A disabled adapter reaches
+  # no user, so booting its container on every push burns minutes for nothing.
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      include: ${{ steps.pick.outputs.include }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: pick
+        run: node .github/scripts/integration-matrix.mjs >> "$GITHUB_OUTPUT"
+
   # Live-container integration, one engine per job — the heavy images (SQL Server,
   # Cassandra, Elasticsearch, …) can't all co-reside on a single runner, so each
   # boots only its own container and runs only that adapter's IT.
   integration:
+    needs: matrix
+    if: needs.matrix.outputs.include != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { engine: postgres,      db: postgres,      tests: src/adapters/postgres }
-          - { engine: mysql,         db: mysql,         tests: src/adapters/mysql/adapter.it.test.ts src/adapters/mysql/adapter.test.ts }
-          - { engine: mariadb,       db: mariadb,       tests: src/adapters/mysql/mariadb.it.test.ts }
-          - { engine: redis,         db: redis,         tests: src/adapters/redis }
-          - { engine: dynamodb,      db: dynamo,        tests: src/adapters/dynamodb }
-          - { engine: mssql,         db: mssql,         tests: src/adapters/mssql }
-          - { engine: clickhouse,    db: clickhouse,    tests: src/adapters/clickhouse }
-          - { engine: cassandra,     db: cassandra,     tests: src/adapters/cassandra }
-          - { engine: neo4j,         db: neo4j,         tests: src/adapters/neo4j }
-          - { engine: mongodb,       db: mongodb,       tests: src/adapters/mongodb }
-          - { engine: elasticsearch, db: elasticsearch, tests: src/adapters/elasticsearch }
-          - { engine: kafka,         db: kafka,         tests: src/adapters/kafka }
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
     name: integration (${{ matrix.engine }})
     steps:
       - uses: actions/checkout@v7

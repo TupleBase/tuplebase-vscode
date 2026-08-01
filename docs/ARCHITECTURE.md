@@ -66,6 +66,11 @@ config loader silently skips any connection whose adapter isn't enabled (disable
 or unknown — no error). The lookups (`adapterById`, `presentationOf`) and the
 generated JSON schema still cover every registered adapter.
 
+CI reads this same list: `.github/scripts/integration-matrix.mjs` parses it and
+emits the integration matrix, so only enabled adapters boot containers. Enabling an
+id there turns its integration job on with no workflow edit — but an enabled id with
+no matrix entry fails that step rather than losing coverage silently.
+
 The types (`src/adapters/types.ts`):
 
 ```ts
