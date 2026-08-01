@@ -31,7 +31,7 @@ Each of these is also a VS Code task (`Terminal → Run Task…`, prefixed `db:`
 ## Reseed & reset
 
 - **After updating from a pre-rename checkout**, recreate local containers because the development database names and credentials changed to `tuplebase`: `docker compose --profile all down -v`.
-- **Every engine reseeds in place** — `npm run db:seed -- <engine>`. Seed scripts drop and recreate their objects; the redis seed starts with `FLUSHALL`. Bare `npm run db:seed` reseeds them all. Every seed includes the high-volume paging dataset (`pagination_demo` tables, `pagedemo:*` keys, …).
+- **Every engine reseeds in place** — `npm run db:seed -- <engine>`. Seed scripts drop and recreate their objects; the redis seed starts with `FLUSHALL`. Bare `npm run db:seed` reseeds them all. Every seed includes the high-volume paging dataset (`pagination_demo` tables, `pagedemo:*` keys, …). The **mysql** seed also creates 320 empty tables across six naming families (`orders_shard_*`, `user_event_*`, `metrics_daily_*`, `tmp_import_*`, `legacy_billing_*`, `audit_log_YYYY_MM`) so the Explorer's table filter has a realistic catalog to narrow.
 - **Stored password**: run **TupleBase: Clear Stored Credentials** (or per-connection **Reset Credentials**) from the dev host command palette.
 
 ### Targeting one engine: the `--` matters
