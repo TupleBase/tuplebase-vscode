@@ -247,3 +247,74 @@ describe('SchemaTreeProvider table filter', () => {
     expect(labels(await provider.getChildren(connEl))).toContain('audit_2019')
   })
 })
+
+describe('SchemaTreeProvider filter indicator', () => {
+  const schemaEl: ExplorerNode = {
+    type: 'dbnode',
+    connName: 'db1',
+    node: { id: 'pg:public', label: 'public', kind: 'schema', hasChildren: true },
+  }
+
+  const withFilter = () => {
+    const filters = newFilters()
+    return { filters, provider: makeProvider(true, undefined, { filters }) }
+  }
+
+  it('marks an unfiltered schema as filterable', () => {
+    const item = makeProvider(true).getTreeItem(schemaEl) as { contextValue?: string; description?: string }
+    expect(item.contextValue).toBe('tuplebase.schema.filterable')
+    expect(item.description).toBeUndefined()
+  })
+
+  it('marks a filtered schema and shows the count', async () => {
+    const { provider, filters } = withFilter()
+    await filters.set('db1', 'pg:public', { include: ['orders', 'users'], total: 5000 })
+    const item = provider.getTreeItem(schemaEl) as { contextValue?: string; description?: string }
+    expect(item.contextValue).toBe('tuplebase.schema.filtered')
+    expect(item.description).toBe('2 of 5000')
+  })
+
+  it('appends the count after an existing detail', async () => {
+    const { provider, filters } = withFilter()
+    await filters.set('db1', 'pg:public', { include: ['orders'], total: 12 })
+    const withDetail: ExplorerNode = {
+      type: 'dbnode',
+      connName: 'db1',
+      node: { id: 'pg:public', label: 'public', kind: 'schema', hasChildren: true, detail: 'owner: app' },
+    }
+    const item = provider.getTreeItem(withDetail) as { description?: string }
+    expect(item.description).toBe('owner: app · 1 of 12')
+  })
+
+  // postgres keeps tables under a schema, so its connection node owns no filter
+  // and must keep the bare contextValue every existing menu entry matches.
+  it('leaves the connection node alone for a schema-level engine', () => {
+    const item = makeProvider(true).getTreeItem(connEl) as { contextValue?: string }
+    expect(item.contextValue).toBe('tuplebase.connection.connected')
+  })
+
+  it('leaves non-owning node kinds alone', () => {
+    const tableEl: ExplorerNode = {
+      type: 'dbnode',
+      connName: 'db1',
+      node: { id: 't1', label: 'orders', kind: 'table', hasChildren: true },
+    }
+    const item = makeProvider(true).getTreeItem(tableEl) as { contextValue?: string }
+    expect(item.contextValue).toBe('tuplebase.table')
+  })
+
+  // redis omits tableParent — it has no tables at all, so no node is filterable
+  // and neither the connection nor a namespace may grow a suffix.
+  it('marks nothing for an engine that declares no tableParent', () => {
+    const redisConn: ConnectionConfig = { group: 'dev', name: 'cache', adapter: 'redis', readonly: false }
+    const provider = makeProvider(true, undefined, { conn: redisConn })
+    const conn = provider.getTreeItem({ type: 'connection', conn: redisConn }) as { contextValue?: string }
+    expect(conn.contextValue).toBe('tuplebase.connection.connected')
+    const ns = provider.getTreeItem({
+      type: 'dbnode',
+      connName: 'cache',
+      node: { id: 'redis:ns:user:', label: 'user', kind: 'namespace', hasChildren: true },
+    }) as { contextValue?: string }
+    expect(ns.contextValue).toBe('tuplebase.namespace')
+  })
+})

@@ -6,8 +6,8 @@ import { BRAND } from '../core/product'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
-import { adapterById } from '../adapters/registry'
-import { TableFilterStore } from '../core/tableFilter'
+import { adapterById, presentationOf } from '../adapters/registry'
+import { TableFilterStore, ownsTableFilter } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
 
@@ -63,6 +63,23 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     return new vscode.ThemeIcon(adapterIcon(adapter), connected ? new vscode.ThemeColor('charts.green') : undefined)
   }
 
+  // Stamp the filter state onto the node that owns it: a `.filterable` /
+  // `.filtered` contextValue suffix (what the menus key off) and an "N of M"
+  // count. Nodes that don't own a filter are left untouched.
+  private markFilterState(
+    item: vscode.TreeItem, adapterId: string, nodeKind: string, connName: string, parentId: string,
+  ) {
+    if (!ownsTableFilter(presentationOf(adapterId)?.tableParent, nodeKind)) return
+    const filter = this.filters.get(connName, parentId)
+    if (!filter) {
+      item.contextValue = `${item.contextValue}.filterable`
+      return
+    }
+    item.contextValue = `${item.contextValue}.filtered`
+    const count = `${filter.include.length} of ${filter.total}`
+    item.description = item.description ? `${item.description} · ${count}` : count
+  }
+
   getTreeItem(el: ExplorerNode): vscode.TreeItem {
     if (el.type === 'group') {
       const item = new vscode.TreeItem(el.name, vscode.TreeItemCollapsibleState.Collapsed)
@@ -79,6 +96,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       item.iconPath = this.connectionIcon(el.conn.adapter, connected)
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
       item.contextValue = connected ? 'tuplebase.connection.connected' : 'tuplebase.connection.disconnected'
+      if (connected) this.markFilterState(item, el.conn.adapter, 'connection', el.conn.name, '')
       return item
     }
     const item = new vscode.TreeItem(
@@ -89,6 +107,8 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.iconPath = nodeIcon(el.node)
     item.contextValue = `tuplebase.${el.node.kind}`
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
+    const adapterId = this.store.connection(el.connName)?.adapter
+    if (adapterId) this.markFilterState(item, adapterId, el.node.kind, el.connName, el.node.id)
     if (el.node.kind === 'connect') {
       item.tooltip = `Connect to ${el.connName}`
       const conn = this.store.connection(el.connName)
