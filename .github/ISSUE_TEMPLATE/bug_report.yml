@@ -3,10 +3,6 @@ description: Something in TupleBase is broken or behaving unexpectedly
 title: "[bug]: "
 labels: ["bug"]
 body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to report a bug. Please fill in as much as you can — connection details can be redacted, but the engine and versions matter a lot.
   - type: textarea
     id: description
     attributes:
@@ -25,12 +21,6 @@ body:
         3. See error
     validations:
       required: true
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
-    validations:
-      required: false
   - type: dropdown
     id: engine
     attributes:
@@ -52,40 +42,13 @@ body:
         - Other / not engine-specific
     validations:
       required: true
-  - type: dropdown
-    id: area
+  - type: textarea
+    id: environment
     attributes:
-      label: Area
-      options:
-        - Connections / configuration
-        - Explorer tree
-        - Query editor / results
-        - MCP server
-        - Secrets / authentication
-        - Other
-    validations:
-      required: false
-  - type: input
-    id: extension-version
-    attributes:
-      label: TupleBase version
-      description: Shown in the VS Code Extensions view.
-      placeholder: e.g. 0.4.2
-    validations:
-      required: true
-  - type: input
-    id: vscode-version
-    attributes:
-      label: VS Code version
-      description: From Code → About Visual Studio Code.
-      placeholder: e.g. 1.102.0
-    validations:
-      required: true
-  - type: input
-    id: os
-    attributes:
-      label: Operating system
-      placeholder: e.g. macOS 15.5, Windows 11, Ubuntu 24.04
+      label: Environment
+      description: TupleBase version (Extensions view), VS Code version, and OS.
+      placeholder: |
+        TupleBase 0.4.2, VS Code 1.102.0, macOS 15.5
     validations:
       required: true
   - type: textarea

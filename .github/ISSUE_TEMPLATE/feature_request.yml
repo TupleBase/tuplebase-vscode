@@ -19,27 +19,13 @@ body:
     id: solution
     attributes:
       label: Proposed solution
-      description: What would you like TupleBase to do?
+      description: What would you like TupleBase to do? Skip if you only have the pain point — that's still useful.
     validations:
-      required: true
+      required: false
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives considered
       description: Workarounds you use today, or other tools that do this.
-    validations:
-      required: false
-  - type: dropdown
-    id: area
-    attributes:
-      label: Area
-      options:
-        - New database engine
-        - Connections / configuration
-        - Explorer tree
-        - Query editor / results
-        - MCP server
-        - Secrets / authentication
-        - Other
     validations:
       required: false
