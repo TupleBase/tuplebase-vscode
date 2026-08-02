@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a new feature or improvement
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Requests for a **new database engine** are welcome here too — mention the engine and, if you know one, the Node.js driver you'd expect it to use.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow or pain point, not just the solution.
+      placeholder: When I ..., I have to ..., which is slow/error-prone because ...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What would you like TupleBase to do? Skip if you only have the pain point — that's still useful.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or other tools that do this.
+    validations:
+      required: false

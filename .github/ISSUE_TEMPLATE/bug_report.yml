@@ -1,0 +1,61 @@
+name: Bug report
+description: Something in TupleBase is broken or behaving unexpectedly
+title: "[bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, including any error messages (copy them verbatim).
+      placeholder: Running a query against ... fails with ...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Add a connection to ...
+        2. Open the explorer and ...
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Database engine
+      description: Which engine were you connected to when the bug occurred?
+      options:
+        - PostgreSQL
+        - MySQL
+        - MariaDB
+        - SQLite
+        - SQL Server
+        - MongoDB
+        - Redis
+        - Cassandra
+        - ClickHouse
+        - Elasticsearch
+        - DynamoDB
+        - Neo4j
+        - Other / not engine-specific
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: TupleBase version (Extensions view), VS Code version, and OS.
+      placeholder: |
+        TupleBase 0.4.2, VS Code 1.102.0, macOS 15.5
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Output from the TupleBase output channel or Developer Tools console. Redact hostnames and credentials.
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Roadmap & project planning
+    url: https://github.com/TupleBase/tuplebase-project
+    about: Roadmap, task board, and cross-department decisions live in the tuplebase-project repo.
