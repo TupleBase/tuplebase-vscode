@@ -13,6 +13,7 @@ export const presentation: AdapterPresentation = {
   passwordSecret: true,
   // write ⇔ the HTTP method is not a read verb
   writeRule: { mode: 'firstKeywordNotIn', keywords: ['GET', 'HEAD'] },
+  tableParent: 'connection',
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Port', kind: 'number', default: 9200 },

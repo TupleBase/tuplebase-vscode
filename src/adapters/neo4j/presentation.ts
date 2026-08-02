@@ -13,6 +13,7 @@ export const presentation: AdapterPresentation = {
   passwordSecret: true,
   // Cypher puts the write clause after a leading MATCH, so scan the whole statement
   writeRule: { mode: 'anyKeyword', keywords: ['CREATE', 'MERGE', 'DELETE', 'DETACH', 'SET', 'REMOVE', 'FOREACH', 'DROP', 'LOAD'] },
+  tableParent: 'connection',
   fields: [
     { key: 'host', label: 'Host', kind: 'text', required: true, default: 'localhost' },
     { key: 'port', label: 'Bolt port', kind: 'number', default: 7687 },

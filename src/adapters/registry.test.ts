@@ -30,3 +30,22 @@ describe('adapter rollout gating', () => {
     expect(adapterById.get('redis')?.presentation.id).toBe('redis')
   })
 })
+
+describe('table filter metadata', () => {
+  it('declares where each adapter keeps its tables', () => {
+    const where = new Map(allPresentations().map(p => [p.id, p.tableParent]))
+    for (const id of ['postgres', 'mysql', 'mariadb', 'mssql', 'clickhouse', 'cassandra']) {
+      expect(where.get(id)).toBe('schema')
+    }
+    for (const id of ['sqlite', 'mongodb', 'kafka', 'elasticsearch', 'neo4j', 'dynamodb']) {
+      expect(where.get(id)).toBe('connection')
+    }
+  })
+
+  // A new adapter that forgets tableParent silently loses the Explorer filter.
+  // redis is the only engine with no tables, so it is the only allowed omission.
+  it('leaves no adapter undeclared except the one with no tables', () => {
+    const undeclared = allPresentations().filter(p => p.tableParent === undefined).map(p => p.id)
+    expect(undeclared).toEqual(['redis'])
+  })
+})

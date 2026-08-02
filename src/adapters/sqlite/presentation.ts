@@ -13,6 +13,7 @@ export const presentation: AdapterPresentation = {
   completionTriggers: ['.', ' ', '"'],
   // file-based: no host/port/user, so no password secret and no SSH tunnel
   writeRule: { mode: 'firstKeywordIn', keywords: SQL_WRITE_KEYWORDS },
+  tableParent: 'connection',
   fields: [
     {
       key: 'path',

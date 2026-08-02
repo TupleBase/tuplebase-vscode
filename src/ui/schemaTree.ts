@@ -6,7 +6,8 @@ import { BRAND } from '../core/product'
 import { errorMessage } from '../core/errors'
 import { moveConnection } from '../core/configWriter'
 import { adapterIcon } from '../core/adapterCatalog'
-import { adapterById } from '../adapters/registry'
+import { presentationOf } from '../adapters/registry'
+import { TableFilterStore, isTableNode } from '../core/tableFilter'
 
 const CONN_MIME = 'application/vnd.tuplebase.connection'
 
@@ -36,6 +37,30 @@ function nodeIcon(node: TreeNode): vscode.ThemeIcon {
   return new vscode.ThemeIcon(KIND_ICONS[node.kind] ?? 'circle-outline')
 }
 
+// The node a table filter attaches to — the connection for flat engines, the
+// schema node for engines with a schema level; undefined when this node owns no
+// filter. One rule, shared by the tree (which draws the state) and the filter
+// commands (which edit it), so the two can never disagree.
+export interface FilterTarget {
+  connName: string
+  parentNode: TreeNode | null  // null = the connection root
+  parentId: string             // '' for a connection node — it has no TreeNode id
+  label: string
+}
+
+export function filterTarget(el: ExplorerNode | undefined, store: ConfigStore): FilterTarget | undefined {
+  if (el?.type === 'connection') {
+    if (presentationOf(el.conn.adapter)?.tableParent !== 'connection') return undefined
+    return { connName: el.conn.name, parentNode: null, parentId: '', label: el.conn.name }
+  }
+  if (el?.type === 'dbnode') {
+    const adapterId = store.connection(el.connName)?.adapter
+    if (!adapterId || presentationOf(adapterId)?.tableParent !== el.node.kind) return undefined
+    return { connName: el.connName, parentNode: el.node, parentId: el.node.id, label: el.node.label }
+  }
+  return undefined
+}
+
 export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode> {
   private emitter = new vscode.EventEmitter<ExplorerNode | undefined>()
   readonly onDidChangeTreeData = this.emitter.event
@@ -43,6 +68,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   constructor(
     private manager: ConnectionManager,
     private store: ConfigStore,
+    private filters: TableFilterStore,
     private extensionUri?: vscode.Uri,
   ) {}
 
@@ -53,12 +79,28 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
   // A bundled adapter SVG (green-dot variant when connected) if one exists and we
   // know where dist/ lives; otherwise the themed codicon (green tint = connected).
   private connectionIcon(adapter: string, connected: boolean): vscode.ThemeIcon | vscode.Uri {
-    const iconFile = adapterById.get(adapter)?.presentation.iconFile
+    const iconFile = presentationOf(adapter)?.iconFile
     if (iconFile && this.extensionUri) {
       const file = connected ? iconFile.replace(/\.svg$/, '-connected.svg') : iconFile
       return vscode.Uri.joinPath(this.extensionUri, 'dist', 'adapters', adapter, file)
     }
     return new vscode.ThemeIcon(adapterIcon(adapter), connected ? new vscode.ThemeColor('charts.green') : undefined)
+  }
+
+  // Stamp the filter state onto the node that owns it: a `.filterable` /
+  // `.filtered` contextValue suffix (what the menus key off) and an "N of M"
+  // count. Nodes that don't own a filter are left untouched.
+  private markFilterState(item: vscode.TreeItem, el: ExplorerNode) {
+    const target = filterTarget(el, this.store)
+    if (!target) return
+    const filter = this.filters.get(target.connName, target.parentId)
+    if (!filter) {
+      item.contextValue = `${item.contextValue}.filterable`
+      return
+    }
+    item.contextValue = `${item.contextValue}.filtered`
+    const count = `${filter.include.length} of ${filter.total}`
+    item.description = item.description ? `${item.description} · ${count}` : count
   }
 
   getTreeItem(el: ExplorerNode): vscode.TreeItem {
@@ -77,6 +119,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       item.iconPath = this.connectionIcon(el.conn.adapter, connected)
       item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
       item.contextValue = connected ? 'tuplebase.connection.connected' : 'tuplebase.connection.disconnected'
+      if (connected) this.markFilterState(item, el)
       return item
     }
     const item = new vscode.TreeItem(
@@ -87,6 +130,7 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
     item.iconPath = nodeIcon(el.node)
     item.contextValue = `tuplebase.${el.node.kind}`
     item.tooltip = el.node.detail ? `${el.node.label} — ${el.node.detail}` : el.node.label
+    this.markFilterState(item, el)
     if (el.node.kind === 'connect') {
       item.tooltip = `Connect to ${el.connName}`
       const conn = this.store.connection(el.connName)
@@ -99,6 +143,15 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       }
     }
     return item
+  }
+
+  // Table filters are view-only and never hide a non-table sibling — the redis
+  // "capped" info row, or any future view/index node that shares the level.
+  private visible(connName: string, parentId: string, nodes: TreeNode[]): TreeNode[] {
+    const filter = this.filters.get(connName, parentId)
+    if (!filter) return nodes
+    const include = new Set(filter.include)
+    return nodes.filter(n => !isTableNode(n) || include.has(n.label))
   }
 
   async getChildren(el?: ExplorerNode): Promise<ExplorerNode[]> {
@@ -121,12 +174,14 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
           }]
         }
         const children = await adapter.getChildren(null)
-        return children.map(node => ({ type: 'dbnode' as const, connName: el.conn.name, node }))
+        return this.visible(el.conn.name, '', children)
+          .map(node => ({ type: 'dbnode' as const, connName: el.conn.name, node }))
       }
       const adapter = this.manager.liveAdapter(el.connName)
       if (!adapter) return []
       const children = await adapter.getChildren(el.node)
-      return children.map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
+      return this.visible(el.connName, el.node.id, children)
+        .map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
       void vscode.window.showErrorMessage(`${BRAND}: ${errorMessage(e)}`)
       return []
@@ -173,9 +228,10 @@ function connectionDragAndDrop(store: ConfigStore): vscode.TreeDragAndDropContro
 export function registerSchemaTree(
   manager: ConnectionManager,
   store: ConfigStore,
+  filters: TableFilterStore,
   extensionUri?: vscode.Uri,
 ): vscode.Disposable {
-  const provider = new SchemaTreeProvider(manager, store, extensionUri)
+  const provider = new SchemaTreeProvider(manager, store, filters, extensionUri)
   const view = vscode.window.createTreeView('tuplebase.explorer', {
     treeDataProvider: provider,
     dragAndDropController: connectionDragAndDrop(store),
@@ -184,6 +240,7 @@ export function registerSchemaTree(
     view,
     store.onDidChange(() => provider.refresh()),
     manager.onDidChangeConnections(() => provider.refresh()),
+    filters.onDidChange(() => provider.refresh()),
     // Refresh re-checks the live connections first: a server that died mid-session
     // would otherwise keep its connected dot until some operation failed.
     vscode.commands.registerCommand('tuplebase.refreshExplorer', async () => {

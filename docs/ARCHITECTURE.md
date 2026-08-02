@@ -89,7 +89,7 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
 ## Adding a database type
 
 1. **Create `src/adapters/<id>/`** with the four files above.
-   - `presentation.ts` — model on `postgres/presentation.ts`. Set `id`, `label`, `emoji`, `blurb`, `codicon`, `iconFile`, `languageId` (`'sql'` / `'redis'` / a new grammar), `statementSyntax` (`'sql'` / `'partiql'` / `'redis'`), `completionTriggers`, `passwordSecret` (if it takes a password), and `fields` (the connection-form fields — these also generate the JSON schema).
+   - `presentation.ts` — model on `postgres/presentation.ts`. Set `id`, `label`, `emoji`, `blurb`, `codicon`, `iconFile`, `languageId` (`'sql'` / `'redis'` / a new grammar), `statementSyntax` (`'sql'` / `'partiql'` / `'redis'`), `completionTriggers`, `passwordSecret` (if it takes a password), `tableParent` (`'schema'` when tables hang off a schema node, `'connection'` when they hang off the connection itself, omit when the engine has no tables — this is what tells the Explorer where to put the table filter), and `fields` (the connection-form fields — these also generate the JSON schema).
    - `adapter.ts` — implement `Adapter` (`connect`, `testConnection`, `execute`, `getChildren`, `searchItems`, `dispose`) and export an `AdapterFactory` (`id`, `validate`, `requiredSecrets`, `create`). Load the driver with `await import('driver')` **inside** a method, never at module top level, so it stays out of the chunk's load cost until used. Set `pk: true` on the column nodes that form the table's primary key if the engine has one; leave it unset otherwise (Kafka, Neo4j and Elasticsearch do).
    - `completion.ts` (optional) — export a `CompletionContribution` with `provide(ctx)` returning `CompletionResult[]`. `ctx` gives you the text, cursor, `connected` flag and a `search(kind, prefix)` bound to the live adapter.
    - `index.ts` — `export { <id>Factory as factory } from './adapter'` and `export { <id>Completion as completion } from './completion'`.
@@ -145,7 +145,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 ```
 
 - **2-stage form**: pick a DB-type card → per-adapter fields (from `presentation.fields`) → optional credentials section (password + prompt-every-connect toggle).
-- **Explorer** (`src/ui/schemaTree.ts`): group-first tree; per-adapter icons; drag a connection between groups; context menus + toolbar wired to `configWriter`.
+- **Explorer** (`src/ui/schemaTree.ts`): group-first tree; per-adapter icons; drag a connection between groups; context menus + toolbar wired to `configWriter`. A per-node table filter (`src/core/tableFilter.ts`, `src/ui/tableFilterCommands.ts`) hides tables from the tree only — it never affects queries, completion or MCP. It attaches to the node named by the adapter's `tableParent` and persists in `workspaceState`.
 - **Tree glyphs**: connection rows use the per-adapter SVG; schema/table/column rows use `tb-*` ids from the bundled icon font (`src/ui/icons/*.svg` → `dist/icons/tuplebase.woff`, declared in `contributes.icons`). Being `ThemeIcon`s rather than SVG paths, they follow the editor theme and accept a `ThemeColor` — which is how a `pk` column renders as a tinted key. Codepoints are pinned in `scripts/gen-icons.mjs` and mirrored in `package.json`; change one and you must change the other.
 - **configWriter** (`src/core/configWriter.ts`): all edits are jsonc `modify`/`applyEdits`, so comments and formatting survive. `addConnection` auto-creates a missing group (used by the toolbar's default "Ungrouped" bucket).
 
