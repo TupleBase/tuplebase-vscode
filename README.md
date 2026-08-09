@@ -78,6 +78,10 @@ TupleBase does not collect telemetry or send usage data to TupleBase. It connect
 - Report vulnerabilities privately according to the [security policy](SECURITY.md).
 - For other questions, contact [hello@tuplebase.app](mailto:hello@tuplebase.app).
 
+## Sponsor
+
+TupleBase is free and open source. If it saves you time, [sponsor the project on GitHub](https://github.com/sponsors/TupleBase) to fund adapter work and ongoing maintenance.
+
 ## License
 
 [MIT](LICENSE). Third-party components and their licenses are listed in [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES). Database logos come from [devicon](https://github.com/devicons/devicon) (MIT); database names and logos are trademarks of their respective owners and are used to indicate compatibility.
