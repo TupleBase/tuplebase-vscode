@@ -1,3 +1,16 @@
+/* Native widget chrome (select popup, number spinners, autofill) follows the
+   browser color-scheme, not CSS variables — align it with the active theme so
+   nothing renders in default-light. Light rules last: HC-light bodies also
+   carry the vscode-high-contrast class. */
+body.vscode-dark,
+body.vscode-high-contrast {
+  color-scheme: dark;
+}
+body.vscode-light,
+body.vscode-high-contrast-light {
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   padding: 24px 20px 40px;
@@ -83,6 +96,7 @@ img.card-icon { width: 32px; height: 32px; object-fit: contain; }
 .row-label { color: var(--vscode-descriptionForeground); font-size: 0.92em; }
 .row input[type="text"],
 .row input[type="number"],
+.row input[type="password"],
 .row select {
   padding: 5px 8px;
   color: var(--vscode-input-foreground);
@@ -92,18 +106,86 @@ img.card-icon { width: 32px; height: 32px; object-fit: contain; }
   font-family: inherit;
   font-size: inherit;
 }
+.row input::placeholder {
+  color: var(--vscode-input-placeholderForeground, var(--vscode-descriptionForeground));
+  opacity: 1;
+}
 .row input:focus,
 .row select:focus {
   outline: none;
   border-color: var(--vscode-focusBorder);
 }
+
+/* Select: dropdown tokens + our own chevron (appearance: none drops the native one) */
+.select-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.row select {
+  appearance: none;
+  padding-right: 28px;
+  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
+  background: var(--vscode-dropdown-background, var(--vscode-input-background));
+  border-color: var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+  cursor: pointer;
+}
+.row select:focus { border-color: var(--vscode-focusBorder); }
+.select-wrap::after {
+  content: '';
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -5px;
+  border-right: 1.5px solid var(--vscode-foreground);
+  border-bottom: 1.5px solid var(--vscode-foreground);
+  transform: rotate(45deg);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.row select option {
+  color: var(--vscode-dropdown-foreground, var(--vscode-input-foreground));
+  background: var(--vscode-dropdown-background, var(--vscode-input-background));
+}
+
 .row-check {
   flex-direction: row-reverse;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  cursor: pointer;
 }
-.row-check input { width: 16px; height: 16px; }
+.row-check input {
+  appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  background: var(--vscode-checkbox-background, var(--vscode-input-background));
+  border: 1px solid var(--vscode-checkbox-border, var(--vscode-input-border, var(--vscode-panel-border)));
+  border-radius: 3px;
+  cursor: pointer;
+}
+.row-check input:hover { border-color: var(--vscode-focusBorder); }
+.row-check input:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+.row-check input::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  margin-top: -2px;
+  border-right: 1.5px solid var(--vscode-checkbox-foreground, var(--vscode-foreground));
+  border-bottom: 1.5px solid var(--vscode-checkbox-foreground, var(--vscode-foreground));
+  transform: rotate(45deg);
+  opacity: 0;
+}
+.row-check input:checked::after { opacity: 1; }
 .row-check .row-label { font-size: 1em; color: var(--vscode-foreground); }
 
 .errors {
@@ -118,7 +200,7 @@ img.card-icon { width: 32px; height: 32px; object-fit: contain; }
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 16px;
 }
 .actions button {
   padding: 5px 14px;
@@ -127,6 +209,10 @@ img.card-icon { width: 32px; height: 32px; object-fit: contain; }
   cursor: pointer;
   font-family: inherit;
   font-size: inherit;
+}
+.actions button:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
 }
 .primary {
   color: var(--vscode-button-foreground);
@@ -140,13 +226,14 @@ img.card-icon { width: 32px; height: 32px; object-fit: contain; }
 .secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
 
 .creds {
-  margin-top: 12px;
-  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--vscode-panel-border, rgba(128,128,128,0.35));
 }
-.creds-title {
-  font-weight: 600;
-  margin-bottom: 6px;
-  opacity: 0.85;
+.creds input[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
-.creds input[disabled] { opacity: 0.5; }
