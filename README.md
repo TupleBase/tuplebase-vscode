@@ -8,8 +8,6 @@ Explore schemas, write queries, inspect results, and revisit query history witho
 
 TupleBase keeps connection configuration in a committable `.tuplebase.json` while credentials remain safely stored on your machine. Its built-in MCP server gives AI agents access to the same connections, with writes blocked by default.
 
-> TupleBase `0.2.0` is the first stable release. PostgreSQL, MySQL, and MariaDB are the enabled engines.
-
 [Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) · [Install from Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase)
 
 <img src="media/tuplebase-overview.png" alt="TupleBase in VS Code with a PostgreSQL schema, SQL editor, query history, and results grid">
@@ -56,7 +54,7 @@ Passwords and private keys do not belong in this file. TupleBase stores credenti
 
 ## Supported engines
 
-**Available in `0.2.0`:** PostgreSQL, MySQL, and MariaDB.
+**Available today:** PostgreSQL, MySQL, and MariaDB.
 
 Adapters for SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch and OpenSearch, Kafka, Redis, and DynamoDB are in development. See the [database support matrix](docs/DATABASES.md) for their current status.
 
