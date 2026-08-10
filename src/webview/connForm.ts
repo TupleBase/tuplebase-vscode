@@ -102,7 +102,15 @@ function inputFor(f: Field, initial: unknown): HTMLInputElement | HTMLSelectElem
 function fieldRow(f: Field, initial: unknown): HTMLElement {
   const row = el('label', f.kind === 'checkbox' ? 'row row-check' : 'row')
   row.appendChild(el('span', 'row-label', f.required ? `${f.label} *` : f.label))
-  row.appendChild(inputFor(f, initial))
+  const input = inputFor(f, initial)
+  if (f.kind === 'select') {
+    // wrapper anchors the CSS chevron (appearance: none hides the native one)
+    const wrap = el('span', 'select-wrap')
+    wrap.appendChild(input)
+    row.appendChild(wrap)
+  } else {
+    row.appendChild(input)
+  }
   return row
 }
 
@@ -110,7 +118,6 @@ function fieldRow(f: Field, initial: unknown): HTMLElement {
 // The prompt-every-connect toggle stores nothing and re-asks on each connect.
 function credentials(editing: boolean, promptEveryTime: boolean): HTMLElement {
   const box = el('div', 'creds')
-  box.appendChild(el('div', 'creds-title', 'Password'))
 
   const pwRow = el('label', 'row')
   pwRow.appendChild(el('span', 'row-label', editing ? 'New password' : 'Password'))
