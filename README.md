@@ -8,7 +8,7 @@ Explore schemas, write queries, inspect results, and revisit query history witho
 
 TupleBase keeps connection configuration in a committable `.tuplebase.json` while credentials remain safely stored on your machine. Its built-in MCP server gives AI agents access to the same connections, with writes blocked by default.
 
-> TupleBase `0.1.0` is a pre-release. PostgreSQL is the engine enabled in this first public version.
+> TupleBase `0.2.0` is the first stable release. PostgreSQL, MySQL, and MariaDB are the enabled engines.
 
 [Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) · [Install from Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase)
 
@@ -27,7 +27,7 @@ TupleBase keeps connection configuration in a committable `.tuplebase.json` whil
 
 ## Get started
 
-1. Install the TupleBase pre-release from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) or [Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase).
+1. Install TupleBase from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) or [Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase).
 2. Open a folder in VS Code, select the TupleBase activity-bar icon, and choose **Create Config**.
 3. Add a PostgreSQL connection from the explorer. TupleBase writes its non-secret settings to `.tuplebase.json` and prompts for the password when you first connect.
 4. Open a `.sql` file and use the **Run** CodeLens or `cmd+enter` / `ctrl+enter`. TupleBase remembers the connection selected for that file.
@@ -56,7 +56,7 @@ Passwords and private keys do not belong in this file. TupleBase stores credenti
 
 ## Supported engines
 
-**Available in `0.1.0`:** PostgreSQL. **Coming in the next release:** MySQL and MariaDB.
+**Available in `0.2.0`:** PostgreSQL, MySQL, and MariaDB.
 
 Adapters for SQLite, SQL Server, ClickHouse, Cassandra, Neo4j, MongoDB, Elasticsearch and OpenSearch, Kafka, Redis, and DynamoDB are in development. See the [database support matrix](docs/DATABASES.md) for their current status.
 
