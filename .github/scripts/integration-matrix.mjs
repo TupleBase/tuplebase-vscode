@@ -9,18 +9,18 @@ import { readFileSync } from 'node:fs'
 // engine: matrix job name · db: dev/db.mjs service · tests: vitest paths
 // SQLite is absent on purpose — file-based, so its IT runs in the unit job.
 const ENGINES = [
-  { engine: 'postgres',      db: 'postgres',      tests: 'src/adapters/postgres' },
-  { engine: 'mysql',         db: 'mysql',         tests: 'src/adapters/mysql/adapter.it.test.ts src/adapters/mysql/adapter.test.ts' },
-  { engine: 'mariadb',       db: 'mariadb',       tests: 'src/adapters/mysql/mariadb.it.test.ts' },
-  { engine: 'redis',         db: 'redis',         tests: 'src/adapters/redis' },
-  { engine: 'dynamodb',      db: 'dynamo',        tests: 'src/adapters/dynamodb' },
-  { engine: 'mssql',         db: 'mssql',         tests: 'src/adapters/mssql' },
-  { engine: 'clickhouse',    db: 'clickhouse',    tests: 'src/adapters/clickhouse' },
-  { engine: 'cassandra',     db: 'cassandra',     tests: 'src/adapters/cassandra' },
-  { engine: 'neo4j',         db: 'neo4j',         tests: 'src/adapters/neo4j' },
-  { engine: 'mongodb',       db: 'mongodb',       tests: 'src/adapters/mongodb' },
-  { engine: 'elasticsearch', db: 'elasticsearch', tests: 'src/adapters/elasticsearch' },
-  { engine: 'kafka',         db: 'kafka',         tests: 'src/adapters/kafka' },
+  { engine: 'postgres',      db: 'postgres',      tests: 'tests/integration/adapters/postgres/adapter.it.test.ts' },
+  { engine: 'mysql',         db: 'mysql',         tests: 'tests/integration/adapters/mysql/adapter.it.test.ts' },
+  { engine: 'mariadb',       db: 'mariadb',       tests: 'tests/integration/adapters/mysql/mariadb.it.test.ts' },
+  { engine: 'redis',         db: 'redis',         tests: 'tests/integration/adapters/redis/adapter.it.test.ts' },
+  { engine: 'dynamodb',      db: 'dynamo',        tests: 'tests/integration/adapters/dynamodb/adapter.it.test.ts' },
+  { engine: 'mssql',         db: 'mssql',         tests: 'tests/integration/adapters/mssql/adapter.it.test.ts' },
+  { engine: 'clickhouse',    db: 'clickhouse',    tests: 'tests/integration/adapters/clickhouse/adapter.it.test.ts' },
+  { engine: 'cassandra',     db: 'cassandra',     tests: 'tests/integration/adapters/cassandra/adapter.it.test.ts' },
+  { engine: 'neo4j',         db: 'neo4j',         tests: 'tests/integration/adapters/neo4j/adapter.it.test.ts' },
+  { engine: 'mongodb',       db: 'mongodb',       tests: 'tests/integration/adapters/mongodb/adapter.it.test.ts' },
+  { engine: 'elasticsearch', db: 'elasticsearch', tests: 'tests/integration/adapters/elasticsearch/adapter.it.test.ts' },
+  { engine: 'kafka',         db: 'kafka',         tests: 'tests/integration/adapters/kafka/adapter.it.test.ts' },
 ]
 
 const registry = readFileSync('src/adapters/registry.ts', 'utf8')

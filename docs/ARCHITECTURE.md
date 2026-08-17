@@ -97,7 +97,7 @@ the completion registrar calls `loadCompletion()` on first completion in a file.
 2. **Register it** — import the presentation in `src/adapters/registry.ts` and add it to `PRESENTATIONS`. Add its id to `ENABLED_ADAPTER_IDS` when it's ready to ship — until then it stays registered but invisible. While developing, add the id locally so the dev host shows it.
 3. **Regenerate the JSON schema** — `npm run gen:schema` rebuilds `schemas/tuplebase.schema.json` from the presentations' `fields`. Never hand-edit that file.
 4. **Add the driver dependency** to `package.json`. esbuild bundles it into the adapter's chunk (mark any optional native `.node` bindings `external` in `esbuild.mjs`).
-5. **Test it** — unit tests next to the code (`adapter.test.ts`, `completion.test.ts`) and a live-container integration test (`adapter.it.test.ts`, gated by `TUPLEBASE_IT=1`), plus a compose service + seed under `dev/`.
+5. **Test it** — mirror the adapter under `tests/unit/adapters/<id>/` (`adapter.test.ts`, `completion.test.ts`) and add its live-container test under `tests/integration/adapters/<id>/` (`adapter.it.test.ts`, gated by `TUPLEBASE_IT=1`), plus a compose service + seed under `dev/`.
 6. **Move its row** from Candidates to Shipped in `DATABASES.md`.
 
 Nothing else changes — config filtering (enabled registry ids), the connection form, tree icons, completion registration and the connection manager all derive from the registry.
@@ -171,7 +171,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 | `dist/test/*.js` | the VS Code smoke test |
 | `dist/icons/tuplebase.woff` | the tree glyph font, compiled from `src/ui/icons/*.svg` |
 
-`npm run build` runs `gen:schema`, `gen:icons`, then esbuild. `tsconfig.json` uses **bundler** module resolution (matches esbuild; allows extensionless dynamic imports). See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `TUPLEBASE_IT=1 npx vitest run`, `npm run test:vscode`).
+`npm run build` runs `gen:schema`, `gen:icons`, then esbuild. `tsconfig.json` type-checks production code only; `tsconfig.test.json` adds the external `tests/` tree. Both use **bundler** module resolution (matches esbuild; allows extensionless dynamic imports), and `npm run check` runs both. See [`TESTING.md`](TESTING.md) for the test layers (`npm test`, `TUPLEBASE_IT=1 npx vitest run`, `npm run test:vscode`).
 
 ---
 

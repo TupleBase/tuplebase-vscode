@@ -19,6 +19,17 @@ Run the extension per [DEVELOPMENT.md](DEVELOPMENT.md#setup--run) (`npm run watc
 
 Three layers:
 
+```text
+tests/
+  unit/          # mirrors src/ modules; fast Vitest coverage
+  integration/   # adapter round trips; SQLite is local, other engines need containers
+  vscode/        # extension-host smoke tests, bundled to dist/test/
+```
+
+Production implementation stays under `src/`; tests import through the same module
+interfaces used by callers. `npm run check` type-checks both trees with separate
+TypeScript configs.
+
 ```bash
 npm test                 # unit + SQLite integration (vitest) — no external services (SQLite is file-based)
 TUPLEBASE_IT=1 npx vitest run   # unit + integration — needs each engine up (postgres, mysql, mariadb, mssql, clickhouse, cassandra, neo4j, mongodb, elasticsearch, kafka, redis, dynamo). `npm run db:start -- all && npm run db:seed` starts and seeds them all.

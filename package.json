@@ -500,7 +500,7 @@
     "gen:notices": "node scripts/gen-third-party-notices.mjs",
     "package:prerelease": "npm run build && vsce package --pre-release",
     "package:release": "npm run build && vsce package",
-    "check": "tsc --noEmit",
+    "check": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "db:start": "node dev/db.mjs start",
     "db:seed": "node dev/db.mjs seed",

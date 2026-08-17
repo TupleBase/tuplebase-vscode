@@ -36,7 +36,7 @@ const webview = {
 
 const smokeTest = {
   ...host,
-  entryPoints: ['src/test/smoke.test.ts', 'src/test/noconfig.test.ts'],
+  entryPoints: ['tests/vscode/smoke.test.ts', 'tests/vscode/noconfig.test.ts'],
   outfile: undefined,
   outdir: 'dist/test',
   external: [...host.external, 'mocha'],

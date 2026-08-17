@@ -1,4 +1,5 @@
 src/**
+tests/**
 node_modules/**
 docs/**
 dev/**
@@ -21,6 +22,6 @@ media/tuplebase-wordmark-ink.svg
 media/tuplebase-wordmark-light.svg
 esbuild.mjs
 vitest.config.ts
-tsconfig.json
+tsconfig*.json
 docker-compose.yml
 **/*.map
