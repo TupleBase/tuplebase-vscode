@@ -26,6 +26,15 @@ export function buildQueryCodeLenses(
   const syntax = fileStatementSyntax(store, workspaceState, doc.uri.fsPath, doc.languageId)
   const statements = splitAll(text, syntax)
   const bound = getFileConnection(workspaceState, doc.uri.fsPath)
+  const stateIcon = (name: string) => {
+    switch (manager.connectionState(name).status) {
+      case 'connected': return '$(pass-filled)'
+      case 'connecting': return '$(loading~spin)'
+      case 'checking': return '$(sync~spin)'
+      case 'error': return '$(error)'
+      default: return '$(circle-outline)'
+    }
+  }
   const lenses: vscode.CodeLens[] = []
   for (const stmt of statements) {
     const pos = doc.positionAt(stmt.start)
@@ -39,7 +48,7 @@ export function buildQueryCodeLenses(
         arguments: [{ uri: doc.uri, offset: stmt.start }],
       }),
       new vscode.CodeLens(range, {
-        title: bound ? `${manager.isConnected(bound) ? '$(pass-filled)' : '$(circle-outline)'} ${bound}` : 'select connection…',
+        title: bound ? `${stateIcon(bound)} ${bound}` : 'select connection…',
         command: 'tuplebase.selectConnectionForFile',
         arguments: [doc.uri],
       }),

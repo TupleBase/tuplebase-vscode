@@ -56,7 +56,8 @@ class MSSQLAdapter implements Adapter {
 
   async testConnection(cfg: ResolvedConnection) {
     this.cfg = cfg
-    await this.getPool()
+    const pool = await this.getPool()
+    await pool.request().query('select 1')
   }
 
   async execute(stmt: string, opts: ExecuteOptions): Promise<ResultEnvelope> {

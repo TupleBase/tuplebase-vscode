@@ -41,11 +41,15 @@ function connectionSignature(cfg: ConnectionConfig): string {
   return JSON.stringify(stable(driverConfig))
 }
 
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'checking' | 'error'
+export interface ConnectionState { status: ConnectionStatus; message?: string }
+
 export class ConnectionManager implements vscode.Disposable {
   private readonly live = new Map<string, LiveConnection>()   // key: connection name (globally unique)
   private readonly pending = new Map<string, PendingConnection>()
   private readonly connecting = new Set<Promise<Adapter>>()
   private readonly generations = new Map<string, number>()
+  private readonly states = new Map<string, ConnectionState>()
   private readonly factoryCache = new Map<string, AdapterFactory>()   // lazily loaded, once per adapter type
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
   private readonly connEmitter = new vscode.EventEmitter<void>()
@@ -136,6 +140,18 @@ export class ConnectionManager implements vscode.Disposable {
     return this.liveAdapter(connName) !== undefined
   }
 
+  connectionState(connName: string): ConnectionState {
+    return this.states.get(connName) ?? { status: 'disconnected' }
+  }
+
+  private setState(connName: string, status: ConnectionStatus, message?: string): void {
+    const previous = this.connectionState(connName)
+    if (previous.status === status && previous.message === message) return
+    if (status === 'disconnected' && !message) this.states.delete(connName)
+    else this.states.set(connName, { status, ...(message ? { message } : {}) })
+    this.connEmitter.fire()
+  }
+
   private generation(key: string): number {
     return this.generations.get(key) ?? 0
   }
@@ -176,6 +192,7 @@ export class ConnectionManager implements vscode.Disposable {
     if (inFlight) this.cancelPending(key)
     const myEpoch = this.epoch
     const myGeneration = this.generation(key)
+    this.setState(key, 'connecting')
     const p = (async () => {
       const factory = await this.factory(cfg.adapter)
       const resolved = await this.resolve(cfg, factory)
@@ -191,9 +208,14 @@ export class ConnectionManager implements vscode.Disposable {
           throw new Error('Connection cancelled — disposed while connecting')
         }
         this.live.set(key, { adapter, cfg: effective, signature, ...(tunnel ? { tunnel } : {}) })
-        this.connEmitter.fire()
+        this.setState(key, 'connected')
         return adapter
       } catch (e) {
+        if (this.epoch === myEpoch && this.generation(key) === myGeneration) {
+          const message = e instanceof Error ? e.message : String(e)
+          if (message.startsWith('Connection cancelled')) this.setState(key, 'disconnected')
+          else this.setState(key, 'error', message)
+        }
         if (adapter || tunnel) {
           try {
             if (adapter) await this.close(adapter, tunnel)
@@ -217,10 +239,13 @@ export class ConnectionManager implements vscode.Disposable {
   }
 
   async disconnect(connName: string): Promise<void> {
+    const hadPending = this.pending.has(connName)
     this.cancelPending(connName)
     const conn = this.takeLive(connName)
+    if (conn || hadPending || this.connectionState(connName).status !== 'disconnected') {
+      this.setState(connName, 'disconnected')
+    }
     if (!conn) return
-    this.connEmitter.fire()
     await this.close(conn.adapter, conn.tunnel)
   }
 
@@ -230,22 +255,31 @@ export class ConnectionManager implements vscode.Disposable {
   // explorer refresh calls this so a dead connection is dropped (and redrawn as
   // disconnected) instead of lying. Re-uses the config it was opened with, so
   // no secret is prompted again.
+  async verifyConnection(connName: string): Promise<boolean> {
+    const conn = this.live.get(connName)
+    if (!conn) return false
+    this.setState(connName, 'checking')
+    try {
+      await conn.adapter.testConnection(conn.cfg)
+      if (this.live.get(connName) === conn) this.setState(connName, 'connected')
+      return this.live.get(connName) === conn
+    } catch (e) {
+      if (this.live.get(connName) !== conn) return false
+      this.live.delete(connName)
+      this.cancelPending(connName)
+      const message = e instanceof Error ? e.message : String(e)
+      this.setState(connName, 'error', message)
+      await this.close(conn.adapter, conn.tunnel)
+      return false
+    }
+  }
+
   async verifyLive(): Promise<void> {
-    let changed = false
-    const cleanupErrors: unknown[] = []
-    await Promise.all([...this.live].map(async ([key, conn]) => {
-      try {
-        await conn.adapter.testConnection(conn.cfg)
-      } catch {
-        if (this.live.get(key) !== conn) return
-        this.live.delete(key)
-        this.cancelPending(key)
-        changed = true
-        try { await this.close(conn.adapter, conn.tunnel) } catch (e) { cleanupErrors.push(e) }
-      }
-    }))
-    if (changed) this.connEmitter.fire()
-    if (cleanupErrors.length) throw new AggregateError(cleanupErrors, 'Failed to clean up dead connections')
+    const results = await Promise.allSettled([...this.live.keys()].map(key => this.verifyConnection(key)))
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+    if (errors.length) throw new AggregateError(errors, 'Failed to clean up dead connections')
   }
 
   // Reconcile cached resources after ConfigStore publishes a newly parsed file.
@@ -260,7 +294,10 @@ export class ConnectionManager implements vscode.Disposable {
       .map(([key]) => key)
     for (const [key, pending] of this.pending) {
       const current = this.store.connection(key)
-      if (!current || connectionSignature(current) !== pending.signature) this.cancelPending(key)
+      if (!current || connectionSignature(current) !== pending.signature) {
+        this.cancelPending(key)
+        this.setState(key, 'disconnected')
+      }
     }
     const results = await Promise.allSettled(stale.map(key => this.disconnect(key)))
     const errors = results
@@ -288,8 +325,10 @@ export class ConnectionManager implements vscode.Disposable {
     this.pending.clear()
     const connecting = [...this.connecting]
     const connections = [...this.live.values()]
+    const hadStates = this.states.size > 0
     this.live.clear()
-    if (connections.length) this.connEmitter.fire()
+    this.states.clear()
+    if (connections.length || hadStates) this.connEmitter.fire()
     const results = await Promise.allSettled([
       ...connections.map(conn => this.close(conn.adapter, conn.tunnel)),
       ...connecting.map(p => p.catch(() => undefined)),

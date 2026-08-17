@@ -72,6 +72,10 @@ class PostgresAdapter implements Adapter {
         max: 3,
         connectionTimeoutMillis: 8000,
       })
+      // pg-pool emits an EventEmitter error when an idle client loses its
+      // server. Without a listener Node treats it as uncaught; liveness probes
+      // and operation errors update the user-visible state separately.
+      this.pool.on('error', () => {})
     }
     return this.pool
   }
@@ -84,7 +88,7 @@ class PostgresAdapter implements Adapter {
     this.cfg = cfg
     const pool = await this.getPool()
     const client = await pool.connect()
-    client.release()
+    try { await client.query('select 1') } finally { client.release() }
   }
 
   async execute(stmt: string, opts: ExecuteOptions): Promise<ResultEnvelope> {
