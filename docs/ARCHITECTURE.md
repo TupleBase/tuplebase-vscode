@@ -153,7 +153,7 @@ webview form (src/webview/connForm.ts)  ──postMessage──▶  host panel (
 
 ## Running a query
 
-`src/core/runQuery.ts` — resolve the file's connection (prompt/pick if unbound, filtered by `presentation.languageId`), split the file into statements by the adapter's `statementSyntax` (`src/core/statements.ts` + `src/core/dialect.ts`), block writes on read-only connections (`src/core/querySafety.ts`), execute via the adapter, and post results to the grid (`src/ui/resultsPanel.ts` → `src/webview/results.ts`). A row opens the themed JSON detail view (`src/webview/detailJson.ts`).
+`src/core/runQuery.ts` — resolve the file's connection (prompt/pick if unbound, filtered by `presentation.languageId`), split the file into statements by the adapter's `statementSyntax` (`src/core/statements.ts` + `src/core/dialect.ts`), block writes on read-only connections (`src/core/querySafety.ts`), execute via the adapter, and post results to the grid (`src/ui/resultsPanel.ts` → `src/webview/results.ts`). SQL-family read-only classification tokenizes outside literals/comments and inspects CTEs, `EXPLAIN` wrappers, `SELECT INTO`, and additional statements; it is defense in depth, while database grants remain the security boundary. A row opens the themed JSON detail view (`src/webview/detailJson.ts`).
 
 ---
 
