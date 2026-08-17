@@ -31,6 +31,37 @@ The **TupleBase: Show MCP Server Config** command bridges the secret-storage gap
 generates a client configuration using the current `.tuplebase.json`, bundled server,
 and credentials already stored by the extension.
 
+## Connection sessions and project scope
+
+An MCP server process loads **one** `.tuplebase.json` when it starts.
+`list_connections` exposes every enabled connection in that file — not only the
+connection selected or currently connected in the TupleBase extension. The MCP server
+then opens its own adapter connection lazily when the agent calls `inspect_schema` or
+`run_query` and keeps it for the lifetime of that MCP process.
+
+Consequently:
+
+- disconnecting a connection in the extension does not disconnect the MCP session;
+- stopping or restarting the MCP server closes its sessions;
+- config and credential changes require regenerating the client config and restarting
+  the MCP server; and
+- the agent cannot see connections from other config files unless those files are
+  configured as additional MCP servers.
+
+| Editor setup | Connections visible to the agent |
+|---|---|
+| One project with one workspace MCP server | All enabled connections in that project's configured `.tuplebase.json` |
+| Two projects in separate VS Code windows, each with workspace MCP config | Each window's agent sees only that window's project server |
+| A user-level MCP server pinned to project A | Project A's connections are available in every workspace where that server is enabled; it does not follow the active project |
+| One multi-root VS Code workspace | **Show MCP Server Config** currently uses the first workspace folder's config only |
+| Multiple explicitly named servers | The agent sees the connections of every enabled server; use names such as `tuplebase-orders` and `tuplebase-analytics` to keep their scope clear |
+
+For the strongest project isolation, use a workspace-scoped MCP entry and keep its
+credential-bearing file uncommitted. For convenience, a user-level entry works, but
+disable it outside the intended project with the MCP server manager or agent tool
+picker. Opening separate VS Code windows is the least surprising setup for multiple
+projects today.
+
 ## Tools
 
 | Tool | Arguments | Returns |
@@ -93,9 +124,12 @@ VS Code stores local MCP configuration in `mcp.json`; see the official
    extension). Open each password-protected connection once so its credentials are in
    VS Code SecretStorage.
 2. Run **TupleBase: Show MCP Server Config** from the Command Palette.
-3. Run **MCP: Open User Configuration**. Use the user configuration rather than a
-   committed workspace file because the generated environment contains plaintext
-   credentials.
+3. Choose the configuration scope:
+   - Run **MCP: Open User Configuration** for the quickest setup. This makes the same
+     fixed TupleBase server available across your VS Code workspaces, so disable it
+     when working outside this project.
+   - Use this project's `.vscode/mcp.json` for project isolation, but keep the file
+     uncommitted because the generated environment contains plaintext credentials.
 4. Copy the generated `tuplebase` entry into the `servers` object:
 
    ```jsonc
@@ -217,6 +251,12 @@ read-only queries, but they explain the roadmap item for improved MCP support:
   disconnect tools, and nested connection failures can lose useful diagnostic detail.
 - The MCP process cannot read VS Code SecretStorage or reuse the extension's live
   sessions. Generated client configuration currently carries the required secrets.
+- There is no local status page yet. A useful opt-in diagnostics page would bind only
+  to `127.0.0.1` and show the exact `TUPLEBASE_CONFIG` path, inferred project root,
+  config source (environment, CLI argument or working-directory default), MCP server
+  path and start time, configured connections, session state and last connection
+  error. Safe test/connect/disconnect controls would help diagnose setup without
+  exposing credentials or query execution over HTTP.
 - The server provides tools only; it does not yet provide MCP resources, prompts or
   server instructions that teach an agent the most efficient schema-to-query workflow.
 
