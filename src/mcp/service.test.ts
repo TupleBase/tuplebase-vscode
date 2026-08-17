@@ -102,3 +102,68 @@ describe('McpService secrets', () => {
     await expect(service.runQuery('rw', 'select 1')).rejects.toThrow(/TUPLEBASE_SECRET_RW_PASSWORD/)
   })
 })
+
+describe('McpService connection lifecycle', () => {
+  function lifecycleService(connect: () => Promise<void>) {
+    let created = 0
+    let disposed = 0
+    const factory: AdapterFactory = {
+      id: 'postgres',
+      validate: () => [],
+      requiredSecrets: () => [],
+      create: () => {
+        created++
+        return {
+          id: 'postgres',
+          connect,
+          testConnection: async () => {},
+          execute: async () => ({ columns: [], rows: [], rowCount: 0, elapsedMs: 0, warnings: [] }),
+          getChildren: async () => NODES,
+          searchItems: async () => [],
+          dispose: async () => { disposed++ },
+        }
+      },
+    }
+    const service = new McpService(config, new Map([['postgres', factory]]), noSecrets)
+    return { service, created: () => created, disposed: () => disposed }
+  }
+
+  it('disposes an adapter whose initial connect fails', async () => {
+    const h = lifecycleService(async () => { throw new Error('connect failed') })
+
+    await expect(h.service.runQuery('rw', 'select 1')).rejects.toThrow('connect failed')
+    expect(h.created()).toBe(1)
+    expect(h.disposed()).toBe(1)
+  })
+
+  it('deduplicates concurrent connects for one connection', async () => {
+    let release!: () => void
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const h = lifecycleService(() => gate)
+    const schema = h.service.inspectSchema('rw')
+    const query = h.service.runQuery('rw', 'select 1')
+    release()
+
+    await Promise.all([schema, query])
+    expect(h.created()).toBe(1)
+    await h.service.dispose()
+    expect(h.disposed()).toBe(1)
+  })
+
+  it('does not let a pending connection land after shutdown', async () => {
+    let started!: () => void
+    let release!: () => void
+    const didStart = new Promise<void>(resolve => { started = resolve })
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const h = lifecycleService(async () => { started(); await gate })
+    const pending = h.service.runQuery('rw', 'select 1')
+    pending.catch(() => {})
+    await didStart
+
+    const disposing = h.service.dispose()
+    release()
+    await disposing
+    await expect(pending).rejects.toThrow(/shutting down/i)
+    expect(h.disposed()).toBe(1)
+  })
+})

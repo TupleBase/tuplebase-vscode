@@ -38,6 +38,9 @@ export interface QueryResult {
 export class McpService {
   private readonly live = new Map<string, Adapter>()
   private readonly tunnels = new Map<string, Tunnel>()
+  private readonly pending = new Map<string, Promise<Adapter>>()
+  private readonly connecting = new Set<Promise<Adapter>>()
+  private epoch = 0
   private readonly maxRows: number
   private readonly allowWrites: boolean
   private readonly baseDir: string | undefined
@@ -112,24 +115,49 @@ export class McpService {
   private async connect(name: string): Promise<Adapter> {
     const existing = this.live.get(name)
     if (existing) return existing
-    const cfg = this.connConfig(name)
-    const factory = this.factories.get(cfg.adapter)
-    if (!factory) throw new Error(`No adapter registered for "${cfg.adapter}"`)
-    const errs = factory.validate(cfg)
-    if (errs.length) throw new Error(`Invalid config for "${name}": ${errs.join(', ')}`)
-    const resolved = await this.resolve(cfg, factory)
-    const tunnel = await this.openSshTunnel(cfg)
-    const effective = tunnel ? { ...resolved, host: tunnel.host, port: tunnel.port } : resolved
-    const adapter = factory.create(effective)
+    const inFlight = this.pending.get(name)
+    if (inFlight) return inFlight
+    const myEpoch = this.epoch
+    const promise = (async () => {
+      const cfg = this.connConfig(name)
+      const factory = this.factories.get(cfg.adapter)
+      if (!factory) throw new Error(`No adapter registered for "${cfg.adapter}"`)
+      const errs = factory.validate(cfg)
+      if (errs.length) throw new Error(`Invalid config for "${name}": ${errs.join(', ')}`)
+      const resolved = await this.resolve(cfg, factory)
+      let tunnel: Tunnel | undefined
+      let adapter: Adapter | undefined
+      try {
+        tunnel = await this.openSshTunnel(cfg)
+        const effective = tunnel ? { ...resolved, host: tunnel.host, port: tunnel.port } : resolved
+        adapter = factory.create(effective)
+        await adapter.connect(effective)
+        if (this.epoch !== myEpoch) throw new Error('Connection cancelled — service is shutting down')
+        this.live.set(name, adapter)
+        if (tunnel) this.tunnels.set(name, tunnel)
+        return adapter
+      } catch (e) {
+        const cleanup = await Promise.allSettled([
+          ...(adapter ? [Promise.resolve().then(() => adapter!.dispose())] : []),
+          ...(tunnel ? [Promise.resolve().then(() => tunnel!.close())] : []),
+        ])
+        const cleanupErrors = cleanup
+          .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+          .map(r => r.reason)
+        if (cleanupErrors.length) {
+          throw new AggregateError([e, ...cleanupErrors], `${(e as Error).message} (cleanup also failed)`)
+        }
+        throw e
+      }
+    })()
+    this.pending.set(name, promise)
+    this.connecting.add(promise)
     try {
-      await adapter.connect(effective)
-    } catch (e) {
-      await tunnel?.close().catch(() => {})
-      throw e
+      return await promise
+    } finally {
+      this.connecting.delete(promise)
+      if (this.pending.get(name) === promise) this.pending.delete(name)
     }
-    this.live.set(name, adapter)
-    if (tunnel) this.tunnels.set(name, tunnel)
-    return adapter
   }
 
   // Children of a schema node — root when nodeId/kind are omitted, otherwise the
@@ -163,9 +191,21 @@ export class McpService {
   }
 
   async dispose(): Promise<void> {
-    for (const a of this.live.values()) await a.dispose().catch(() => {})
-    for (const t of this.tunnels.values()) await t.close().catch(() => {})
+    this.epoch++
+    this.pending.clear()
+    const connecting = [...this.connecting]
+    const adapters = [...this.live.values()]
+    const tunnels = [...this.tunnels.values()]
     this.live.clear()
     this.tunnels.clear()
+    const results = await Promise.allSettled([
+      ...adapters.map(a => Promise.resolve().then(() => a.dispose())),
+      ...tunnels.map(t => Promise.resolve().then(() => t.close())),
+      ...connecting.map(p => p.catch(() => undefined)),
+    ])
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+    if (errors.length) throw new AggregateError(errors, 'Failed to dispose MCP connections')
   }
 }

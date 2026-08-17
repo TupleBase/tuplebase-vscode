@@ -6,6 +6,7 @@ import { adapterById, presentations } from '../adapters/registry'
 import { ConfigStore } from '../core/configStore'
 import { SecretVault } from '../core/secrets'
 import type { AdapterPresentation, ConnectionConfig } from '../adapters/types'
+import type { ConnectionManager } from '../core/connections'
 
 const formFields = (adapter: string) => withReadonly(adapterById.get(adapter)?.presentation.fields ?? [])
 
@@ -48,6 +49,7 @@ export function registerNewConnectionForm(
   extensionUri: vscode.Uri,
   store: ConfigStore,
   vault: SecretVault,
+  manager: ConnectionManager,
 ): vscode.Disposable {
   const open = async (group: string, edit?: EditContext) => {
     const uri = store.configUri
@@ -104,6 +106,14 @@ export function registerNewConnectionForm(
         if (renamed && originalName) await vault.delete(originalName, 'password')
         if (promptEveryTime) await vault.delete(connName, 'password')
         else if (msg.secret?.password) await vault.store(connName, 'password', msg.secret.password)
+        // Any edit may include a new password that is intentionally absent from
+        // the config signature. Close the old session so the next use resolves
+        // the freshly stored secret and current endpoint.
+        if (originalName !== undefined) {
+          await manager.disconnect(originalName).catch(e => {
+            void vscode.window.showWarningMessage(`${BRAND}: connection updated but cleanup failed: ${(e as Error).message}`)
+          })
+        }
         panel.dispose()
       } catch (e) {
         void panel.webview.postMessage({ type: 'error', errors: [`Failed to write config: ${(e as Error).message}`] })

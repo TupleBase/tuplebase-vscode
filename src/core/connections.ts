@@ -13,12 +13,39 @@ import { openTunnel, type Tunnel, type TunnelSecrets } from './sshTunnel'
 interface LiveConnection {
   adapter: Adapter
   cfg: ResolvedConnection
+  signature: string
   tunnel?: Tunnel   // SSH bastion backing it, when the config asks for one
+}
+
+interface PendingConnection {
+  generation: number
+  signature: string
+  promise: Promise<Adapter>
+}
+
+// Group/read-only changes affect presentation and query policy, not the driver's
+// endpoint. Everything else is part of the identity of the live connection.
+function connectionSignature(cfg: ConnectionConfig): string {
+  const { group: _group, readonly: _readonly, ...driverConfig } = cfg
+  const stable = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(stable)
+    if (value !== null && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, child]) => [key, stable(child)]),
+      )
+    }
+    return value
+  }
+  return JSON.stringify(stable(driverConfig))
 }
 
 export class ConnectionManager implements vscode.Disposable {
   private readonly live = new Map<string, LiveConnection>()   // key: connection name (globally unique)
-  private readonly pending = new Map<string, Promise<Adapter>>()
+  private readonly pending = new Map<string, PendingConnection>()
+  private readonly connecting = new Set<Promise<Adapter>>()
+  private readonly generations = new Map<string, number>()
   private readonly factoryCache = new Map<string, AdapterFactory>()   // lazily loaded, once per adapter type
   private epoch = 0   // bumped by disposeAll so in-flight connects know not to land
   private readonly connEmitter = new vscode.EventEmitter<void>()
@@ -109,61 +136,92 @@ export class ConnectionManager implements vscode.Disposable {
     return this.liveAdapter(connName) !== undefined
   }
 
+  private generation(key: string): number {
+    return this.generations.get(key) ?? 0
+  }
+
+  private cancelPending(key: string): void {
+    this.generations.set(key, this.generation(key) + 1)
+    this.pending.delete(key)
+  }
+
+  private async close(adapter: Adapter, tunnel?: Tunnel): Promise<void> {
+    const results = await Promise.allSettled([
+      Promise.resolve().then(() => adapter.dispose()),
+      ...(tunnel ? [Promise.resolve().then(() => tunnel.close())] : []),
+    ])
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+    if (errors.length) throw new AggregateError(errors, 'Failed to close connection resources')
+  }
+
+  private takeLive(key: string): LiveConnection | undefined {
+    const conn = this.live.get(key)
+    if (conn) this.live.delete(key)
+    return conn
+  }
+
   async getAdapter(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
     const key = cfg.name
+    const signature = connectionSignature(cfg)
     const existing = this.live.get(key)
-    if (existing) return existing.adapter
+    if (existing?.signature === signature) return existing.adapter
+    if (existing) await this.disconnect(key)
     const inFlight = this.pending.get(key)
-    if (inFlight) return inFlight
+    if (inFlight?.signature === signature && inFlight.generation === this.generation(key)) {
+      return inFlight.promise
+    }
+    if (inFlight) this.cancelPending(key)
     const myEpoch = this.epoch
+    const myGeneration = this.generation(key)
     const p = (async () => {
       const factory = await this.factory(cfg.adapter)
       const resolved = await this.resolve(cfg, factory)
-      const tunnel = await this.openSshTunnel(cfg)
-      // route the adapter through the tunnel's local endpoint when there is one
-      const effective = tunnel ? { ...resolved, host: tunnel.host, port: tunnel.port } : resolved
-      const adapter = factory.create(effective)
+      let tunnel: Tunnel | undefined
+      let adapter: Adapter | undefined
       try {
+        tunnel = await this.openSshTunnel(cfg)
+        // route the adapter through the tunnel's local endpoint when there is one
+        const effective = tunnel ? { ...resolved, host: tunnel.host, port: tunnel.port } : resolved
+        adapter = factory.create(effective)
         await adapter.connect(effective)
+        if (this.epoch !== myEpoch || this.generation(key) !== myGeneration) {
+          throw new Error('Connection cancelled — disposed while connecting')
+        }
+        this.live.set(key, { adapter, cfg: effective, signature, ...(tunnel ? { tunnel } : {}) })
+        this.connEmitter.fire()
+        return adapter
       } catch (e) {
-        await tunnel?.close().catch(() => {})
+        if (adapter || tunnel) {
+          try {
+            if (adapter) await this.close(adapter, tunnel)
+            else await tunnel?.close()
+          } catch (cleanupError) {
+            throw new AggregateError([e, cleanupError], `${(e as Error).message} (cleanup also failed)`)
+          }
+        }
         throw e
       }
-      if (this.epoch !== myEpoch) {
-        // disposeAll ran while we were connecting (shutdown/refresh) — don't resurrect
-        await adapter.dispose().catch(() => {})
-        await tunnel?.close().catch(() => {})
-        throw new Error('Connection cancelled — disposed while connecting')
-      }
-      this.live.set(key, { adapter, cfg: effective, ...(tunnel ? { tunnel } : {}) })
-      this.connEmitter.fire()
-      return adapter
     })()
-    this.pending.set(key, p)
+    const pending = { generation: myGeneration, signature, promise: p }
+    this.pending.set(key, pending)
+    this.connecting.add(p)
     try {
       return await p
     } finally {
-      this.pending.delete(key)
+      this.connecting.delete(p)
+      if (this.pending.get(key) === pending) this.pending.delete(key)
     }
   }
 
-  // Close a connection's adapter and tunnel. Shutdown paths call it directly;
-  // drop() also forgets the entry. Neither fires — callers decide when to notify.
-  private async close(conn: LiveConnection): Promise<void> {
-    await conn.adapter.dispose().catch(() => {})
-    await conn.tunnel?.close().catch(() => {})
-  }
-
-  private async drop(key: string): Promise<boolean> {
-    const conn = this.live.get(key)
-    if (!conn) return false
-    await this.close(conn)
-    return this.live.delete(key)
-  }
-
   async disconnect(connName: string): Promise<void> {
-    if (await this.drop(connName)) this.connEmitter.fire()
+    this.cancelPending(connName)
+    const conn = this.takeLive(connName)
+    if (!conn) return
+    this.connEmitter.fire()
+    await this.close(conn.adapter, conn.tunnel)
   }
 
   // Prove the live connections are actually live. Nothing else notices when a
@@ -173,15 +231,42 @@ export class ConnectionManager implements vscode.Disposable {
   // disconnected) instead of lying. Re-uses the config it was opened with, so
   // no secret is prompted again.
   async verifyLive(): Promise<void> {
-    const checks = [...this.live].map(async ([key, conn]) => {
+    let changed = false
+    const cleanupErrors: unknown[] = []
+    await Promise.all([...this.live].map(async ([key, conn]) => {
       try {
         await conn.adapter.testConnection(conn.cfg)
-        return false
       } catch {
-        return this.drop(key)
+        if (this.live.get(key) !== conn) return
+        this.live.delete(key)
+        this.cancelPending(key)
+        changed = true
+        try { await this.close(conn.adapter, conn.tunnel) } catch (e) { cleanupErrors.push(e) }
       }
-    })
-    if ((await Promise.all(checks)).some(Boolean)) this.connEmitter.fire()
+    }))
+    if (changed) this.connEmitter.fire()
+    if (cleanupErrors.length) throw new AggregateError(cleanupErrors, 'Failed to clean up dead connections')
+  }
+
+  // Reconcile cached resources after ConfigStore publishes a newly parsed file.
+  // Removed/renamed connections and driver-affecting edits are closed; group and
+  // read-only changes keep the same underlying session.
+  async reconcileConfig(): Promise<void> {
+    const stale = [...this.live]
+      .filter(([key, conn]) => {
+        const current = this.store.connection(key)
+        return !current || connectionSignature(current) !== conn.signature
+      })
+      .map(([key]) => key)
+    for (const [key, pending] of this.pending) {
+      const current = this.store.connection(key)
+      if (!current || connectionSignature(current) !== pending.signature) this.cancelPending(key)
+    }
+    const results = await Promise.allSettled(stale.map(key => this.disconnect(key)))
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+    if (errors.length) throw new AggregateError(errors, 'Failed to reconcile changed connections')
   }
 
   // Drop this connection's stored secrets (a bad saved password, say) without
@@ -193,21 +278,30 @@ export class ConnectionManager implements vscode.Disposable {
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
-    if (await this.drop(cfg.name)) this.connEmitter.fire()
+    await this.disconnect(cfg.name)
     await this.vault.deleteConnection(cfg.name)
     return this.getAdapter(connName)
   }
 
   async disposeAll() {
     this.epoch++
-    const hadLive = this.live.size > 0
-    for (const conn of this.live.values()) await this.close(conn)
+    this.pending.clear()
+    const connecting = [...this.connecting]
+    const connections = [...this.live.values()]
     this.live.clear()
-    if (hadLive) this.connEmitter.fire()
+    if (connections.length) this.connEmitter.fire()
+    const results = await Promise.allSettled([
+      ...connections.map(conn => this.close(conn.adapter, conn.tunnel)),
+      ...connecting.map(p => p.catch(() => undefined)),
+    ])
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+    if (errors.length) throw new AggregateError(errors, 'Failed to dispose all connections')
   }
 
   dispose() {
     // disposeAll fires connEmitter — only dispose it once that finishes
-    void this.disposeAll().finally(() => this.connEmitter.dispose())
+    void this.disposeAll().catch(() => {}).finally(() => this.connEmitter.dispose())
   }
 }
