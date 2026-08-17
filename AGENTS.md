@@ -5,7 +5,7 @@ TupleBase is a VS Code extension for querying 12+ database engines through one a
 ## Verify your changes
 
 ```bash
-npm run check   # tsc --noEmit
+npm run check   # type-check production + test sources
 npm test        # unit + SQLite integration — no containers needed
 ```
 

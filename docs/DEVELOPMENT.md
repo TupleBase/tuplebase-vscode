@@ -46,7 +46,7 @@ npm run db:seed -- kafka        # ✓ (re)seed kafka only
 ## Checks & tests
 
 ```bash
-npm run check   # tsc --noEmit
+npm run check   # type-check production + test sources
 npm test        # unit + SQLite integration — no containers needed
 ```
 
