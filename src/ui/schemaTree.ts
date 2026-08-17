@@ -113,12 +113,18 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       return item
     }
     if (el.type === 'connection') {
+      const state = this.manager.connectionState(el.conn.name)
       const connected = this.manager.isConnected(el.conn.name)
       const item = new vscode.TreeItem(el.conn.name, vscode.TreeItemCollapsibleState.Collapsed)
-      item.description = el.conn.adapter
+      item.description = state.status === 'connected' || state.status === 'disconnected'
+        ? el.conn.adapter
+        : `${el.conn.adapter} · ${state.status}`
       item.iconPath = this.connectionIcon(el.conn.adapter, connected)
-      item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${connected ? 'connected' : 'not connected'}`
-      item.contextValue = connected ? 'tuplebase.connection.connected' : 'tuplebase.connection.disconnected'
+      item.tooltip = `${el.conn.name} (${el.conn.adapter}) — ${state.message ?? state.status}`
+      const actionableAsConnected = connected || state.status === 'connecting'
+      item.contextValue = actionableAsConnected
+        ? `tuplebase.connection.connected${state.status === 'connected' ? '' : `.${state.status}`}`
+        : `tuplebase.connection.disconnected${state.status === 'disconnected' ? '' : `.${state.status}`}`
       if (connected) this.markFilterState(item, el)
       return item
     }
@@ -183,6 +189,8 @@ export class SchemaTreeProvider implements vscode.TreeDataProvider<ExplorerNode>
       return this.visible(el.connName, el.node.id, children)
         .map(node => ({ type: 'dbnode' as const, connName: el.connName, node }))
     } catch (e) {
+      const connName = el?.type === 'connection' ? el.conn.name : el?.type === 'dbnode' ? el.connName : undefined
+      if (connName) await this.manager.verifyConnection(connName).catch(() => {})
       void vscode.window.showErrorMessage(`${BRAND}: ${errorMessage(e)}`)
       return []
     }

@@ -91,13 +91,13 @@ describe('ConnectionManager connection state', () => {
     expect(manager.isConnected('db1')).toBe(false)
   })
 
-  it('is connected after getAdapter, and fires the change event', async () => {
+  it('moves through connecting to connected after getAdapter', async () => {
     const { manager } = makeManager()
-    const fired: number[] = []
-    manager.onDidChangeConnections(() => fired.push(1))
+    const states: string[] = []
+    manager.onDidChangeConnections(() => states.push(manager.connectionState('db1').status))
     await manager.getAdapter('db1')
     expect(manager.isConnected('db1')).toBe(true)
-    expect(fired).toHaveLength(1)
+    expect(states).toEqual(['connecting', 'connected'])
   })
 
   it('forgetSecrets disconnects and clears that connection\'s stored secrets', async () => {
@@ -128,7 +128,7 @@ describe('ConnectionManager connection state', () => {
     await manager.getAdapter('db1')
     await manager.getAdapter('db1')
     expect(connects).toHaveLength(1)
-    expect(fired).toHaveLength(1)
+    expect(fired).toHaveLength(2)
   })
 
   it('disconnect clears state and fires the change event', async () => {
@@ -158,7 +158,7 @@ describe('ConnectionManager connection state', () => {
     await expect(manager.getAdapter('nope')).rejects.toThrow(/not found/i)
   })
 
-  it('failed connect fires no event, stays disconnected, and can be retried', async () => {
+  it('failed connect enters error state, stays disconnected, and can be retried', async () => {
     let calls = 0
     const { manager, connects, disposed } = makeManager({
       connect: async () => {
@@ -169,7 +169,8 @@ describe('ConnectionManager connection state', () => {
     manager.onDidChangeConnections(() => fired.push(1))
     await expect(manager.getAdapter('db1')).rejects.toThrow('boom')
     expect(manager.isConnected('db1')).toBe(false)
-    expect(fired).toHaveLength(0)
+    expect(fired).toHaveLength(2)
+    expect(manager.connectionState('db1')).toEqual({ status: 'error', message: 'boom' })
     expect(disposed).toEqual(['db1'])
     await manager.getAdapter('db1')
     expect(manager.isConnected('db1')).toBe(true)
@@ -188,7 +189,8 @@ describe('ConnectionManager connection state', () => {
     manager.onDidChangeConnections(() => fired.push(1))
     await expect(manager.reconnectWithFreshSecret('db1')).rejects.toThrow('nope')
     expect(manager.isConnected('db1')).toBe(false)
-    expect(fired).toHaveLength(1)
+    expect(fired).toHaveLength(3)
+    expect(manager.connectionState('db1')).toEqual({ status: 'error', message: 'nope' })
   })
 
   it('verifyLive keeps a connection whose round-trip succeeds', async () => {
@@ -199,7 +201,8 @@ describe('ConnectionManager connection state', () => {
     await manager.verifyLive()
     expect(pinged).toEqual(['db1'])
     expect(manager.isConnected('db1')).toBe(true)
-    expect(fired).toHaveLength(0)
+    expect(fired).toHaveLength(2)
+    expect(manager.connectionState('db1').status).toBe('connected')
   })
 
   it('verifyLive drops a connection whose server went away', async () => {
@@ -214,7 +217,10 @@ describe('ConnectionManager connection state', () => {
     await manager.verifyLive()
     expect(manager.isConnected('db1')).toBe(false)
     expect(disposed).toEqual(['db1'])
-    expect(fired).toHaveLength(1)
+    expect(fired).toHaveLength(2)
+    expect(manager.connectionState('db1')).toEqual({
+      status: 'error', message: 'Connection lost: The server closed the connection.',
+    })
   })
 
   it('verifyLive re-prompts nothing and is a no-op with nothing live', async () => {

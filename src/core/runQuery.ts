@@ -36,6 +36,14 @@ export function registerRunQuery(
   const syntaxOf = (doc: vscode.TextDocument) =>
     fileStatementSyntax(store, workspaceState, doc.uri.fsPath, doc.languageId)
 
+  const recheckAfterFailure = async (connName: string) => {
+    try {
+      await manager.verifyConnection(connName)
+    } catch (e) {
+      void vscode.window.showErrorMessage(`${BRAND}: connection cleanup failed: ${errorMessage(e)}`)
+    }
+  }
+
   const pickConnection = async (fsPath: string, languageId: string): Promise<string | undefined> => {
     const remembered = getFileConnection(workspaceState, fsPath)
     // only connections whose adapter speaks this editor language, across all groups
@@ -151,6 +159,7 @@ export function registerRunQuery(
       rememberPage(0, connName, stmt, envelope.nextPageToken)
     } catch (e) {
       if (cancelledOrSuperseded()) return
+      await recheckAfterFailure(connName)
       record(group, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
       const message = errorMessage(e)
       panel.post({ type: 'error', index: 0, message: `Error: ${message}` })
@@ -234,8 +243,10 @@ export function registerRunQuery(
           if (inFlight === mine) panel.post({ type: 'error', index, message: timedOut ? `Timed out after ${timeoutMs}ms` : 'Cancelled' })
           break
         }
+        await recheckAfterFailure(connName)
         record(group, connName, adapterId, doc.languageId, stmt, false, Date.now() - started)
         panel.post({ type: 'error', index, message: `Error: ${errorMessage(e)}` })
+        if (!manager.isConnected(connName)) break
       } finally {
         clearTimeout(timer)
       }
@@ -258,6 +269,7 @@ export function registerRunQuery(
       panel.post({ type: 'append', index, envelope })
       rememberPage(index, ctx.connName, ctx.statement, envelope.nextPageToken)
     } catch (e) {
+      await recheckAfterFailure(ctx.connName)
       panel.post({ type: 'error', index, message: `Error: ${errorMessage(e)}` })
     } finally {
       clearTimeout(timer)

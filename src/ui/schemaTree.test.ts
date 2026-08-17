@@ -28,7 +28,7 @@ vi.mock('vscode', () => ({
 }))
 
 import type { Adapter, ConnectionConfig, TreeNode } from '../adapters/types'
-import type { ConnectionManager } from '../core/connections'
+import type { ConnectionManager, ConnectionStatus } from '../core/connections'
 import type { ConfigStore } from '../core/configStore'
 import { SchemaTreeProvider, type ExplorerNode } from './schemaTree'
 import { TableFilterStore } from '../core/tableFilter'
@@ -51,7 +51,7 @@ const newFilters = () => new TableFilterStore(fakeMemento() as never)
 function makeProvider(
   live: boolean,
   extensionUri?: { path: string },
-  opts: { children?: TreeNode[]; conn?: ConnectionConfig; filters?: TableFilterStore } = {},
+  opts: { children?: TreeNode[]; conn?: ConnectionConfig; filters?: TableFilterStore; status?: ConnectionStatus; message?: string } = {},
 ) {
   const table: TreeNode = { id: 't1', label: 'users', kind: 'table', hasChildren: true }
   const adapter = {
@@ -60,6 +60,7 @@ function makeProvider(
   } as unknown as Adapter
   const manager = {
     isConnected: () => live,
+    connectionState: () => ({ status: opts.status ?? (live ? 'connected' : 'disconnected'), ...(opts.message ? { message: opts.message } : {}) }),
     liveAdapter: () => (live ? adapter : undefined),
     getAdapter: () => {
       throw new Error('tree must never connect')
@@ -147,6 +148,21 @@ describe('SchemaTreeProvider with a live adapter', () => {
     const provider = makeProvider(false, { path: '/ext' })
     const item = provider.getTreeItem(connEl) as { iconPath?: { path?: string } }
     expect(item.iconPath?.path).toBe('/ext/dist/adapters/postgres/postgres.svg')
+  })
+
+  it('renders connecting and error states without claiming a live green icon', () => {
+    const connecting = makeProvider(false, undefined, { status: 'connecting' }).getTreeItem(connEl) as {
+      contextValue?: string; description?: string
+    }
+    expect(connecting.contextValue).toBe('tuplebase.connection.connected.connecting')
+    expect(connecting.description).toBe('postgres · connecting')
+
+    const failed = makeProvider(false, undefined, { status: 'error', message: 'server unavailable' }).getTreeItem(connEl) as {
+      contextValue?: string; description?: string; tooltip?: string
+    }
+    expect(failed.contextValue).toBe('tuplebase.connection.disconnected.error')
+    expect(failed.description).toBe('postgres · error')
+    expect(failed.tooltip).toContain('server unavailable')
   })
 })
 

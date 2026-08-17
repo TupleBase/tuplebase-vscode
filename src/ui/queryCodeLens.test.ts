@@ -63,6 +63,7 @@ const manager = {
   activeEnvironment: 'dev',
   factories: new Map([['postgres', { languageId: 'sql' }]]),
   isConnected: () => false,
+  connectionState: () => ({ status: 'disconnected' }),
 } as unknown as ConnectionManager
 
 const store = {
