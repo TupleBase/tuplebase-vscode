@@ -74,6 +74,19 @@ describe('McpService.runQuery', () => {
     expect(recorder.executed).toEqual([])
   })
 
+  it('blocks SQL writes hidden behind read-looking wrappers', async () => {
+    const { service, recorder } = make()
+    for (const statement of [
+      'WITH doomed AS (DELETE FROM users RETURNING *) SELECT * FROM doomed',
+      'EXPLAIN ANALYZE DELETE FROM users',
+      'SELECT * INTO users_copy FROM users',
+      'SELECT 1; DELETE FROM users',
+    ]) {
+      await expect(service.runQuery('rw', statement)).rejects.toThrow(/read-only for agents/)
+    }
+    expect(recorder.executed).toEqual([])
+  })
+
   it('allows writes only when enabled and the connection is not readonly', async () => {
     const { service, recorder } = make({ allowWrites: true })
     await service.runQuery('rw', 'delete from users')

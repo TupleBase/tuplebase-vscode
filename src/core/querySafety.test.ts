@@ -8,6 +8,24 @@ describe('isWriteStatement', () => {
     expect(isWriteStatement('postgres', 'CREATE TABLE logs (id int)')).toBe(true)
   })
 
+  it('blocks writes hidden behind SQL wrappers', () => {
+    expect(isWriteStatement(
+      'postgres',
+      'WITH doomed AS (DELETE FROM crew RETURNING *) SELECT * FROM doomed',
+    )).toBe(true)
+    expect(isWriteStatement('postgres', 'EXPLAIN ANALYZE DELETE FROM crew')).toBe(true)
+    expect(isWriteStatement('postgres', 'SELECT * INTO crew_copy FROM crew')).toBe(true)
+    expect(isWriteStatement('postgres', 'SELECT 1; DELETE FROM crew')).toBe(true)
+  })
+
+  it('allows read-only wrappers and ignores write words in data/comments', () => {
+    expect(isWriteStatement('postgres', 'WITH crew_ids AS (SELECT id FROM crew) SELECT * FROM crew_ids')).toBe(false)
+    expect(isWriteStatement('postgres', 'EXPLAIN ANALYZE SELECT * FROM crew')).toBe(false)
+    expect(isWriteStatement('postgres', "SELECT 'DELETE FROM crew' AS sample")).toBe(false)
+    expect(isWriteStatement('postgres', 'SELECT "delete" FROM crew /* UPDATE crew */')).toBe(false)
+    expect(isWriteStatement('postgres', 'SELECT $$ DELETE FROM crew $$ AS sample')).toBe(false)
+  })
+
   it('only permits known read-only Redis commands', () => {
     expect(isWriteStatement('redis', 'GET crew:1:name')).toBe(false)
     expect(isWriteStatement('redis', 'SET crew:1:name ada')).toBe(true)

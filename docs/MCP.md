@@ -80,6 +80,11 @@ Agents are read-only by default. To let an agent write, start the server with
 `.tuplebase.json`. Both must hold — a `readonly` connection stays read-only even with writes
 enabled.
 
+The statement classifier is a defense-in-depth guardrail, not a replacement for database
+permissions: stored procedures and read-looking functions can have server-side side effects that
+client-side SQL inspection cannot prove. Use a database account with read-only grants for any
+connection exposed to an untrusted agent.
+
 ## Troubleshooting
 
 - **No connections listed** — `TUPLEBASE_CONFIG` is wrong or the file failed to parse. Check the `[tuplebase-mcp] config:` stderr lines.
