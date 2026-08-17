@@ -7,6 +7,7 @@ export interface SshConfig {
   host: string
   port?: number
   user: string
+  hostFingerprint: string // trusted OpenSSH SHA256 fingerprint, e.g. SHA256:abc…
   privateKey?: string   // path to the private key file
   passphrase?: boolean  // prompt for the key passphrase
   password?: boolean    // prompt for an SSH password

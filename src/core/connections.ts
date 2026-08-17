@@ -309,14 +309,19 @@ export class ConnectionManager implements vscode.Disposable {
   // Drop this connection's stored secrets (a bad saved password, say) without
   // touching others — the next connect re-prompts. Disconnects first if live.
   async forgetSecrets(connName: string): Promise<void> {
-    await this.disconnect(connName)
-    await this.vault.deleteConnection(connName)
+    // A cancelled connect can still be finishing a prompt/SecretStorage write.
+    // Wait for it before deleting so it cannot recreate a credential afterward.
+    const inFlight = this.pending.get(connName)?.promise
+    const errors: unknown[] = []
+    try { await this.disconnect(connName) } catch (e) { errors.push(e) }
+    await inFlight?.catch(() => undefined)
+    try { await this.vault.deleteConnection(connName) } catch (e) { errors.push(e) }
+    if (errors.length) throw new AggregateError(errors, `Failed to reset credentials for "${connName}"`)
   }
 
   async reconnectWithFreshSecret(connName: string): Promise<Adapter> {
     const cfg = this.findConfig(connName)
-    await this.disconnect(cfg.name)
-    await this.vault.deleteConnection(cfg.name)
+    await this.forgetSecrets(cfg.name)
     return this.getAdapter(connName)
   }
 

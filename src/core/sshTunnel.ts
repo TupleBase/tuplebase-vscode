@@ -1,6 +1,7 @@
 import { Client, type ConnectConfig } from 'ssh2'
 import { createServer, type Socket } from 'node:net'
 import type { SshConfig } from '../adapters/types'
+import { matchesSshHostFingerprint } from './sshFingerprint'
 
 export interface TunnelSecrets {
   privateKey?: Buffer | string
@@ -21,6 +22,10 @@ export function buildConnectConfig(ssh: SshConfig, secrets: TunnelSecrets): Conn
     port: ssh.port ?? 22,
     username: ssh.user,
     readyTimeout: 15_000,
+    // ssh2 otherwise accepts any server key. Verify the raw key against the
+    // trusted OpenSSH SHA256 fingerprint from the secret-free config.
+    hostVerifier: (key: Buffer | string) =>
+      Buffer.isBuffer(key) && matchesSshHostFingerprint(ssh.hostFingerprint, key),
   }
   if (secrets.privateKey !== undefined) cfg.privateKey = secrets.privateKey
   if (secrets.passphrase !== undefined) cfg.passphrase = secrets.passphrase

@@ -123,14 +123,15 @@ Nothing else changes — config filtering (enabled registry ids), the connection
 - **Groups** are folders. A query runs against the connection **bound to its file** (there is no active environment). `src/core/fileConn.ts` tracks the file→connection binding in `workspaceState`.
 - **Secret-free.** Passwords never live in the file. `config.ts` rejects secret-looking fields. Per-connection extras: `readonly` (block writes), `ssh` (bastion tunnel, see below), `promptPassword` (prompt every connect instead of storing).
 - **`${env:VAR}`** interpolation is applied to string values (and ssh string fields).
+- **Transport settings stay adapter-local.** TLS fields come from `src/adapters/<id>/presentation.ts`; validation and driver TLS options live in that adapter's factory/implementation. Core passes the config through without branching on adapter ids. Wire-compatible aliases such as MariaDB deliberately inherit the MySQL presentation and factory.
 
 ### Secrets
 
-`SecretVault` (`src/core/secrets.ts`) wraps VS Code SecretStorage (OS keychain), keyed by connection name + field. `ConnectionManager.getSecret` prompts once and stores; with `promptPassword: true` it prompts every connect and stores nothing. Per-connection **Reset Credentials** clears one connection's secrets; **Clear Stored Credentials** clears all.
+`SecretVault` (`src/core/secrets.ts`) wraps VS Code SecretStorage (OS keychain), keyed by connection name + field. `ConnectionManager.getSecret` prompts once and stores; with `promptPassword: true` it prompts every connect and stores nothing. Per-connection **Reset Credentials** clears one connection's secrets; **Clear Stored Credentials** closes live sessions before clearing all. Renaming or removing a connection (or deleting its group) clears its whole secret namespace, including SSH credentials.
 
 ### SSH tunnels
 
-A host/port connection may carry an `ssh` block (`src/core/sshTunnel.ts`, `ssh2`). At connect the manager opens a local forward through the bastion and points the adapter at `127.0.0.1:<localPort>`. Key passphrase / SSH password are keychained like DB passwords. Rejected for adapters with no `host` (DynamoDB).
+A host/port connection may carry an `ssh` block (`src/core/sshTunnel.ts`, `ssh2`). At connect the manager opens a local forward through the bastion and points the adapter at `127.0.0.1:<localPort>`. Every tunnel requires `hostFingerprint`, an OpenSSH `SHA256:...` host-key fingerprint that is checked before authentication; obtain it from the bastion administrator or compare `ssh-keyscan <host> | ssh-keygen -lf -` through a trusted channel. Key passphrase / SSH password are keychained like DB passwords. SSH is rejected for adapters with no `host` (DynamoDB).
 
 ### Creating / editing a connection (the CRUD flow)
 

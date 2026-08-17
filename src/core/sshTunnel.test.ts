@@ -16,6 +16,10 @@ vi.mock('node:net', () => ({
 vi.mock('ssh2', () => ({ Client: class {} }))
 
 import { buildConnectConfig, openTunnel } from './sshTunnel'
+import { sshHostFingerprint } from './sshFingerprint'
+
+const HOST_KEY = Buffer.from('trusted host key')
+const HOST_FINGERPRINT = sshHostFingerprint(HOST_KEY)
 
 class FakeClient extends EventEmitter {
   connectArgs: unknown
@@ -36,15 +40,25 @@ class FakeClient extends EventEmitter {
 
 describe('buildConnectConfig', () => {
   it('defaults port to 22 and sets a ready timeout', () => {
-    expect(buildConnectConfig({ host: 'b', user: 'u' }, {})).toEqual({
-      host: 'b', port: 22, username: 'u', readyTimeout: 15_000,
-    })
+    const cfg = buildConnectConfig({ host: 'b', user: 'u', hostFingerprint: HOST_FINGERPRINT }, {})
+    expect(cfg).toMatchObject({ host: 'b', port: 22, username: 'u', readyTimeout: 15_000 })
+    expect(cfg.hostVerifier).toBeTypeOf('function')
   })
 
   it('carries key, passphrase and password secrets through', () => {
     const key = Buffer.from('KEY')
-    expect(buildConnectConfig({ host: 'b', port: 2222, user: 'u' }, { privateKey: key, passphrase: 'pp', password: 'pw' }))
+    expect(buildConnectConfig(
+      { host: 'b', port: 2222, user: 'u', hostFingerprint: HOST_FINGERPRINT },
+      { privateKey: key, passphrase: 'pp', password: 'pw' },
+    ))
       .toMatchObject({ port: 2222, privateKey: key, passphrase: 'pp', password: 'pw' })
+  })
+
+  it('accepts only the configured SSH host key', () => {
+    const cfg = buildConnectConfig({ host: 'b', user: 'u', hostFingerprint: HOST_FINGERPRINT }, {})
+    const verify = cfg.hostVerifier as (key: Buffer) => boolean
+    expect(verify(HOST_KEY)).toBe(true)
+    expect(verify(Buffer.from('attacker host key'))).toBe(false)
   })
 })
 
@@ -53,7 +67,7 @@ describe('openTunnel', () => {
     serverClosed = false
     const client = new FakeClient('ready')
     const tunnel = await openTunnel(
-      { host: 'bastion', port: 2222, user: 'ec2' },
+      { host: 'bastion', port: 2222, user: 'ec2', hostFingerprint: HOST_FINGERPRINT },
       { host: 'db.internal', port: 5432 },
       { password: 'pw' },
       () => client as never,
@@ -75,7 +89,10 @@ describe('openTunnel', () => {
   it('rejects (and ends the client) when the SSH connection errors', async () => {
     const client = new FakeClient('error')
     await expect(
-      openTunnel({ host: 'bastion', user: 'u' }, { host: 'db', port: 5432 }, {}, () => client as never),
+      openTunnel(
+        { host: 'bastion', user: 'u', hostFingerprint: HOST_FINGERPRINT },
+        { host: 'db', port: 5432 }, {}, () => client as never,
+      ),
     ).rejects.toThrow(/SSH tunnel to bastion:22: auth failed/)
     expect(client.ended).toBe(true)
   })

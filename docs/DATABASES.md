@@ -9,8 +9,8 @@ Adapters roll out gradually per release. **Preview** engines are enabled today; 
 | Database | Status | `adapter` | Query surface | Notes |
 |---|---|---|---|---|
 | PostgreSQL | Preview | `postgres` | SQL | TLS (`sslmode` + CA cert), password in OS keychain |
-| MySQL | Preview | `mysql` | SQL | schemas → tables → columns tree, JSON columns, password in OS keychain |
-| MariaDB | Preview | `mariadb` | SQL | own picker entry; speaks the MySQL wire protocol — same driver as `mysql` (verified: schema tree + queries work) |
+| MySQL | Preview | `mysql` | SQL | TLS (`sslmode` + CA cert), schemas → tables → columns tree, JSON columns, password in OS keychain |
+| MariaDB | Preview | `mariadb` | SQL | own picker entry; MySQL-wire-compatible, including the same TLS config and driver (verified: schema tree + queries work) |
 | SQLite | Coming soon | `sqlite` | SQL | file-based (`path`), no server/password; pure-JS driver (sql.js), writes persist to the file |
 | SQL Server | Coming soon | `mssql` | T-SQL | `mssql` (tedious) driver; `information_schema` schema tree, optional `encrypt` (server cert trusted) |
 | ClickHouse | Coming soon | `clickhouse` | SQL | analytics; HTTP driver (`@clickhouse/client`), `database`/`user` + optional `auth`, `system.*` schema tree |

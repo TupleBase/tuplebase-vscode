@@ -102,19 +102,27 @@ export function registerNewConnectionForm(
         if (originalName !== undefined && renamed) text = removeConnection(text, group, originalName)
         text = addConnection(text, group, connName, conn)
         await vscode.workspace.fs.writeFile(uri, Buffer.from(text, 'utf8'))
-        // keychain: rename clears the old name's secret; store/clear per the choice
-        if (renamed && originalName) await vault.delete(originalName, 'password')
-        if (promptEveryTime) await vault.delete(connName, 'password')
-        else if (msg.secret?.password) await vault.store(connName, 'password', msg.secret.password)
-        // Any edit may include a new password that is intentionally absent from
-        // the config signature. Close the old session so the next use resolves
-        // the freshly stored secret and current endpoint.
+        const postSaveErrors: unknown[] = []
+        // Close before changing credentials. On rename, the manager also waits
+        // for cancelled connects and clears the whole old DB/SSH namespace.
         if (originalName !== undefined) {
-          await manager.disconnect(originalName).catch(e => {
-            void vscode.window.showWarningMessage(`${BRAND}: connection updated but cleanup failed: ${(e as Error).message}`)
-          })
+          try {
+            if (renamed) await manager.forgetSecrets(originalName)
+            else await manager.disconnect(originalName)
+          } catch (e) { postSaveErrors.push(e) }
+        }
+        try {
+          if (promptEveryTime) await vault.delete(connName, 'password')
+          else if (msg.secret?.password) await vault.store(connName, 'password', msg.secret.password)
+        } catch (e) {
+          postSaveErrors.push(e)
         }
         panel.dispose()
+        if (postSaveErrors.length) {
+          void vscode.window.showWarningMessage(
+            `${BRAND}: connection saved, but ${postSaveErrors.length} connection resource(s) could not be updated`,
+          )
+        }
       } catch (e) {
         void panel.webview.postMessage({ type: 'error', errors: [`Failed to write config: ${(e as Error).message}`] })
       }

@@ -80,9 +80,11 @@ describe('parseConfig (groups model)', () => {
     expect(Object.keys(config!.connections)).toEqual(['e'])
   })
 
-  it('does not flag secret fields on skipped entries', () => {
+  it('flags secret fields even on skipped entries', () => {
     const { config, errors } = parseConfig(base({ dev: { c: { adapter: 'mssql', password: 'x' } } }))
-    expect(errors).toEqual([])
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatchObject({ path: 'groups.dev.c.password' })
+    expect(errors[0].message).toMatch(/secret/i)
     expect(config!.connections).toEqual({})
   })
 
@@ -118,22 +120,32 @@ describe('parseConfig (groups model)', () => {
 })
 
 describe('parseConfig ssh tunnels', () => {
+  const HOST_FINGERPRINT = 'SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
   const withSsh = (adapter: string, ssh: unknown, extra: Record<string, unknown> = {}) =>
-    base({ prod: { c: { adapter, ...extra, ssh } } })
+    base({ prod: { c: {
+      adapter,
+      ...extra,
+      ssh: typeof ssh === 'object' && ssh !== null && !Array.isArray(ssh)
+        ? { hostFingerprint: HOST_FINGERPRINT, ...ssh }
+        : ssh,
+    } } })
 
   it('parses a full ssh block and interpolates its string fields', () => {
     const text = withSsh('postgres', { host: '${env:BASTION}', port: 2222, user: 'ec2-user', privateKey: '~/.ssh/id_ed25519' }, { host: 'db.internal', user: 'app' })
     const { config, errors } = parseConfig(text, { BASTION: 'bastion.example.com' })
     expect(errors).toEqual([])
     expect(config!.connections['c'].ssh).toEqual({
-      host: 'bastion.example.com', port: 2222, user: 'ec2-user', privateKey: '~/.ssh/id_ed25519',
+      host: 'bastion.example.com', port: 2222, user: 'ec2-user', hostFingerprint: HOST_FINGERPRINT,
+      privateKey: '~/.ssh/id_ed25519',
     })
   })
 
   it('allows password auth without a private key', () => {
     const { config, errors } = parseConfig(withSsh('postgres', { host: 'b', user: 'u', password: true }, { host: 'r' }))
     expect(errors).toEqual([])
-    expect(config!.connections['c'].ssh).toEqual({ host: 'b', user: 'u', password: true })
+    expect(config!.connections['c'].ssh).toEqual({
+      host: 'b', user: 'u', hostFingerprint: HOST_FINGERPRINT, password: true,
+    })
   })
 
   it('skips a not-enabled adapter before ssh validation (dynamodb)', () => {
@@ -148,6 +160,18 @@ describe('parseConfig ssh tunnels', () => {
       expect.stringMatching(/ssh\.host is required/),
       expect.stringMatching(/ssh\.user is required/),
     ]))
+  })
+
+  it('requires a valid trusted host fingerprint', () => {
+    const missing = parseConfig(withSsh(
+      'postgres', { host: 'b', user: 'u', privateKey: 'k', hostFingerprint: undefined }, { host: 'db', user: 'app' },
+    ))
+    expect(missing.errors.some(e => /ssh\.hostFingerprint is required/.test(e.message))).toBe(true)
+
+    const invalid = parseConfig(withSsh(
+      'postgres', { host: 'b', user: 'u', privateKey: 'k', hostFingerprint: 'SHA256:not-valid' }, { host: 'db', user: 'app' },
+    ))
+    expect(invalid.errors.some(e => /OpenSSH SHA256 fingerprint/.test(e.message))).toBe(true)
   })
 
   it('rejects a secret string where a boolean flag is expected', () => {

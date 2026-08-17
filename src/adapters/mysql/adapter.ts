@@ -1,12 +1,49 @@
+import { readFileSync } from 'node:fs'
+import { isAbsolute } from 'node:path'
 import type {
   Adapter, AdapterFactory, ExecuteOptions,
   ItemKind, ResolvedConnection, ResultEnvelope, SchemaItem, TreeNode,
 } from '../types'
 import type { Pool, RowDataPacket, FieldPacket } from 'mysql2/promise'
+import type { SslOptions } from 'mysql2'
 import { offsetFromToken, windowedSql } from '../../core/pagination'
 
 // system schemas are hidden from the tree (mirrors postgres hiding pg_catalog)
 const SYSTEM_SCHEMAS = new Set(['information_schema', 'mysql', 'performance_schema', 'sys'])
+const SSL_MODES = ['disable', 'require', 'verify-ca', 'verify-full']
+
+export function buildMysqlSslOptions(
+  cfg: { sslmode?: unknown; sslrootcert?: unknown; [key: string]: unknown },
+  readFile: (path: string) => string | Buffer = readFileSync,
+): SslOptions | undefined {
+  const mode = cfg.sslmode ?? 'disable'
+  if (mode === 'disable') return undefined
+  if (mode === 'require') return { rejectUnauthorized: false }
+  if (mode !== 'verify-ca' && mode !== 'verify-full') {
+    throw new Error(`unknown sslmode '${String(mode)}' (expected one of ${SSL_MODES.join(', ')})`)
+  }
+  const certPath = cfg.sslrootcert
+  if (typeof certPath !== 'string' || certPath === '') {
+    throw new Error(`sslmode=${mode} requires sslrootcert (path to the CA certificate)`)
+  }
+  if (!isAbsolute(certPath)) {
+    throw new Error(
+      `sslrootcert must be an absolute path, got '${certPath}' (use \${env:VAR} for machine-specific paths)`,
+    )
+  }
+  let ca: string | Buffer
+  try {
+    ca = readFile(certPath)
+  } catch (e) {
+    throw new Error(`cannot read sslrootcert '${certPath}': ${e instanceof Error ? e.message : String(e)}`)
+  }
+  return {
+    ca,
+    rejectUnauthorized: true,
+    // mysql2 keeps hostname checks off for compatibility unless explicitly set.
+    verifyIdentity: mode === 'verify-full',
+  }
+}
 
 // tree node ids: 'my:' + dot-joined segments, each escaped so names with dots survive
 export function myNodeId(...parts: string[]): string {
@@ -36,6 +73,7 @@ class MySQLAdapter implements Adapter {
         database: String(this.cfg.database),
         user: String(this.cfg.user),
         password: this.cfg.secrets.password,
+        ssl: buildMysqlSslOptions(this.cfg),
         connectionLimit: 3,
         connectTimeout: 8000,
       })
@@ -162,6 +200,16 @@ export const mysqlFactory: AdapterFactory = {
     const errs: string[] = []
     for (const f of ['host', 'database', 'user']) {
       if (typeof raw[f] !== 'string' || raw[f] === '') errs.push(`${f} is required`)
+    }
+    if (raw.sslmode !== undefined && !SSL_MODES.includes(raw.sslmode as string)) {
+      errs.push(`sslmode must be one of ${SSL_MODES.join(', ')}`)
+    }
+    const verify = raw.sslmode === 'verify-ca' || raw.sslmode === 'verify-full'
+    if (verify && (typeof raw.sslrootcert !== 'string' || raw.sslrootcert === '')) {
+      errs.push(`sslrootcert is required for sslmode=${raw.sslmode}`)
+    }
+    if (!verify && raw.sslrootcert !== undefined) {
+      errs.push('sslrootcert is only valid with sslmode verify-ca or verify-full')
     }
     return errs
   },
