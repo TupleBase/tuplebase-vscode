@@ -109,6 +109,35 @@ describe('ConnectionManager connection state', () => {
     expect(deleted).toEqual(['db1'])
   })
 
+  it('forgetSecrets waits for a cancelled connect before deleting its secrets', async () => {
+    let started!: () => void
+    let release!: () => void
+    const didStart = new Promise<void>(resolve => { started = resolve })
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const { manager, deleted } = makeManager({
+      requiredSecrets: ['password'],
+      connect: async () => { started(); await gate },
+    })
+    const connecting = manager.getAdapter('db1')
+    connecting.catch(() => {})
+    await didStart
+
+    const forgetting = manager.forgetSecrets('db1')
+    await Promise.resolve()
+    expect(deleted).toEqual([])
+    release()
+    await forgetting
+    await expect(connecting).rejects.toThrow(/cancelled/i)
+    expect(deleted).toEqual(['db1'])
+  })
+
+  it('forgetSecrets still deletes credentials when closing the adapter fails', async () => {
+    const { manager, deleted } = makeManager({ dispose: async () => { throw new Error('close failed') } })
+    await manager.getAdapter('db1')
+    await expect(manager.forgetSecrets('db1')).rejects.toThrow(/reset credentials/i)
+    expect(deleted).toEqual(['db1'])
+  })
+
   it('stores a prompted secret by default', async () => {
     const { manager, stored } = makeManager({ requiredSecrets: ['password'] })
     await manager.getAdapter('db1')

@@ -40,7 +40,9 @@ describe('buildJsonSchema', () => {
   })
 
   it('offers an ssh block only for host/port adapters', () => {
-    expect(branchFor('postgres').properties.ssh).toMatchObject({ type: 'object', required: ['host', 'user'] })
+    expect(branchFor('postgres').properties.ssh).toMatchObject({
+      type: 'object', required: ['host', 'user', 'hostFingerprint'],
+    })
     expect(branchFor('redis').properties.ssh).toBeDefined()
     expect(branchFor('dynamodb').properties.ssh).toBeUndefined()
   })

@@ -23,11 +23,12 @@ function propertyFor(f: Field): JsonSchema {
 const SSH_SCHEMA: JsonSchema = {
   type: 'object',
   description: 'Tunnel this connection through an SSH bastion / jump host',
-  required: ['host', 'user'],
+  required: ['host', 'user', 'hostFingerprint'],
   properties: {
     host: { type: 'string', description: 'Bastion hostname' },
     port: { type: 'number', default: 22 },
     user: { type: 'string', description: 'SSH username' },
+    hostFingerprint: { type: 'string', description: 'Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)' },
     privateKey: { type: 'string', description: 'Path to the private key file (use ${env:VAR} for machine-specific paths)' },
     passphrase: { type: 'boolean', description: 'Prompt for the private key passphrase (stored in the OS keychain)' },
     password: { type: 'boolean', description: 'Prompt for an SSH password (stored in the OS keychain)' },

@@ -19,5 +19,14 @@ export const presentation: AdapterPresentation = {
     { key: 'port', label: 'Port', kind: 'number', default: 3306 },
     { key: 'database', label: 'Database', kind: 'text', required: true },
     { key: 'user', label: 'User', kind: 'text', required: true },
+    {
+      key: 'sslmode', label: 'SSL mode', kind: 'select',
+      options: ['', 'disable', 'require', 'verify-ca', 'verify-full'],
+      description: 'TLS mode: require encrypts without certificate checks, verify-ca checks the CA, verify-full checks the CA and hostname',
+    },
+    {
+      key: 'sslrootcert', label: 'SSL root cert', kind: 'text',
+      description: 'Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)',
+    },
   ],
 }

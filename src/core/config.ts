@@ -2,8 +2,9 @@ import { BRAND } from './product'
 import { parse, ParseError, printParseErrorCode } from 'jsonc-parser'
 import type { ConnectionConfig, SshConfig } from '../adapters/types'
 import { adapterIds, adapterById } from '../adapters/registry'
+import { normalizeSshFingerprint } from './sshFingerprint'
 
-const SSH_KEYS = new Set(['host', 'port', 'user', 'privateKey', 'passphrase', 'password'])
+const SSH_KEYS = new Set(['host', 'port', 'user', 'hostFingerprint', 'privateKey', 'passphrase', 'password'])
 
 // Validate + interpolate a connection's optional `ssh` bastion block. Paths and
 // names are config; the passphrase / password are booleans here (prompted and
@@ -30,7 +31,7 @@ function parseSsh(
   for (const k of Object.keys(o)) {
     if (!SSH_KEYS.has(k)) errors.push({ path: `${at}.${k}`, message: `unknown ssh field "${k}"` })
   }
-  const str = (k: 'host' | 'user' | 'privateKey', required: boolean): string | undefined => {
+  const str = (k: 'host' | 'user' | 'hostFingerprint' | 'privateKey', required: boolean): string | undefined => {
     const v = o[k]
     if (v === undefined || v === '') {
       if (required) errors.push({ path: `${at}.${k}`, message: `ssh.${k} is required` })
@@ -53,6 +54,14 @@ function parseSsh(
   }
   const host = str('host', true)
   const user = str('user', true)
+  const fingerprintRaw = str('hostFingerprint', true)
+  const hostFingerprint = fingerprintRaw ? normalizeSshFingerprint(fingerprintRaw) : undefined
+  if (fingerprintRaw && !hostFingerprint) {
+    errors.push({
+      path: `${at}.hostFingerprint`,
+      message: 'ssh.hostFingerprint must be an OpenSSH SHA256 fingerprint (SHA256:...)',
+    })
+  }
   const privateKey = str('privateKey', false)
   const passphrase = bool('passphrase')
   const password = bool('password')
@@ -64,9 +73,9 @@ function parseSsh(
   if (privateKey === undefined && password !== true) {
     errors.push({ path: at, message: 'ssh needs a privateKey path or "password": true' })
   }
-  if (host === undefined || user === undefined) return undefined
+  if (host === undefined || user === undefined || hostFingerprint === undefined) return undefined
   return {
-    host, user,
+    host, user, hostFingerprint,
     ...(port !== undefined ? { port } : {}),
     ...(privateKey ? { privateKey } : {}),
     ...(passphrase !== undefined ? { passphrase } : {}),
@@ -140,16 +149,17 @@ export function parseConfig(
         continue
       }
       const conn = { ...(connRaw as Record<string, unknown>) }
-      // Not an enabled adapter (disabled for this release, or unknown): skip the
-      // entry entirely — configs written for other versions load without errors.
-      // Skipped entries get no diagnostics at all — not even the secret-field scrub.
-      if (typeof conn.adapter !== 'string' || !adapterIds.includes(conn.adapter)) continue
+      // Scrub plaintext secrets before the adapter rollout gate. A disabled or
+      // misspelled adapter must not make an unsafe config appear clean.
       for (const field of Object.keys(conn)) {
         if (SECRET_FIELDS.includes(field.toLowerCase())) {
           errors.push({ path: `${path}.${field}`, message: `secret field "${field}" not allowed — ${BRAND} keeps secrets out of config (prompted and stored on your machine)` })
           delete conn[field]
         }
       }
+      // Not an enabled adapter (disabled for this release, or unknown): skip the
+      // entry entirely — configs written for other versions load without errors.
+      if (typeof conn.adapter !== 'string' || !adapterIds.includes(conn.adapter)) continue
       const connReadonly = typeof conn.readonly === 'boolean' ? conn.readonly : undefined
       delete conn.readonly
       const sshRaw = conn.ssh

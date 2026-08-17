@@ -108,7 +108,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -122,6 +123,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -175,6 +180,19 @@
               "user": {
                 "type": "string"
               },
+              "sslmode": {
+                "enum": [
+                  "disable",
+                  "require",
+                  "verify-ca",
+                  "verify-full"
+                ],
+                "description": "TLS mode: require encrypts without certificate checks, verify-ca checks the CA, verify-full checks the CA and hostname"
+              },
+              "sslrootcert": {
+                "type": "string",
+                "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)"
+              },
               "promptPassword": {
                 "type": "boolean",
                 "description": "Prompt for the password every connect instead of storing it in the keychain"
@@ -184,7 +202,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -198,6 +217,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -251,6 +274,19 @@
               "user": {
                 "type": "string"
               },
+              "sslmode": {
+                "enum": [
+                  "disable",
+                  "require",
+                  "verify-ca",
+                  "verify-full"
+                ],
+                "description": "TLS mode: require encrypts without certificate checks, verify-ca checks the CA, verify-full checks the CA and hostname"
+              },
+              "sslrootcert": {
+                "type": "string",
+                "description": "Absolute path to the CA certificate for verify-ca/verify-full (use ${env:VAR} for machine-specific paths)"
+              },
               "promptPassword": {
                 "type": "boolean",
                 "description": "Prompt for the password every connect instead of storing it in the keychain"
@@ -260,7 +296,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -274,6 +311,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -367,7 +408,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -381,6 +423,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -448,7 +494,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -462,6 +509,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -534,7 +585,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -548,6 +600,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -609,7 +665,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -623,6 +680,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -690,7 +751,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -704,6 +766,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -773,7 +839,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -787,6 +854,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -837,7 +908,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -851,6 +923,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",
@@ -921,7 +997,8 @@
                 "description": "Tunnel this connection through an SSH bastion / jump host",
                 "required": [
                   "host",
-                  "user"
+                  "user",
+                  "hostFingerprint"
                 ],
                 "properties": {
                   "host": {
@@ -935,6 +1012,10 @@
                   "user": {
                     "type": "string",
                     "description": "SSH username"
+                  },
+                  "hostFingerprint": {
+                    "type": "string",
+                    "description": "Trusted OpenSSH SHA256 host-key fingerprint (SHA256:...)"
                   },
                   "privateKey": {
                     "type": "string",

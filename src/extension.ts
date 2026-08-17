@@ -45,7 +45,7 @@ export async function activate(context: vscode.ExtensionContext) {
     filters,
     registerSchemaTree(manager, store, filters, context.extensionUri),
     registerNewConnectionForm(context.extensionUri, store, vault, manager),
-    registerExplorerCommands(store),
+    registerExplorerCommands(store, manager),
     registerTableFilterCommands(manager, store, filters),
     registerMcpConfig(context.extensionUri, store, vault),
     registerRunQuery(manager, store, panel, context.workspaceState, entry => {
@@ -75,8 +75,21 @@ export async function activate(context: vscode.ExtensionContext) {
       await vscode.workspace.fs.writeFile(uri, Buffer.from(addGroup(text, name.trim()), 'utf8'))
     }),
     vscode.commands.registerCommand('tuplebase.clearCredentials', async () => {
-      const deleted = await vault.clearAll()
-      void vscode.window.showInformationMessage(`${BRAND}: cleared ${deleted.length} stored secret(s)`)
+      // Wait for cancelled connects before clearing SecretStorage; otherwise an
+      // in-flight prompt could store a credential after clearAll completes.
+      let closeError: unknown
+      try { await manager.disposeAll() } catch (e) { closeError = e }
+      let deleted: string[]
+      try { deleted = await vault.clearAll() } catch (e) {
+        void vscode.window.showErrorMessage(`${BRAND}: failed to clear stored credentials: ${(e as Error).message}`)
+        return
+      }
+      const message = `${BRAND}: cleared ${deleted.length} stored secret(s)`
+      if (closeError) {
+        void vscode.window.showWarningMessage(`${message}, but some live connection resources could not be closed`)
+      } else {
+        void vscode.window.showInformationMessage(message)
+      }
     }),
     vscode.commands.registerCommand('tuplebase.createConfig', async () => {
       const folder = vscode.workspace.workspaceFolders?.[0]
