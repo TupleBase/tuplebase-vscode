@@ -42,22 +42,28 @@ loadMoreBtn.addEventListener('click', () => {
 })
 
 // Show a "load more" affordance when the active result has a continuation token.
-function renderPager() {
+function renderPager(rendering = false) {
   const tab = tabs[active]
   const env = tab && tab.status === 'done' ? tab.envelope : undefined
   if (!env || !env.nextPageToken) { pager.hidden = true; return }
   pager.hidden = false
   pagerInfo.textContent = `showing ${env.rows.length} rows — more available`
-  loadMoreBtn.disabled = false
-  loadMoreBtn.textContent = 'Load more'
+  loadMoreBtn.disabled = rendering
+  loadMoreBtn.textContent = rendering ? 'Rendering…' : 'Load more'
 }
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!))
 
+const isNumericColumn = (rows: unknown[][], column: number) => {
+  const values = rows.map(row => row[column]).filter(value => value !== null && value !== undefined)
+  return values.length > 0 && values.every(value => typeof value === 'number' || typeof value === 'bigint')
+}
+
 function hideDetail() {
   if (detail.hidden) return
   detail.hidden = true
+  table?.deselectRow()
   table?.redraw()
 }
 
@@ -67,18 +73,37 @@ function destroyTable() {
 }
 
 function buildTable(envelope: Envelope) {
-  const columns = envelope.columns.map((c, i) => ({
-    title: escapeHtml(c.name),
-    field: `c${i}`,
-    formatter: (cell: { getValue(): unknown }) => {
-      const v = cell.getValue()
-      return v === null || v === undefined ? '<span class="null">NULL</span>' : escapeHtml(String(v))
-    },
-  }))
+  const columns = envelope.columns.map((c, i) => {
+    const numeric = isNumericColumn(envelope.rows, i)
+    return {
+      title: escapeHtml(c.name),
+      field: `c${i}`,
+      maxWidth: 480,
+      hozAlign: numeric ? 'right' as const : 'left' as const,
+      headerHozAlign: numeric ? 'right' as const : 'left' as const,
+      headerTooltip: c.type ? `${c.name} · ${c.type}` : c.name,
+      tooltip: (_event: MouseEvent, cell: { getElement(): HTMLElement; getValue(): unknown }) => {
+        const el = cell.getElement()
+        const value = cell.getValue()
+        return el.scrollWidth > el.clientWidth && value !== null && value !== undefined ? String(value) : ''
+      },
+      formatter: (cell: { getValue(): unknown }) => {
+        const v = cell.getValue()
+        return v === null || v === undefined ? '<span class="null">NULL</span>' : escapeHtml(String(v))
+      },
+    }
+  })
   const data = envelope.rows.map(r => Object.fromEntries(r.map((v, i) => [`c${i}`, v])))
   destroyTable()
-  table = new Tabulator('#grid', { data, columns, height: '100%', layout: 'fitDataStretch' })
+  table = new Tabulator('#grid', {
+    data,
+    columns,
+    height: '100%',
+    layout: 'fitDataFill',
+    selectableRows: 1,
+  })
   table.on('rowClick', (_e, row) => {
+    row.select()
     const rowData = row.getData() as Record<string, unknown>
     const values = envelope.columns.map((_c, i) => rowData[`c${i}`])
     detailText = formatRow(envelope.columns, values)
@@ -128,7 +153,7 @@ function renderActive() {
   }
   const { envelope } = tab
   const warn = envelope.warnings.length ? ` — ${envelope.warnings.join('; ')}` : ''
-  status.textContent = `${envelope.rowCount} rows in ${envelope.elapsedMs}ms${warn}`
+  status.textContent = `${envelope.rowCount} rows · ${envelope.elapsedMs} ms${warn}`
   buildTable(envelope)
   renderPager()
 }
@@ -150,12 +175,24 @@ function onMessage(msg: Incoming) {
   if (msg.type === 'append') {
     tabs = appendRows(tabs, msg.index, msg.envelope)
     if (msg.index === active) {
-      // append rows in place (keeps scroll position) rather than rebuilding
-      if (table) void table.addData(toGridData(msg.envelope.rows))
-      else renderActive()
       const tab = tabs[active]
+      // Replacing the accumulated data preserves virtual-scroll position while
+      // rebuilding its row window. Tabulator's incremental addData path can
+      // leave stale virtual padding after a page is appended during scrolling.
+      if (table && tab.status === 'done') {
+        const currentTable = table
+        renderPager(true)
+        void currentTable.replaceData(toGridData(tab.envelope.rows)).then(() => {
+          if (table === currentTable && msg.index === active) renderPager()
+        }, () => {
+          // A tab switch may destroy the table mid-replacement. If the same
+          // table is still active, rebuild it from the authoritative tab state.
+          if (table === currentTable && msg.index === active) renderActive()
+        })
+      } else {
+        renderActive()
+      }
       if (tab.status === 'done') status.textContent = `${tab.envelope.rowCount} rows`
-      renderPager()
     }
     renderStrip()
     persist()

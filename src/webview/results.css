@@ -148,11 +148,24 @@ body {
 .tabulator .tabulator-header .tabulator-col {
   border-right: 1px solid var(--vscode-panel-border);
 }
-/* The stock skin highlights sortable headers on hover (#cdcdcd) at higher
-   specificity than the transparent override above, which puts light-on-light
-   text in dark themes — match its selector to keep the header unhighlighted. */
+/* Replace Tabulator's fixed light hover with the active VS Code theme. */
 .tabulator .tabulator-header .tabulator-col.tabulator-sortable.tabulator-col-sorter-element:hover {
-  background-color: transparent;
+  background-color: var(--vscode-toolbar-hoverBackground, transparent);
+  color: var(--vscode-foreground);
+}
+/* Keep unsorted columns quiet; reveal the affordance on hover and retain it
+   after sorting. Scaling the stock triangle avoids replacing accessible sort
+   state or click behaviour with a custom control. */
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable .tabulator-col-sorter {
+  opacity: 0.25;
+  transition: opacity 80ms ease;
+}
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable:hover .tabulator-col-sorter,
+.tabulator .tabulator-header .tabulator-col.tabulator-sortable:not([aria-sort='none']) .tabulator-col-sorter {
+  opacity: 1;
+}
+.tabulator .tabulator-header .tabulator-col .tabulator-col-sorter .tabulator-arrow {
+  transform: scale(0.67);
 }
 .tabulator .tabulator-tableholder .tabulator-table { background: transparent; }
 .tabulator .tabulator-row {
@@ -171,8 +184,11 @@ body {
   background-color: var(--vscode-list-hoverBackground);
   color: var(--vscode-list-hoverForeground, var(--vscode-foreground));
 }
-.tabulator .tabulator-row.tabulator-selected {
-  background: var(--vscode-list-activeSelectionBackground);
+.tabulator .tabulator-row.tabulator-selected,
+.tabulator .tabulator-row.tabulator-selected .tabulator-cell,
+.tabulator .tabulator-row.tabulator-selected:hover,
+.tabulator .tabulator-row.tabulator-selected:hover .tabulator-cell {
+  background-color: var(--vscode-list-activeSelectionBackground);
   color: var(--vscode-list-activeSelectionForeground);
 }
 .tabulator .tabulator-cell {
@@ -182,6 +198,13 @@ body {
 /* Keep header title padding in step with the cell padding above. */
 .tabulator .tabulator-header .tabulator-col .tabulator-col-content {
   padding: 5px 8px;
+}
+.tabulator-tooltip {
+  max-width: min(480px, calc(100vw - 16px));
+  overflow-wrap: anywhere;
+  color: var(--vscode-editorHoverWidget-foreground, var(--vscode-foreground));
+  background: var(--vscode-editorHoverWidget-background, var(--vscode-editor-background));
+  border: 1px solid var(--vscode-editorHoverWidget-border, var(--vscode-panel-border));
 }
 
 #pager {
