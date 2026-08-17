@@ -15,15 +15,21 @@ vi.mock('vscode', () => ({
   window: { showInputBox: async () => 'prompted-secret' },
 }))
 
-import type { Adapter, AdapterFactory, AdapterModule } from '../adapters/types'
+import type { Adapter, AdapterFactory, AdapterModule, ConnectionConfig, ResolvedConnection } from '../adapters/types'
 import { ConnectionManager } from './connections'
 import type { ConfigStore } from './configStore'
 import type { SecretVault } from './secrets'
 
 function makeManager(
-  opts: { connect?: () => Promise<void>; testConnection?: () => Promise<void>; requiredSecrets?: string[] } = {},
+  opts: {
+    connect?: () => Promise<void>
+    testConnection?: () => Promise<void>
+    dispose?: () => Promise<void>
+    requiredSecrets?: string[]
+  } = {},
 ) {
   const connects: string[] = []
+  const created: ResolvedConnection[] = []
   const disposed: string[] = []
   const pinged: string[] = []
   const makeAdapter = (name: string): Adapter => ({
@@ -38,6 +44,7 @@ function makeManager(
     searchItems: async () => [],
     dispose: async () => {
       disposed.push(name)
+      await opts.dispose?.()
     },
   })
   const factory: AdapterFactory = {
@@ -46,6 +53,7 @@ function makeManager(
     requiredSecrets: () => opts.requiredSecrets ?? [],
     create: cfg => {
       connects.push(cfg.name)
+      created.push(cfg)
       return makeAdapter(cfg.name)
     },
   }
@@ -55,12 +63,11 @@ function makeManager(
       loadFactory: async () => factory,
     }],
   ])
-  const store = {
-    connection: (name: string) =>
-      name === 'db1' ? { name: 'db1', group: 'local', adapter: 'fake', readonly: false }
-        : name === 'promptdb' ? { name: 'promptdb', group: 'local', adapter: 'fake', readonly: false, promptPassword: true }
-          : undefined,
-  } as unknown as ConfigStore
+  const configs = new Map<string, ConnectionConfig>([
+    ['db1', { name: 'db1', group: 'local', adapter: 'fake', readonly: false, host: 'old-host' }],
+    ['promptdb', { name: 'promptdb', group: 'local', adapter: 'fake', readonly: false, promptPassword: true }],
+  ])
+  const store = { connection: (name: string) => configs.get(name) } as unknown as ConfigStore
   const deleted: string[] = []
   const stored: string[] = []
   const vault = {
@@ -69,7 +76,13 @@ function makeManager(
     deleteConnection: async (name: string) => { deleted.push(name) },
   } as unknown as SecretVault
   const manager = new ConnectionManager(store, vault, modules)
-  return { manager, connects, disposed, deleted, stored, pinged }
+  return {
+    manager, connects, created, disposed, deleted, stored, pinged,
+    setConfig(name: string, cfg: ConnectionConfig | undefined) {
+      if (cfg) configs.set(name, cfg)
+      else configs.delete(name)
+    },
+  }
 }
 
 describe('ConnectionManager connection state', () => {
@@ -147,7 +160,7 @@ describe('ConnectionManager connection state', () => {
 
   it('failed connect fires no event, stays disconnected, and can be retried', async () => {
     let calls = 0
-    const { manager, connects } = makeManager({
+    const { manager, connects, disposed } = makeManager({
       connect: async () => {
         if (++calls === 1) throw new Error('boom')
       },
@@ -157,6 +170,7 @@ describe('ConnectionManager connection state', () => {
     await expect(manager.getAdapter('db1')).rejects.toThrow('boom')
     expect(manager.isConnected('db1')).toBe(false)
     expect(fired).toHaveLength(0)
+    expect(disposed).toEqual(['db1'])
     await manager.getAdapter('db1')
     expect(manager.isConnected('db1')).toBe(true)
     expect(connects).toHaveLength(2)
@@ -236,10 +250,72 @@ describe('ConnectionManager connection state', () => {
     const { manager, disposed } = makeManager({ connect: () => gate })
     const pending = manager.getAdapter('db1')
     pending.catch(() => {})
-    await manager.disposeAll()
+    const disposing = manager.disposeAll()
+    release()
+    await disposing
+    await expect(pending).rejects.toThrow(/cancelled/i)
+    expect(manager.isConnected('db1')).toBe(false)
+    expect(disposed).toEqual(['db1'])
+  })
+
+  it('replaces a live adapter when driver configuration changes', async () => {
+    const { manager, connects, created, disposed, setConfig } = makeManager()
+    const first = await manager.getAdapter('db1')
+    setConfig('db1', {
+      name: 'db1', group: 'local', adapter: 'fake', readonly: false, host: 'new-host',
+    })
+
+    const second = await manager.getAdapter('db1')
+    expect(second).not.toBe(first)
+    expect(created.map(cfg => cfg.host)).toEqual(['old-host', 'new-host'])
+    expect(connects).toEqual(['db1', 'db1'])
+    expect(disposed).toEqual(['db1'])
+  })
+
+  it('reconcileConfig closes removed connections', async () => {
+    const { manager, disposed, setConfig } = makeManager()
+    await manager.getAdapter('db1')
+    setConfig('db1', undefined)
+
+    await manager.reconcileConfig()
+    expect(manager.isConnected('db1')).toBe(false)
+    expect(disposed).toEqual(['db1'])
+  })
+
+  it('reconcileConfig keeps a live adapter for group and read-only changes', async () => {
+    const { manager, connects, setConfig } = makeManager()
+    await manager.getAdapter('db1')
+    setConfig('db1', {
+      name: 'db1', group: 'production', adapter: 'fake', readonly: true, host: 'old-host',
+    })
+
+    await manager.reconcileConfig()
+    expect(manager.isConnected('db1')).toBe(true)
+    expect(connects).toEqual(['db1'])
+  })
+
+  it('disconnect cancels a connection that is still pending', async () => {
+    let started!: () => void
+    let release!: () => void
+    const didStart = new Promise<void>(resolve => { started = resolve })
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const { manager, disposed } = makeManager({ connect: async () => { started(); await gate } })
+    const pending = manager.getAdapter('db1')
+    pending.catch(() => {})
+    await didStart
+
+    await manager.disconnect('db1')
     release()
     await expect(pending).rejects.toThrow(/cancelled/i)
     expect(manager.isConnected('db1')).toBe(false)
     expect(disposed).toEqual(['db1'])
+  })
+
+  it('disconnect reports cleanup errors after removing the live adapter', async () => {
+    const { manager } = makeManager({ dispose: async () => { throw new Error('close failed') } })
+    await manager.getAdapter('db1')
+
+    await expect(manager.disconnect('db1')).rejects.toThrow(/close connection resources/i)
+    expect(manager.isConnected('db1')).toBe(false)
   })
 })

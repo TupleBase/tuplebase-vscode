@@ -19,11 +19,14 @@ import { registerExplorerCommands } from './ui/explorerCommands'
 import { registerTableFilterCommands } from './ui/tableFilterCommands'
 import { registerMcpConfig } from './ui/mcpConfig'
 
+let activeManager: ConnectionManager | undefined
+
 export async function activate(context: vscode.ExtensionContext) {
   const diagnostics = vscode.languages.createDiagnosticCollection('tuplebase')
   const store = new ConfigStore(diagnostics)
   const vault = new SecretVault(context.secrets, context.globalState)
   const manager = new ConnectionManager(store, vault)
+  activeManager = manager
   const filters = new TableFilterStore(context.workspaceState)
   const panel = ResultsPanel.register(context)
   // storageUri is undefined without a workspace — no place for history, skip it
@@ -34,9 +37,14 @@ export async function activate(context: vscode.ExtensionContext) {
     diagnostics,
     store,
     manager,
+    store.onDidChange(() => {
+      void manager.reconcileConfig().catch(e => {
+        void vscode.window.showErrorMessage(`${BRAND}: failed to close changed connection: ${(e as Error).message}`)
+      })
+    }),
     filters,
     registerSchemaTree(manager, store, filters, context.extensionUri),
-    registerNewConnectionForm(context.extensionUri, store, vault),
+    registerNewConnectionForm(context.extensionUri, store, vault, manager),
     registerExplorerCommands(store),
     registerTableFilterCommands(manager, store, filters),
     registerMcpConfig(context.extensionUri, store, vault),
@@ -95,4 +103,8 @@ export async function activate(context: vscode.ExtensionContext) {
   await store.load()
 }
 
-export function deactivate() {}
+export async function deactivate() {
+  const manager = activeManager
+  activeManager = undefined
+  await manager?.disposeAll()
+}

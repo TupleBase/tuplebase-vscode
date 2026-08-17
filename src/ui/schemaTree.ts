@@ -263,8 +263,8 @@ export function registerSchemaTree(
       if (el?.type === 'connection') {
         try {
           await manager.disconnect(el.conn.name)
-        } catch {
-          await manager.disposeAll()
+        } catch (e) {
+          void vscode.window.showErrorMessage(`${BRAND}: disconnected, but cleanup failed: ${errorMessage(e)}`)
         }
       }
     }),
