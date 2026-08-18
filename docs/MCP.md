@@ -62,6 +62,93 @@ disable it outside the intended project with the MCP server manager or agent too
 picker. Opening separate VS Code windows is the least surprising setup for multiple
 projects today.
 
+## Planned product direction: one connection state, many agents
+
+The current standalone process is a functional first version, but copying config paths
+and database credentials into each agent is not the intended experience. The product
+goals are:
+
+1. **Start locally with almost no setup.** Enabling agent access in TupleBase should
+   start the local MCP service; Copilot should discover it automatically.
+2. **Keep the extension as the source of truth.** Agents should use the connection
+   definitions, secrets, open/closed state and adapter sessions already managed by the
+   current VS Code window.
+3. **Support as many agents as possible.** The bridge should speak standard MCP over
+   Streamable HTTP, with a small stdio relay for clients that only support stdio.
+
+### Delivery order
+
+Implement and validate the integrations in this order:
+
+1. **GitHub Copilot Agent in VS Code.** TupleBase registers the current window's bridge
+   automatically and its tools appear without editing `mcp.json`.
+2. **Claude Code agent in VS Code.** The Claude Code panel can discover and call the
+   same project bridge with no database credentials copied into Claude configuration.
+3. **Codex in VS Code.** Codex can discover and call that same bridge from its VS Code
+   experience, with the same connection scope and safety behavior.
+4. **Claude Code CLI and Codex CLI.** Their standard HTTP or stdio MCP configuration
+   connects to the already-running extension bridge; standalone mode remains available
+   when VS Code is not running.
+
+An integration is complete only after the agent can perform the full
+`list_connections` → `inspect_schema` → `run_query` flow against the connection shared
+by the correct VS Code window, without receiving a database password or a manually
+entered `.tuplebase.json` path. Test separate windows with different projects before
+moving to the next integration.
+
+The intended runtime design is:
+
+```text
+VS Code Copilot (automatic provider) ───────────────┐
+Claude Code / Codex / HTTP MCP clients ─────────────┼──▶ TupleBase extension bridge
+stdio-only MCP clients ─▶ discovery/stdio relay ────┘              │
+                                                                   ▼
+                                                ConnectionManager → adapter → database
+```
+
+TupleBase can register its bridge with Copilot through VS Code's
+[`McpServerDefinitionProvider`](https://code.visualstudio.com/api/extension-guides/ai/mcp)
+API. VS Code, Claude Code and Codex support Streamable HTTP MCP; an stdio relay keeps
+older/local-only clients compatible. All transports must reach the same extension-owned
+tool service rather than construct their own database adapters.
+
+For users, the target workflow is:
+
+1. Configure and connect a database normally in TupleBase.
+2. Run **TupleBase: Enable Agent Access** (or enable it from the connection UI).
+3. Copilot receives the tools automatically. For another client, use **Copy Agent
+   Setup** and choose Claude Code, Codex or generic MCP; the generated command contains
+   no database credentials.
+4. Ask the agent to inspect the schema and run a query. The extension shows which
+   connection and client are active and retains its read-only guardrail.
+
+`list_connections` should report the extension's configured connections and their
+status. An already-open connection is reused. If a connection is closed,
+`open_connection` may request an explicit user approval and let the extension open it
+with SecretStorage; it must never send that secret to the agent. Users should also be
+able to disable agent access per connection so an unrelated or production connection
+is not exposed merely because it exists in the config.
+
+Each VS Code window should publish a separate authenticated endpoint bound only to
+`127.0.0.1`, with project-aware discovery and an ephemeral per-window credential. This
+prevents two open projects from sharing connection scope accidentally. Closing the
+window stops its bridge; disconnecting a database immediately updates its agent-visible
+state. The local diagnostics page described below can report the endpoint, project,
+connected clients, shared connections and session state without displaying secrets.
+
+Two explicit operating modes remain useful:
+
+1. **Extension bridge (preferred):** automatic in VS Code, shared extension state, no
+   copied config path or database credentials, and usable by external local agents
+   while that VS Code window is open.
+2. **Standalone MCP (fallback):** works when VS Code is not running, but necessarily
+   owns separate adapter sessions and receives config and credentials independently.
+
+Acceptance criteria for the bridge are: no database secret in agent configuration;
+one action at most for first-time Copilot setup; a copyable one-command setup for
+Claude Code and Codex; clear per-window/per-project scope; per-connection sharing
+control; and identical tool behavior across HTTP and stdio clients.
+
 ## Tools
 
 | Tool | Arguments | Returns |
