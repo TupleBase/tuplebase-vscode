@@ -509,11 +509,11 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^26.2.0",
-    "@types/pg": "^8.21.0",
+    "@types/node": "^26.4.0",
+    "@types/pg": "^8.23.1",
     "@types/ssh2": "^1.15.5",
     "@types/tabulator-tables": "^6.3.6",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.134.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "3.9.2",
@@ -521,12 +521,12 @@
     "fantasticon": "^4.1.0",
     "ovsx": "1.1.1",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1111.0",
-    "@aws-sdk/credential-providers": "^3.1111.0",
-    "@aws-sdk/lib-dynamodb": "^3.1111.0",
+    "@aws-sdk/client-dynamodb": "^3.1121.0",
+    "@aws-sdk/credential-providers": "^3.1121.0",
+    "@aws-sdk/lib-dynamodb": "^3.1121.0",
     "@clickhouse/client": "^1.23.1",
     "@elastic/elasticsearch": "^9.5.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -536,15 +536,15 @@
     "cassandra-driver": "^4.9.0",
     "jsonc-parser": "^3.3.1",
     "kafkajs": "^2.2.4",
-    "mongodb": "^7.5.0",
+    "mongodb": "^7.6.0",
     "mssql": "^12.7.0",
-    "mysql2": "^3.23.3",
+    "mysql2": "^3.24.2",
     "neo4j-driver": "^6.2.0",
     "pg": "^8.23.0",
     "sql.js": "^1.14.2",
     "ssh2": "^1.17.0",
     "tabulator-tables": "^6.5.2",
-    "zod": "^4.4.3"
+    "zod": "^4.5.1"
   },
   "overrides": {
     "cassandra-driver": {
