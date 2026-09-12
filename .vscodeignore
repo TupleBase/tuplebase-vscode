@@ -21,7 +21,7 @@ dist/test/**
 media/tuplebase-wordmark-ink.svg
 media/tuplebase-wordmark-light.svg
 esbuild.mjs
-vitest.config.ts
+vitest.config.mts
 tsconfig*.json
 docker-compose.yml
 **/*.map
