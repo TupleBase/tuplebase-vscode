@@ -509,24 +509,24 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "^26.5.1",
+    "@types/node": "^26.6.1",
     "@types/pg": "^8.23.1",
     "@types/ssh2": "^1.15.6",
     "@types/tabulator-tables": "^6.3.6",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.138.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
-    "@vscode/vsce": "3.9.2",
+    "@vscode/vsce": "4.0.0",
     "esbuild": "^0.28.2",
     "fantasticon": "^4.1.0",
-    "ovsx": "1.1.1",
+    "ovsx": "1.2.0",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.1131.0",
-    "@aws-sdk/credential-providers": "^3.1131.0",
-    "@aws-sdk/lib-dynamodb": "^3.1131.0",
+    "@aws-sdk/client-dynamodb": "^3.1136.0",
+    "@aws-sdk/credential-providers": "^3.1136.0",
+    "@aws-sdk/lib-dynamodb": "^3.1136.0",
     "@clickhouse/client": "^1.23.1",
     "@elastic/elasticsearch": "^9.5.1",
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -543,8 +543,8 @@
     "pg": "^8.23.0",
     "sql.js": "^1.14.2",
     "ssh2": "^1.17.0",
-    "tabulator-tables": "^6.5.2",
-    "zod": "^4.6.2"
+    "tabulator-tables": "^6.5.3",
+    "zod": "^4.6.5"
   },
   "overrides": {
     "cassandra-driver": {
