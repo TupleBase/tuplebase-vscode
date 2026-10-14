@@ -529,7 +529,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1131.0",
     "@clickhouse/client": "^1.23.1",
     "@elastic/elasticsearch": "^9.5.1",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@redis/client": "^6.2.1",
     "@types/mssql": "^12.3.0",
     "@types/sql.js": "^1.4.11",
