@@ -8,6 +8,147 @@ Node process over stdio — no VS Code required at run time.
 **Read-only for agents by default.** Writes are blocked unless you explicitly opt in
 (see [Allowing writes](#allowing-writes)).
 
+## How it relates to the extension
+
+```text
+VS Code Agent / Codex / another MCP client
+                  │ stdio
+                  ▼
+          dist/mcp/server.js
+             │         │
+     .tuplebase.json    └─ environment secrets
+             │
+             ▼
+       adapter → database
+```
+
+The MCP server reuses the extension's **configuration and adapter implementations**,
+but it is a separate process. It does not borrow an already-open extension connection
+or read VS Code SecretStorage directly. Schema inspection and queries open their own
+database connection on demand and cache it for the lifetime of the MCP server.
+
+The **TupleBase: Show MCP Server Config** command bridges the secret-storage gap: it
+generates a client configuration using the current `.tuplebase.json`, bundled server,
+and credentials already stored by the extension.
+
+## Connection sessions and project scope
+
+An MCP server process loads **one** `.tuplebase.json` when it starts.
+`list_connections` exposes every enabled connection in that file — not only the
+connection selected or currently connected in the TupleBase extension. The MCP server
+then opens its own adapter connection lazily when the agent calls `inspect_schema` or
+`run_query` and keeps it for the lifetime of that MCP process.
+
+Consequently:
+
+- disconnecting a connection in the extension does not disconnect the MCP session;
+- stopping or restarting the MCP server closes its sessions;
+- config and credential changes require regenerating the client config and restarting
+  the MCP server; and
+- the agent cannot see connections from other config files unless those files are
+  configured as additional MCP servers.
+
+| Editor setup | Connections visible to the agent |
+|---|---|
+| One project with one workspace MCP server | All enabled connections in that project's configured `.tuplebase.json` |
+| Two projects in separate VS Code windows, each with workspace MCP config | Each window's agent sees only that window's project server |
+| A user-level MCP server pinned to project A | Project A's connections are available in every workspace where that server is enabled; it does not follow the active project |
+| One multi-root VS Code workspace | **Show MCP Server Config** currently uses the first workspace folder's config only |
+| Multiple explicitly named servers | The agent sees the connections of every enabled server; use names such as `tuplebase-orders` and `tuplebase-analytics` to keep their scope clear |
+
+For the strongest project isolation, use a workspace-scoped MCP entry and keep its
+credential-bearing file uncommitted. For convenience, a user-level entry works, but
+disable it outside the intended project with the MCP server manager or agent tool
+picker. Opening separate VS Code windows is the least surprising setup for multiple
+projects today.
+
+## Planned product direction: one connection state, many agents
+
+The current standalone process is a functional first version, but copying config paths
+and database credentials into each agent is not the intended experience. The product
+goals are:
+
+1. **Start locally with almost no setup.** Enabling agent access in TupleBase should
+   start the local MCP service; Copilot should discover it automatically.
+2. **Keep the extension as the source of truth.** Agents should use the connection
+   definitions, secrets, open/closed state and adapter sessions already managed by the
+   current VS Code window.
+3. **Support as many agents as possible.** The bridge should speak standard MCP over
+   Streamable HTTP, with a small stdio relay for clients that only support stdio.
+
+### Delivery order
+
+Implement and validate the integrations in this order:
+
+1. **GitHub Copilot Agent in VS Code.** TupleBase registers the current window's bridge
+   automatically and its tools appear without editing `mcp.json`.
+2. **Claude Code agent in VS Code.** The Claude Code panel can discover and call the
+   same project bridge with no database credentials copied into Claude configuration.
+3. **Codex in VS Code.** Codex can discover and call that same bridge from its VS Code
+   experience, with the same connection scope and safety behavior.
+4. **Claude Code CLI and Codex CLI.** Their standard HTTP or stdio MCP configuration
+   connects to the already-running extension bridge; standalone mode remains available
+   when VS Code is not running.
+
+An integration is complete only after the agent can perform the full
+`list_connections` → `inspect_schema` → `run_query` flow against the connection shared
+by the correct VS Code window, without receiving a database password or a manually
+entered `.tuplebase.json` path. Test separate windows with different projects before
+moving to the next integration.
+
+The intended runtime design is:
+
+```text
+VS Code Copilot (automatic provider) ───────────────┐
+Claude Code / Codex / HTTP MCP clients ─────────────┼──▶ TupleBase extension bridge
+stdio-only MCP clients ─▶ discovery/stdio relay ────┘              │
+                                                                   ▼
+                                                ConnectionManager → adapter → database
+```
+
+TupleBase can register its bridge with Copilot through VS Code's
+[`McpServerDefinitionProvider`](https://code.visualstudio.com/api/extension-guides/ai/mcp)
+API. VS Code, Claude Code and Codex support Streamable HTTP MCP; an stdio relay keeps
+older/local-only clients compatible. All transports must reach the same extension-owned
+tool service rather than construct their own database adapters.
+
+For users, the target workflow is:
+
+1. Configure and connect a database normally in TupleBase.
+2. Run **TupleBase: Enable Agent Access** (or enable it from the connection UI).
+3. Copilot receives the tools automatically. For another client, use **Copy Agent
+   Setup** and choose Claude Code, Codex or generic MCP; the generated command contains
+   no database credentials.
+4. Ask the agent to inspect the schema and run a query. The extension shows which
+   connection and client are active and retains its read-only guardrail.
+
+`list_connections` should report the extension's configured connections and their
+status. An already-open connection is reused. If a connection is closed,
+`open_connection` may request an explicit user approval and let the extension open it
+with SecretStorage; it must never send that secret to the agent. Users should also be
+able to disable agent access per connection so an unrelated or production connection
+is not exposed merely because it exists in the config.
+
+Each VS Code window should publish a separate authenticated endpoint bound only to
+`127.0.0.1`, with project-aware discovery and an ephemeral per-window credential. This
+prevents two open projects from sharing connection scope accidentally. Closing the
+window stops its bridge; disconnecting a database immediately updates its agent-visible
+state. The local diagnostics page described below can report the endpoint, project,
+connected clients, shared connections and session state without displaying secrets.
+
+Two explicit operating modes remain useful:
+
+1. **Extension bridge (preferred):** automatic in VS Code, shared extension state, no
+   copied config path or database credentials, and usable by external local agents
+   while that VS Code window is open.
+2. **Standalone MCP (fallback):** works when VS Code is not running, but necessarily
+   owns separate adapter sessions and receives config and credentials independently.
+
+Acceptance criteria for the bridge are: no database secret in agent configuration;
+one action at most for first-time Copilot setup; a copyable one-command setup for
+Claude Code and Codex; clear per-window/per-project scope; per-connection sharing
+control; and identical tool behavior across HTTP and stdio clients.
+
 ## Tools
 
 | Tool | Arguments | Returns |
@@ -15,6 +156,116 @@ Node process over stdio — no VS Code required at run time.
 | `list_connections` | — | every connection (name, group, adapter, whether writes are allowed, whether it tunnels over SSH) |
 | `inspect_schema` | `connection`, optional `nodeId` + `kind` | schema tree children — omit `nodeId` for the top level (postgres schemas / dynamo tables / redis key namespaces), pass a node's `id`+`kind` from a previous result to drill in |
 | `run_query` | `connection`, `statement` | one SQL / PartiQL statement or redis command, as `{ columns, rows, rowCount, elapsedMs, warnings }` (rows are objects). Writes are rejected unless enabled. |
+
+There is no separate `open_connection` tool today. `inspect_schema` and `run_query`
+open and cache the requested connection automatically.
+
+## Which agents can connect?
+
+TupleBase is model-agnostic. Any **local MCP client with stdio support** can launch
+the Node server and use its tools:
+
+| Agent/client | Supported? | Setup |
+|---|---|---|
+| VS Code Agent mode / GitHub Copilot | Yes — recommended first | User or workspace `mcp.json`, then enable TupleBase in **Configure Tools** |
+| Claude Code CLI | Yes | Local stdio server via [`claude mcp add`](https://code.claude.com/docs/en/mcp) |
+| Codex app or CLI | Yes | Local stdio server via `codex mcp add` |
+| Claude Desktop, Cline, Continue | Yes | Use their local `mcpServers` configuration |
+| ChatGPT web, Claude Code web or another cloud-only agent | Not directly | A cloud agent cannot launch this local process or reach a local database; TupleBase would need a secured remote HTTP transport |
+
+For Claude Code, copy the paths and secret environment entries produced by
+**TupleBase: Show MCP Server Config** into this command:
+
+```bash
+claude mcp add --transport stdio \
+  --env TUPLEBASE_CONFIG=/absolute/path/to/.tuplebase.json \
+  --env TUPLEBASE_SECRET_APP_DB_PASSWORD=... \
+  tuplebase -- node /absolute/path/to/dist/mcp/server.js
+claude mcp list
+# Inside Claude Code, /mcp shows server and tool status.
+```
+
+The equivalent Codex setup is:
+
+```bash
+codex mcp add \
+  --env TUPLEBASE_CONFIG=/absolute/path/to/.tuplebase.json \
+  --env TUPLEBASE_SECRET_APP_DB_PASSWORD=... \
+  tuplebase -- node /absolute/path/to/dist/mcp/server.js
+codex mcp list
+# Start a new Codex session after adding the server.
+```
+
+Both commands store the supplied environment in local client configuration. Keep it
+in user/local scope, never commit it, and treat it like the generated config because
+it contains database credentials.
+
+## Quickstart: VS Code Agent mode
+
+VS Code Agent mode is the shortest path for using TupleBase because the database
+extension, MCP configuration, tool picker and agent chat all live in the same editor.
+VS Code stores local MCP configuration in `mcp.json`; see the official
+[VS Code MCP server guide](https://code.visualstudio.com/docs/agent-customization/mcp-servers).
+
+1. Build the development checkout with `npm run build` (skip this for an installed
+   extension). Open each password-protected connection once so its credentials are in
+   VS Code SecretStorage.
+2. Run **TupleBase: Show MCP Server Config** from the Command Palette.
+3. Choose the configuration scope:
+   - Run **MCP: Open User Configuration** for the quickest setup. This makes the same
+     fixed TupleBase server available across your VS Code workspaces, so disable it
+     when working outside this project.
+   - Use this project's `.vscode/mcp.json` for project isolation, but keep the file
+     uncommitted because the generated environment contains plaintext credentials.
+4. Copy the generated `tuplebase` entry into the `servers` object:
+
+   ```jsonc
+   {
+     "servers": {
+       "tuplebase": {
+         "type": "stdio",
+         "command": "node",
+         "args": ["/absolute/path/to/dist/mcp/server.js"],
+         "env": {
+           "TUPLEBASE_CONFIG": "/absolute/path/to/.tuplebase.json",
+           "TUPLEBASE_SECRET_APP_DB_PASSWORD": "…"
+         }
+       }
+     }
+   }
+   ```
+
+   The command currently generates the client-neutral `mcpServers` wrapper; VS Code's
+   `mcp.json` uses the `servers` wrapper shown above. Keep the generated command,
+   absolute paths and environment values unchanged.
+5. Save the file, start `tuplebase` from the inline action or **MCP: List Servers**,
+   and approve the local-server trust prompt. Use **Show Output** from the same menu
+   if startup fails.
+6. Open Chat, select **Agent**, choose **Configure Tools**, and enable the three
+   `tuplebase` tools.
+
+### Prove the agent is using TupleBase
+
+Try these in order. Replace `local-pg` and the table names with your connection and
+schema:
+
+```text
+Use the TupleBase tools to list my database connections. Do not infer them from files.
+```
+
+```text
+Using the local-pg connection, inspect the schema until you find the public.crew table.
+Tell me its columns. Do not run a query yet.
+```
+
+```text
+Using TupleBase, answer: how many crew members are there? Show the SQL you ran and the result.
+```
+
+The expected tool flow is `list_connections` → one or more `inspect_schema` calls →
+`run_query`. To verify the safety guardrail, ask the agent to run a harmlessly scoped
+write statement in a disposable development database; it should receive
+`read-only for agents` before the statement reaches the database.
 
 ## How to run it
 
@@ -25,10 +276,10 @@ The server is `dist/mcp/server.js` (built by `npm run build`). It reads:
 - **`TUPLEBASE_MCP_ALLOW_WRITES`** — `1`/`true` to permit writes (still subject to each connection's `readonly`).
 - **`TUPLEBASE_MCP_MAX_ROWS`** — row cap per query (default 200).
 
-### Get the config from VS Code (recommended)
+### Get a client-neutral config from VS Code
 
-Run **TupleBase: Show MCP Server Config** from the command palette. It opens a ready-to-paste
-client config that points at the bundled server, sets `TUPLEBASE_CONFIG`, and fills in each
+Run **TupleBase: Show MCP Server Config** from the command palette. It opens a client
+config that points at the bundled server, sets `TUPLEBASE_CONFIG`, and fills in each
 connection's `TUPLEBASE_SECRET_*` **from the OS keychain** — so you don't handle secrets by hand:
 
 ```jsonc
@@ -59,19 +310,42 @@ connection's `TUPLEBASE_SECRET_*` **from the OS keychain** — so you don't hand
   3. `run_query { connection: "app-db", statement: "select 1 as one" }` → `{ "one": 1 }`.
   4. `run_query` with a write (e.g. `delete …`) → **blocked** with `read-only for agents`. That confirms the guardrail.
 
-## Clients
+This repository's MCP test surface has two levels:
 
-Any MCP client that speaks stdio works. The config snippet above is the shape each expects
-(often under a `mcpServers` / `servers` key):
+```bash
+npm test
+# McpService behavior, lifecycle, secrets and read-only guardrails
 
-| Client | Notes |
-|---|---|
-| Claude Desktop | `mcpServers` in the desktop config; verified shape above. |
-| VS Code Copilot (agent mode) | add under `mcp.servers`; the same `command`/`args`/`env`. |
-| Cline / Continue / other editors | expected to work — standard stdio MCP; use the same snippet. |
+TUPLEBASE_IT=1 npx vitest run tests/integration/adapters/postgres/adapter.it.test.ts
+# Real adapter connection/query/schema behavior; requires the local Postgres container
+```
 
-(Verified end-to-end against the reference MCP client driving the server over stdio; individual
-GUI clients are expected-to-work with the snippet above.)
+The second command verifies the same adapter used by MCP. The agent prompts above are
+the final protocol-level check that the client discovered and invoked the tools.
+
+## Current agent-facing gaps
+
+These do not block listing connections, inspecting schemas or answering questions with
+read-only queries, but they explain the roadmap item for improved MCP support:
+
+- Schema discovery exposes the adapter tree directly. Agents must make repeated
+  `inspect_schema` calls; there is no schema search or one-call `describe_table` tool.
+- Tool results are JSON encoded in MCP text content rather than returned as structured
+  content with an output schema.
+- `run_query` applies a row cap but does not expose the adapter continuation token, so
+  agents cannot page through a large result.
+- Connection opening is implicit. There are no `test_connection`, status, reconnect or
+  disconnect tools, and nested connection failures can lose useful diagnostic detail.
+- The MCP process cannot read VS Code SecretStorage or reuse the extension's live
+  sessions. Generated client configuration currently carries the required secrets.
+- There is no local status page yet. A useful opt-in diagnostics page would bind only
+  to `127.0.0.1` and show the exact `TUPLEBASE_CONFIG` path, inferred project root,
+  config source (environment, CLI argument or working-directory default), MCP server
+  path and start time, configured connections, session state and last connection
+  error. Safe test/connect/disconnect controls would help diagnose setup without
+  exposing credentials or query execution over HTTP.
+- The server provides tools only; it does not yet provide MCP resources, prompts or
+  server instructions that teach an agent the most efficient schema-to-query workflow.
 
 ## Allowing writes
 
