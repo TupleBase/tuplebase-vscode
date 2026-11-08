@@ -8,6 +8,8 @@ Explore schemas, write queries, inspect results, and revisit query history witho
 
 [Install from the VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=tuplebase.tuplebase) · [Install from Open VSX](https://open-vsx.org/extension/tuplebase/tuplebase)
 
+<img src="media/tuplebase-overview.png" alt="TupleBase in VS Code with a PostgreSQL schema, SQL editor, query history, and results grid">
+
 ## Docs
 
 - [Features](docs/FEATURES.md)
