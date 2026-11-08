@@ -8,31 +8,31 @@ production dependency graph in package-lock.json by running:
 The following notices are provided for attribution and informational purposes.
 They do not alter the license terms of TupleBase itself.
 
-COMPONENT INVENTORY (263)
+COMPONENT INVENTORY (262)
 
 Package | License | Source
-@aws-sdk/client-dynamodb@3.1131.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/core@3.978.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-cognito-identity@3.972.70 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-env@3.972.71 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-http@3.972.73 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-ini@3.973.16 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-login@3.972.78 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-node@3.972.83 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-process@3.972.71 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-sso@3.973.15 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-provider-web-identity@3.972.77 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/credential-providers@3.1131.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/dynamodb-codec@3.973.45 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/client-dynamodb@3.1164.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/core@3.980.1 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-cognito-identity@3.972.81 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-env@3.972.82 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-http@3.972.84 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-ini@3.973.27 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-login@3.972.89 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-node@3.972.94 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-process@3.972.82 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-sso@3.973.26 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-provider-web-identity@3.972.88 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/credential-providers@3.1164.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/dynamodb-codec@3.973.56 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
 @aws-sdk/endpoint-cache@3.972.11 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/lib-dynamodb@3.1131.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/middleware-endpoint-discovery@3.972.30 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/nested-clients@3.997.45 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/signature-v4-multi-region@3.996.46 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/token-providers@3.1129.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/types@3.974.5 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/lib-dynamodb@3.1164.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/middleware-endpoint-discovery@3.972.37 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/nested-clients@3.998.1 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/signature-v4-multi-region@3.996.51 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/token-providers@3.1164.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/types@3.975.0 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
 @aws-sdk/util-dynamodb@3.996.9 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
-@aws-sdk/xml-builder@3.972.40 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
+@aws-sdk/xml-builder@3.972.42 | Apache-2.0 | https://github.com/aws/aws-sdk-js-v3
 @aws/lambda-invoke-store@0.3.0 | Apache-2.0 | https://github.com/awslabs/aws-lambda-invoke-store
 @azure-rest/core-client@2.9.0 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/abort-controller@2.2.0 | MIT | https://github.com/Azure/azure-sdk-for-js
@@ -44,36 +44,35 @@ Package | License | Source
 @azure/core-rest-pipeline@1.25.0 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/core-tracing@1.4.0 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/core-util@1.14.0 | MIT | https://github.com/Azure/azure-sdk-for-js
-@azure/identity@4.13.2 | MIT | https://github.com/Azure/azure-sdk-for-js
+@azure/identity@4.14.1 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/keyvault-common@2.1.0 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/keyvault-keys@4.10.2 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/logger@1.4.0 | MIT | https://github.com/Azure/azure-sdk-for-js
 @azure/msal-browser@5.21.0 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
-@azure/msal-common@16.13.0 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
 @azure/msal-common@16.14.0 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
-@azure/msal-node@5.6.0 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
-@clickhouse/client@1.23.1 | Apache-2.0 | https://github.com/ClickHouse/clickhouse-js
+@azure/msal-common@16.16.1 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
+@azure/msal-node@7.2.1 | MIT | https://github.com/AzureAD/microsoft-authentication-library-for-js
+@clickhouse/client@1.25.0 | Apache-2.0 | https://github.com/ClickHouse/clickhouse-js
 @elastic/elasticsearch@9.5.1 | Apache-2.0 | https://github.com/elastic/elasticsearch-js
 @elastic/transport@9.4.0 | Apache-2.0 | https://github.com/elastic/elastic-transport-js
-@hono/node-server@2.1.1 | MIT | https://github.com/honojs/node-server
+@hono/node-server@2.1.6 | MIT | https://github.com/honojs/node-server
 @js-joda/core@6.1.0 | BSD-3-Clause | https://github.com/js-joda/js-joda
-@modelcontextprotocol/sdk@1.30.0 | MIT | https://github.com/modelcontextprotocol/typescript-sdk
+@modelcontextprotocol/sdk@1.32.2 | MIT | https://github.com/modelcontextprotocol/typescript-sdk
 @mongodb-js/saslprep@1.5.4 | MIT | https://github.com/mongodb-js/devtools-shared
 @opentelemetry/api@1.9.1 | Apache-2.0 | open-telemetry/opentelemetry-js
 @opentelemetry/core@2.11.0 | Apache-2.0 | open-telemetry/opentelemetry-js
 @opentelemetry/semantic-conventions@1.43.0 | Apache-2.0 | open-telemetry/opentelemetry-js
-@redis/client@6.2.1 | MIT | https://github.com/redis/node-redis
-@smithy/core@3.34.1 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
+@redis/client@6.3.1 | MIT | https://github.com/redis/node-redis
+@smithy/core@3.39.0 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
 @smithy/credential-provider-imds@4.5.2 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
 @smithy/fetch-http-handler@5.8.0 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
-@smithy/node-http-handler@4.12.1 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
-@smithy/signature-v4@5.7.3 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
-@smithy/types@4.18.0 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
+@smithy/node-http-handler@4.14.2 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
+@smithy/signature-v4@5.7.5 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
+@smithy/types@4.20.0 | Apache-2.0 | https://github.com/smithy-lang/smithy-typescript
 @tediousjs/connection-string@1.1.0 | MIT | https://github.com/tediousjs/connection-string
 @types/emscripten@1.41.6 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
 @types/mssql@12.3.0 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
-@types/node@20.19.43 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
-@types/node@26.5.1 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
+@types/node@26.6.6 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
 @types/readable-stream@4.0.24 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
 @types/sql.js@1.4.11 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
 @types/webidl-conversions@7.0.3 | MIT | https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -81,7 +80,7 @@ Package | License | Source
 @typespec/ts-http-runtime@0.3.9 | MIT | https://github.com/Azure/azure-sdk-for-js
 abort-controller@3.0.0 | MIT | https://github.com/mysticatea/abort-controller
 accepts@2.0.0 | MIT | jshttp/accepts
-adm-zip@0.6.0 | MIT | https://github.com/cthackers/adm-zip
+adm-zip@0.6.1 | MIT | https://github.com/cthackers/adm-zip
 agent-base@7.1.4 | MIT | https://github.com/TooTallNate/proxy-agents
 ajv@8.20.0 | MIT | ajv-validator/ajv
 ajv-formats@3.0.1 | MIT | https://github.com/ajv-validator/ajv-formats
@@ -90,18 +89,17 @@ aws-ssl-profiles@1.1.2 | MIT | https://github.com/mysqljs/aws-ssl-profiles
 base64-js@1.5.1 | MIT | https://github.com/beatgammit/base64-js
 bcrypt-pbkdf@1.0.2 | BSD-3-Clause | https://github.com/joyent/node-bcrypt-pbkdf
 bl@6.1.6 | MIT | https://github.com/rvagg/bl
-body-parser@2.3.0 | MIT | expressjs/body-parser
-bowser@2.14.1 | MIT | https://github.com/bowser-js/bowser
+body-parser@2.4.0 | MIT | expressjs/body-parser
+bowser@2.15.0 | MIT | https://github.com/bowser-js/bowser
 bson@7.3.2 | Apache-2.0 | mongodb/js-bson
 buffer@6.0.3 | MIT | https://github.com/feross/buffer
 buffer-equal-constant-time@1.0.1 | BSD-3-Clause | git@github.com:goinstant/buffer-equal-constant-time
 buildcheck@0.0.7 | See included license text | http://github.com/mscdex/buildcheck
-bundle-name@4.1.0 | MIT | sindresorhus/bundle-name
+bundle-name@4.1.1 | MIT | sindresorhus/bundle-name
 bytes@3.1.2 | MIT | visionmedia/bytes.js
 call-bind-apply-helpers@1.0.2 | MIT | https://github.com/ljharb/call-bind-apply-helpers
 call-bound@1.0.4 | MIT | https://github.com/ljharb/call-bound
-cassandra-driver@4.9.0 | Apache-2.0 | https://github.com/apache/cassandra-nodejs-driver
-cluster-key-slot@1.1.2 | Apache-2.0 | https://github.com/Salakar/cluster-key-slot
+cassandra-driver@4.10.0 | Apache-2.0 | https://github.com/apache/cassandra-nodejs-driver
 commander@11.1.0 | MIT | https://github.com/tj/commander.js
 content-disposition@1.1.0 | MIT | jshttp/content-disposition
 content-type@1.0.5 | MIT | jshttp/content-type
@@ -132,7 +130,7 @@ eventsource-parser@3.1.1 | MIT | ssh://git@github.com/rexxars/eventsource-parser
 express@5.2.1 | MIT | expressjs/express
 express-rate-limit@8.7.0 | MIT | https://github.com/express-rate-limit/express-rate-limit
 fast-deep-equal@3.1.3 | MIT | https://github.com/epoberezkin/fast-deep-equal
-fast-uri@3.1.7 | BSD-3-Clause | https://github.com/fastify/fast-uri
+fast-uri@3.1.9 | BSD-3-Clause | https://github.com/fastify/fast-uri
 finalhandler@2.1.1 | MIT | pillarjs/finalhandler
 forwarded@0.2.0 | MIT | jshttp/forwarded
 fresh@2.0.0 | MIT | jshttp/fresh
@@ -143,7 +141,7 @@ get-proto@1.0.1 | MIT | https://github.com/ljharb/get-proto
 gopd@1.2.0 | MIT | https://github.com/ljharb/gopd
 has-symbols@1.1.0 | MIT | https://github.com/inspect-js/has-symbols
 hasown@2.0.4 | MIT | https://github.com/inspect-js/hasOwn
-hono@4.13.7 | MIT | https://github.com/honojs/hono
+hono@4.13.17 | MIT | https://github.com/honojs/hono
 hpagent@1.2.0 | MIT | https://github.com/delvedor/hpagent
 http-errors@2.0.1 | MIT | jshttp/http-errors
 http-proxy-agent@7.0.2 | MIT | https://github.com/TooTallNate/proxy-agents
@@ -151,9 +149,10 @@ https-proxy-agent@7.0.6 | MIT | https://github.com/TooTallNate/proxy-agents
 iconv-lite@0.7.3 | MIT | https://github.com/pillarjs/iconv-lite
 ieee754@1.2.1 | BSD-3-Clause | https://github.com/feross/ieee754
 inherits@2.0.4 | ISC | https://github.com/isaacs/inherits
-ip-address@10.7.0 | MIT | https://github.com/beaugunderson/ip-address
+ip-address@10.7.6 | MIT | https://github.com/beaugunderson/ip-address
 ipaddr.js@1.9.1 | MIT | https://github.com/whitequark/ipaddr.js
 is-docker@3.0.0 | MIT | sindresorhus/is-docker
+is-in-ssh@1.0.0 | MIT | sindresorhus/is-in-ssh
 is-inside-container@1.0.0 | MIT | sindresorhus/is-inside-container
 is-promise@4.0.0 | MIT | https://github.com/then/is-promise
 is-property@1.0.2 | MIT | https://github.com/mikolalysenko/is-property
@@ -185,33 +184,33 @@ merge-descriptors@2.0.0 | MIT | sindresorhus/merge-descriptors
 mime-db@1.54.0 | MIT | jshttp/mime-db
 mime-types@3.0.2 | MIT | jshttp/mime-types
 mnemonist@0.38.3 | MIT | https://github.com/yomguithereal/mnemonist
-mongodb@7.6.0 | Apache-2.0 | git@github.com:mongodb/node-mongodb-native
+mongodb@7.8.0 | Apache-2.0 | git@github.com:mongodb/node-mongodb-native
 mongodb-connection-string-url@7.0.2 | Apache-2.0 | https://github.com/mongodb-js/mongodb-connection-string-url
 ms@2.1.3 | MIT | vercel/ms
-mssql@12.7.2 | MIT | https://github.com/tediousjs/node-mssql
-mysql2@3.24.4 | MIT | https://github.com/sidorares/node-mysql2
+mssql@12.7.14 | MIT | https://github.com/tediousjs/node-mssql
+mysql2@3.24.6 | MIT | https://github.com/sidorares/node-mysql2
 named-placeholders@1.1.6 | MIT | https://github.com/mysqljs/named-placeholders
 nan@2.28.0 | MIT | https://github.com/nodejs/nan
 native-duplexpair@1.0.0 | MIT | https://github.com/tediousjs/native-duplexpair
 negotiator@1.1.0 | MIT | jshttp/negotiator
-neo4j-driver@6.2.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
-neo4j-driver-bolt-connection@6.2.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
-neo4j-driver-core@6.2.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
+neo4j-driver@6.3.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
+neo4j-driver-bolt-connection@6.3.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
+neo4j-driver-core@6.3.0 | Apache-2.0 | https://github.com/neo4j/neo4j-javascript-driver
 object-assign@4.1.1 | MIT | sindresorhus/object-assign
 object-inspect@1.13.4 | MIT | https://github.com/inspect-js/object-inspect
 obliterator@1.6.1 | MIT | https://github.com/yomguithereal/obliterator
 on-finished@2.4.1 | MIT | jshttp/on-finished
 once@1.4.0 | ISC | https://github.com/isaacs/once
-open@10.2.0 | MIT | sindresorhus/open
+open@11.0.4 | MIT | sindresorhus/open
 parseurl@1.3.3 | MIT | pillarjs/parseurl
 path-key@3.1.1 | MIT | sindresorhus/path-key
 path-to-regexp@8.4.2 | MIT | https://github.com/pillarjs/path-to-regexp
-pg@8.23.0 | MIT | https://github.com/brianc/node-postgres
-pg-cloudflare@1.4.0 | MIT | https://github.com/brianc/node-postgres
-pg-connection-string@2.14.0 | MIT | https://github.com/brianc/node-postgres
+pg@8.23.1 | MIT | https://github.com/brianc/node-postgres
+pg-cloudflare@1.4.1 | MIT | https://github.com/brianc/node-postgres
+pg-connection-string@2.14.1 | MIT | https://github.com/brianc/node-postgres
 pg-int8@1.0.1 | ISC | https://github.com/charmander/pg-int8
 pg-pool@3.14.0 | MIT | https://github.com/brianc/node-postgres
-pg-protocol@1.16.0 | MIT | https://github.com/brianc/node-postgres
+pg-protocol@1.16.1 | MIT | https://github.com/brianc/node-postgres
 pg-types@2.2.0 | MIT | https://github.com/brianc/node-pg-types
 pgpass@1.0.5 | MIT | https://github.com/hoegaarden/pgpass
 pkce-challenge@5.0.1 | MIT | https://github.com/crouchcd/pkce-challenge
@@ -219,10 +218,11 @@ postgres-array@2.0.0 | MIT | bendrucker/postgres-array
 postgres-bytea@1.0.1 | MIT | bendrucker/postgres-bytea
 postgres-date@1.0.7 | MIT | bendrucker/postgres-date
 postgres-interval@1.2.0 | MIT | bendrucker/postgres-interval
+powershell-utils@0.2.1 | MIT | sindresorhus/powershell-utils
 process@0.11.10 | MIT | https://github.com/shtylman/node-process
-proxy-addr@2.0.7 | MIT | jshttp/proxy-addr
+proxy-addr@2.0.8 | MIT | jshttp/proxy-addr
 punycode@2.3.1 | MIT | https://github.com/mathiasbynens/punycode.js
-qs@6.16.0 | BSD-3-Clause | https://github.com/ljharb/qs
+qs@6.17.1 | BSD-3-Clause | https://github.com/ljharb/qs
 range-parser@1.3.0 | MIT | jshttp/range-parser
 raw-body@3.0.2 | MIT | stream-utils/raw-body
 readable-stream@4.7.0 | MIT | https://github.com/nodejs/readable-stream
@@ -249,11 +249,11 @@ sparse-bitfield@3.0.3 | MIT | https://github.com/mafintosh/sparse-bitfield
 split2@4.2.0 | ISC | https://github.com/mcollina/split2
 sprintf-js@1.1.3 | BSD-3-Clause | https://github.com/alexei/sprintf.js
 sql-escaper@1.5.1 | MIT | https://github.com/mysqljs/sql-escaper
-sql.js@1.14.2 | MIT | http://github.com/sql-js/sql.js
+sql.js@1.15.2 | MIT | http://github.com/sql-js/sql.js
 ssh2@1.17.0 | See included license text | http://github.com/mscdex/ssh2
 statuses@2.0.2 | MIT | jshttp/statuses
 string_decoder@1.3.0 | MIT | https://github.com/nodejs/string_decoder
-tabulator-tables@6.5.2 | MIT | https://github.com/tabulator-tables/tabulator
+tabulator-tables@6.7.1 | MIT | https://github.com/tabulator-tables/tabulator
 tarn@3.1.2 | MIT | https://github.com/knex/tarn.js
 tedious@20.0.0 | MIT | https://github.com/tediousjs/tedious
 toidentifier@1.0.1 | MIT | component/toidentifier
@@ -261,8 +261,7 @@ tr46@5.1.1 | MIT | https://github.com/jsdom/tr46
 tslib@2.8.1 | 0BSD | https://github.com/Microsoft/tslib
 tweetnacl@0.14.5 | Unlicense | https://github.com/dchest/tweetnacl-js
 type-is@2.1.0 | MIT | jshttp/type-is
-undici@7.29.1 | MIT | https://github.com/nodejs/undici
-undici-types@6.21.0 | MIT | https://github.com/nodejs/undici
+undici@7.30.2 | MIT | https://github.com/nodejs/undici
 undici-types@8.9.0 | MIT | https://github.com/nodejs/undici
 unpipe@1.0.0 | MIT | stream-utils/unpipe
 vary@1.1.2 | MIT | jshttp/vary
@@ -270,31 +269,31 @@ webidl-conversions@7.0.0 | BSD-2-Clause | jsdom/webidl-conversions
 whatwg-url@14.2.0 | MIT | jsdom/whatwg-url
 which@2.0.2 | ISC | https://github.com/isaacs/node-which
 wrappy@1.0.2 | ISC | https://github.com/npm/wrappy
-wsl-utils@0.1.0 | MIT | sindresorhus/wsl-utils
+wsl-utils@1.0.1 | MIT | sindresorhus/wsl-utils
 xtend@4.0.2 | MIT | https://github.com/Raynos/xtend
-zod@4.6.2 | MIT | https://github.com/colinhacks/zod
+zod@4.6.7 | MIT | https://github.com/colinhacks/zod
 zod-to-json-schema@3.25.2 | ISC | https://github.com/StefanTerdell/zod-to-json-schema
 
-LICENSE AND NOTICE TEXTS (165 unique bundles)
+LICENSE AND NOTICE TEXTS (164 unique bundles)
 
 Components using the following notice text:
-- @aws-sdk/client-dynamodb@3.1131.0
-- @aws-sdk/credential-provider-cognito-identity@3.972.70
-- @aws-sdk/credential-provider-env@3.972.71
-- @aws-sdk/credential-provider-ini@3.973.16
-- @aws-sdk/credential-provider-node@3.972.83
-- @aws-sdk/credential-providers@3.1131.0
-- @aws-sdk/dynamodb-codec@3.973.45
-- @aws-sdk/lib-dynamodb@3.1131.0
-- @aws-sdk/middleware-endpoint-discovery@3.972.30
-- @aws-sdk/token-providers@3.1129.0
-- @aws-sdk/types@3.974.5
+- @aws-sdk/client-dynamodb@3.1164.0
+- @aws-sdk/credential-provider-cognito-identity@3.972.81
+- @aws-sdk/credential-provider-env@3.972.82
+- @aws-sdk/credential-provider-ini@3.973.27
+- @aws-sdk/credential-provider-node@3.972.94
+- @aws-sdk/credential-providers@3.1164.0
+- @aws-sdk/dynamodb-codec@3.973.56
+- @aws-sdk/lib-dynamodb@3.1164.0
+- @aws-sdk/middleware-endpoint-discovery@3.972.37
+- @aws-sdk/token-providers@3.1164.0
+- @aws-sdk/types@3.975.0
 - @aws-sdk/util-dynamodb@3.996.9
-- @aws-sdk/xml-builder@3.972.40
+- @aws-sdk/xml-builder@3.972.42
 - @smithy/credential-provider-imds@4.5.2
 - @smithy/fetch-http-handler@5.8.0
-- @smithy/node-http-handler@4.12.1
-- @smithy/signature-v4@5.7.3
+- @smithy/node-http-handler@4.14.2
+- @smithy/signature-v4@5.7.5
 
 LICENSE
 -------
@@ -503,7 +502,7 @@ Apache License
 ================================================================================
 
 Components using the following notice text:
-- @aws-sdk/core@3.978.0
+- @aws-sdk/core@3.980.1
 
 LICENSE
 -------
@@ -712,9 +711,9 @@ Apache License
 ================================================================================
 
 Components using the following notice text:
-- @aws-sdk/credential-provider-http@3.972.73
-- @aws-sdk/credential-provider-login@3.972.78
-- @aws-sdk/nested-clients@3.997.45
+- @aws-sdk/credential-provider-http@3.972.84
+- @aws-sdk/credential-provider-login@3.972.89
+- @aws-sdk/nested-clients@3.998.1
 
 Apache License 2.0
 ------------------
@@ -923,12 +922,12 @@ Apache License
 ================================================================================
 
 Components using the following notice text:
-- @aws-sdk/credential-provider-process@3.972.71
-- @aws-sdk/credential-provider-sso@3.973.15
-- @aws-sdk/credential-provider-web-identity@3.972.77
-- @aws-sdk/signature-v4-multi-region@3.996.46
-- @smithy/core@3.34.1
-- @smithy/types@4.18.0
+- @aws-sdk/credential-provider-process@3.972.82
+- @aws-sdk/credential-provider-sso@3.973.26
+- @aws-sdk/credential-provider-web-identity@3.972.88
+- @aws-sdk/signature-v4-multi-region@3.996.51
+- @smithy/core@3.39.0
+- @smithy/types@4.20.0
 
 LICENSE
 -------
@@ -1536,7 +1535,7 @@ Components using the following notice text:
 - @azure/core-rest-pipeline@1.25.0
 - @azure/core-tracing@1.4.0
 - @azure/core-util@1.14.0
-- @azure/identity@4.13.2
+- @azure/identity@4.14.1
 - @azure/keyvault-common@2.1.0
 - @azure/keyvault-keys@4.10.2
 - @azure/logger@1.4.0
@@ -1628,8 +1627,8 @@ SOFTWARE.
 
 Components using the following notice text:
 - @azure/msal-browser@5.21.0
-- @azure/msal-common@16.13.0
 - @azure/msal-common@16.14.0
+- @azure/msal-common@16.16.1
 
 LICENSE
 -------
@@ -1658,7 +1657,7 @@ SOFTWARE
 ================================================================================
 
 Components using the following notice text:
-- @azure/msal-node@5.6.0
+- @azure/msal-node@7.2.1
 
 LICENSE
 -------
@@ -1687,7 +1686,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- @clickhouse/client@1.23.1
+- @clickhouse/client@1.25.0
 
 LICENSE
 -------
@@ -2326,7 +2325,7 @@ Copyright 2022-2025 Elasticsearch B.V.
 ================================================================================
 
 Components using the following notice text:
-- @hono/node-server@2.1.1
+- @hono/node-server@2.1.6
 
 LICENSE
 -------
@@ -2396,7 +2395,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ================================================================================
 
 Components using the following notice text:
-- @modelcontextprotocol/sdk@1.30.0
+- @modelcontextprotocol/sdk@1.32.2
 
 LICENSE
 -------
@@ -2668,7 +2667,7 @@ Apache License
 ================================================================================
 
 Components using the following notice text:
-- @redis/client@6.2.1
+- @redis/client@6.3.1
 
 MIT License
 -----------
@@ -2728,8 +2727,7 @@ SOFTWARE.
 Components using the following notice text:
 - @types/emscripten@1.41.6
 - @types/mssql@12.3.0
-- @types/node@20.19.43
-- @types/node@26.5.1
+- @types/node@26.6.6
 - @types/readable-stream@4.0.24
 - @types/sql.js@1.4.11
 - @types/webidl-conversions@7.0.3
@@ -2823,7 +2821,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- adm-zip@0.6.0
+- adm-zip@0.6.1
 
 LICENSE
 -------
@@ -3120,7 +3118,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ================================================================================
 
 Components using the following notice text:
-- body-parser@2.3.0
+- body-parser@2.4.0
 - type-is@2.1.0
 
 LICENSE
@@ -3152,7 +3150,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- bowser@2.14.1
+- bowser@2.15.0
 
 LICENSE
 -------
@@ -3486,16 +3484,18 @@ IN THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- bundle-name@4.1.0
+- bundle-name@4.1.1
 - default-browser@5.5.1
 - default-browser-id@5.0.1
 - define-lazy-prop@3.0.0
 - is-docker@3.0.0
+- is-in-ssh@1.0.0
 - is-inside-container@1.0.0
 - is-wsl@3.1.1
-- open@10.2.0
+- open@11.0.4
+- powershell-utils@0.2.1
 - run-applescript@7.1.0
-- wsl-utils@0.1.0
+- wsl-utils@1.0.1
 
 license
 -------
@@ -3578,7 +3578,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- cassandra-driver@4.9.0
+- cassandra-driver@4.10.0
 
 LICENSE.txt
 -----------
@@ -3828,27 +3828,6 @@ theRemix	Jon Borgonia	jon.borgonia@gmail.com                          *
 thetsman	Tatsiana Hetsman
 tmitim	Timothy Myung                                                       *
 vineus	Vincent de Lagabbe	vineus@gmail.com                                *
-
-================================================================================
-
-Components using the following notice text:
-- cluster-key-slot@1.1.2
-
-LICENSE
--------
-Copyright (c) 2018 Mike Diarmid (Salakar) <mike.diarmid@gmail.com>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this library except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 
 ================================================================================
 
@@ -4455,7 +4434,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Components using the following notice text:
 - etag@1.8.1
-- proxy-addr@2.0.7
+- proxy-addr@2.0.8
 
 LICENSE
 -------
@@ -4694,7 +4673,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- fast-uri@3.1.7
+- fast-uri@3.1.9
 
 LICENSE
 -------
@@ -4994,7 +4973,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- hono@4.13.7
+- hono@4.13.17
 
 LICENSE
 -------
@@ -5152,7 +5131,7 @@ PERFORMANCE OF THIS SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- ip-address@10.7.0
+- ip-address@10.7.6
 
 LICENSE
 -------
@@ -5754,7 +5733,7 @@ THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- mongodb@7.6.0
+- mongodb@7.8.0
 
 LICENSE.md
 ----------
@@ -6190,7 +6169,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- mssql@12.7.2
+- mssql@12.7.14
 
 LICENSE.md
 ----------
@@ -6219,7 +6198,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- mysql2@3.24.4
+- mysql2@3.24.6
 
 License
 -------
@@ -6353,9 +6332,9 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- neo4j-driver@6.2.0
-- neo4j-driver-bolt-connection@6.2.0
-- neo4j-driver-core@6.2.0
+- neo4j-driver@6.3.0
+- neo4j-driver-bolt-connection@6.3.0
+- neo4j-driver-core@6.3.0
 
 LICENSE
 -------
@@ -6760,9 +6739,9 @@ THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- pg@8.23.0
-- pg-cloudflare@1.4.0
-- pg-protocol@1.16.0
+- pg@8.23.1
+- pg-cloudflare@1.4.1
+- pg-protocol@1.16.1
 
 LICENSE
 -------
@@ -6791,7 +6770,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- pg-connection-string@2.14.0
+- pg-connection-string@2.14.1
 
 LICENSE
 -------
@@ -7048,7 +7027,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- qs@6.16.0
+- qs@6.17.1
 
 LICENSE.md
 ----------
@@ -7855,7 +7834,7 @@ SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- sql.js@1.14.2
+- sql.js@1.15.2
 
 LICENSE
 -------
@@ -7937,7 +7916,7 @@ THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- tabulator-tables@6.5.2
+- tabulator-tables@6.7.1
 
 LICENSE
 -------
@@ -8136,8 +8115,7 @@ For more information, please refer to <http://unlicense.org>
 ================================================================================
 
 Components using the following notice text:
-- undici@7.29.1
-- undici-types@6.21.0
+- undici@7.30.2
 - undici-types@8.9.0
 
 LICENSE
@@ -8274,7 +8252,7 @@ THE SOFTWARE.
 ================================================================================
 
 Components using the following notice text:
-- zod@4.6.2
+- zod@4.6.7
 
 LICENSE
 -------
