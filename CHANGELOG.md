@@ -7,6 +7,14 @@ and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-08
+
+Stable release of 0.3.0, with no code changes. See 0.3.0 below for everything new since 0.2.0.
+
+### Upgrading from 0.2.0
+
+- **SSH tunnels now require `ssh.hostFingerprint`**, the server's trusted OpenSSH `SHA256:...` host-key fingerprint. Connections with an `ssh` block report a config error until it's added. To get the fingerprint, run `ssh-keyscan <host> | ssh-keygen -lf -`, and confirm the value with your server admin.
+
 ## [0.3.0] - 2026-11-08 (pre-release)
 
 ### Added
@@ -62,7 +70,8 @@ First stable release.
 - Per-workspace query history with rerun support.
 - A bundled MCP server for listing connections, inspecting schemas, and running queries, with agent writes blocked by default.
 
-[Unreleased]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/TupleBase/tuplebase-vscode/compare/v0.1.0...v0.1.1
