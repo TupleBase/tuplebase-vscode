@@ -513,7 +513,7 @@
     "@types/pg": "^8.23.1",
     "@types/ssh2": "^1.15.6",
     "@types/tabulator-tables": "^6.3.6",
-    "@types/vscode": "^1.90.0",
+    "@types/vscode": "^1.145.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "4.1.0",
